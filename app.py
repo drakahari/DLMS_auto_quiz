@@ -1,5 +1,5 @@
 from flask import Flask, send_from_directory, request, redirect, render_template_string, jsonify, Response, flash, url_for
-import os, re, json, time, sqlite3, sys, shutil, signal
+import os, re, json, time, sqlite3, sys, shutil, signal, threading
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
@@ -88,7 +88,7 @@ def get_app_data_dir(app_name: str = "DLMS") -> str:
     return path
 
 APP_NAME = "DLMS"
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.2.0"
 APP_DATA_DIR = get_app_data_dir(APP_NAME)
 
 # =========================
@@ -528,17 +528,21 @@ def toggle_hidden():
         request.form.get("id") or request.json.get("id")
     )
 
-    view = request.form.get("view")  # ← preserve context
+    view = request.form.get("view")
 
-    registry = load_registry()
-    for q in registry:
-        if q.get("id") == quiz_id:
-            q["hidden"] = not q.get("hidden", False)
+    with registry_lock:
+        registry = load_registry()
 
-    save_registry(registry)
+        for q in registry:
+            if q.get("id") == quiz_id:
+                q["hidden"] = not q.get("hidden", False)
+                break
+
+        save_registry(registry)
 
     if view:
         return redirect(f"/library?view={view}")
+
     return redirect("/library")
 
 
@@ -551,14 +555,15 @@ def move_quiz_folder():
     if not folder:
         folder = "Uncategorized"
 
-    registry = normalize_quiz_folders(load_registry())
+    with registry_lock:
+        registry = normalize_quiz_folders(load_registry())
 
-    for q in registry:
-        if q.get("id") == quiz_id:
-            q["folder"] = folder
-            break
+        for q in registry:
+            if q.get("id") == quiz_id:
+                q["folder"] = folder
+                break
 
-    save_registry(registry)
+        save_registry(registry)
 
     return redirect(f"/library?view={view}")
 
@@ -611,15 +616,16 @@ def rename_quiz_folder():
     save_quiz_folders(renamed_folders)
 
     # Update existing quizzes that were assigned to the old folder
-    registry = normalize_quiz_folders(load_registry())
+    with registry_lock:
+        registry = normalize_quiz_folders(load_registry())
 
-    for q in registry:
-        current_folder = str(q.get("folder") or "Uncategorized").strip()
+        for q in registry:
+            current_folder = str(q.get("folder") or "Uncategorized").strip()
 
-        if current_folder.lower() == old_folder.lower():
-            q["folder"] = new_folder
+            if current_folder.lower() == old_folder.lower():
+                q["folder"] = new_folder
 
-    save_registry(registry)
+        save_registry(registry)
 
     return redirect(f"/library?view={view}")
 
@@ -645,15 +651,16 @@ def delete_quiz_folder():
     save_quiz_folders(folders)
 
     # Move quizzes from deleted folder back to Uncategorized
-    registry = normalize_quiz_folders(load_registry())
+    with registry_lock:
+        registry = normalize_quiz_folders(load_registry())
 
-    for q in registry:
-        current_folder = str(q.get("folder") or "Uncategorized").strip()
+        for q in registry:
+            current_folder = str(q.get("folder") or "Uncategorized").strip()
 
-        if current_folder.lower() == folder.lower():
-            q["folder"] = "Uncategorized"
+            if current_folder.lower() == folder.lower():
+                q["folder"] = "Uncategorized"
 
-    save_registry(registry)
+        save_registry(registry)
 
     return redirect(f"/library?view={view}")
 
@@ -709,54 +716,53 @@ def save_quiz_order_in_folder():
     if not isinstance(ordered_html, list):
         return jsonify(status="error", error="Invalid quiz order"), 400
 
-    registry = normalize_quiz_folders(load_registry())
+    with registry_lock:
+        registry = normalize_quiz_folders(load_registry())
 
-    # Quizzes currently in this folder
-    folder_quizzes = [
-        q for q in registry
-        if str(q.get("folder") or "Uncategorized").strip().lower() == folder.lower()
-    ]
+        # Quizzes currently in this folder
+        folder_quizzes = [
+            q for q in registry
+            if str(q.get("folder") or "Uncategorized").strip().lower() == folder.lower()
+        ]
 
-    # Lookup quizzes in this folder by HTML filename
-    folder_lookup = {
-        q.get("html"): q
-        for q in folder_quizzes
-        if q.get("html")
-    }
+        # Lookup quizzes in this folder by HTML filename
+        folder_lookup = {
+            q.get("html"): q
+            for q in folder_quizzes
+            if q.get("html")
+        }
 
-    reordered_folder_quizzes = []
-    used_html = set()
+        reordered_folder_quizzes = []
+        used_html = set()
 
-    # Add quizzes in the requested order
-    for html in ordered_html:
-        if html in folder_lookup and html not in used_html:
-            reordered_folder_quizzes.append(folder_lookup[html])
-            used_html.add(html)
+        # Add quizzes in the requested order
+        for html in ordered_html:
+            if html in folder_lookup and html not in used_html:
+                reordered_folder_quizzes.append(folder_lookup[html])
+                used_html.add(html)
 
-    # Preserve any folder quizzes missing from the request
-    for q in folder_quizzes:
-        html = q.get("html")
-        if html not in used_html:
-            reordered_folder_quizzes.append(q)
+        # Preserve any folder quizzes missing from the request
+        for q in folder_quizzes:
+            html = q.get("html")
+            if html not in used_html:
+                reordered_folder_quizzes.append(q)
 
-    # Rebuild full registry:
-    # - Replace quizzes from this folder with the reordered version
-    # - Leave quizzes from other folders untouched
-    new_registry = []
-    inserted_folder = False
+        # Rebuild full registry
+        new_registry = []
+        inserted_folder = False
 
-    for q in registry:
-        current_folder = str(q.get("folder") or "Uncategorized").strip()
+        for q in registry:
+            current_folder = str(q.get("folder") or "Uncategorized").strip()
 
-        if current_folder.lower() == folder.lower():
-            if not inserted_folder:
-                new_registry.extend(reordered_folder_quizzes)
-                inserted_folder = True
-            continue
+            if current_folder.lower() == folder.lower():
+                if not inserted_folder:
+                    new_registry.extend(reordered_folder_quizzes)
+                    inserted_folder = True
+                continue
 
-        new_registry.append(q)
+            new_registry.append(q)
 
-    save_registry(new_registry)
+        save_registry(new_registry)
 
     return jsonify(status="ok")
 
@@ -1023,23 +1029,61 @@ def save_law_registry(registry):
 # =========================
 # QUIZ REGISTRY
 # =========================
+registry_lock = threading.RLock()
+
 def load_registry():
-    if not os.path.exists(QUIZ_REGISTRY):
-        return []
-    try:
-        with open(QUIZ_REGISTRY, "r", encoding="utf-8") as f:
-            return json.load(f) or []
-    except Exception as e:
-        print(f"[REGISTRY ERROR] load_registry failed: {e}")
-        return []
+    with registry_lock:
+        if not os.path.exists(QUIZ_REGISTRY):
+            return []
+
+        try:
+            with open(QUIZ_REGISTRY, "r", encoding="utf-8") as f:
+                registry = json.load(f)
+
+            if registry is None:
+                return []
+
+            if not isinstance(registry, list):
+                raise ValueError("Quiz registry must contain a JSON list")
+
+            return registry
+
+        except Exception as e:
+            print(f"[REGISTRY ERROR] load_registry failed: {e}")
+            raise RuntimeError(
+                f"Quiz registry could not be loaded safely: {e}"
+            ) from e
 
 def save_registry(registry):
+    temp_file = QUIZ_REGISTRY + ".tmp"
+
     try:
         os.makedirs(os.path.dirname(QUIZ_REGISTRY), exist_ok=True)
-        with open(QUIZ_REGISTRY, "w", encoding="utf-8") as f:
-            json.dump(registry, f, indent=4)
+
+        with registry_lock:
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(registry, f, indent=4)
+                f.flush()
+                os.fsync(f.fileno())
+
+            # Validate the temporary file before replacing the live registry
+            with open(temp_file, "r", encoding="utf-8") as f:
+                validated = json.load(f)
+
+            if not isinstance(validated, list):
+                raise ValueError("Quiz registry must contain a JSON list")
+
+            os.replace(temp_file, QUIZ_REGISTRY)
+
     except Exception as e:
         print(f"[REGISTRY ERROR] save_registry failed: {e}")
+
+        try:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+        except Exception:
+            pass
+        raise
 
 
 def normalize_quiz_folders(registry):
@@ -1050,19 +1094,20 @@ def normalize_quiz_folders(registry):
     This guarantees every quiz has one without changing quiz files,
     quiz IDs, history, results, or generated HTML/JSON.
     """
-    changed = False
+    with registry_lock:
+        changed = False
 
-    for q in registry:
-        folder = str(q.get("folder") or "").strip()
+        for q in registry:
+            folder = str(q.get("folder") or "").strip()
 
-        if not folder:
-            q["folder"] = "Uncategorized"
-            changed = True
+            if not folder:
+                q["folder"] = "Uncategorized"
+                changed = True
 
-    if changed:
-        save_registry(registry)
+        if changed:
+            save_registry(registry)
 
-    return registry
+        return registry
 
 def add_quiz_to_registry(quiz_id, html, title, logo=None):
     """
@@ -1070,63 +1115,51 @@ def add_quiz_to_registry(quiz_id, html, title, logo=None):
     - quiz_id is the DATABASE quizzes.id (authoritative)
     - Registry is a UI index only
     """
-    print(f"[REGISTRY] add_quiz_to_registry db_id={quiz_id} title={title!r} logo={logo!r}")
+    print(
+        f"[REGISTRY] add_quiz_to_registry "
+        f"db_id={quiz_id} title={title!r} logo={logo!r}"
+    )
 
-    registry = load_registry()
+    with registry_lock:
+        registry = load_registry()
 
-    try:
-        quiz_id = int(quiz_id)
-    except Exception:
-        raise ValueError("add_quiz_to_registry requires a numeric DB quiz_id")
+        try:
+            quiz_id = int(quiz_id)
+        except Exception:
+            raise ValueError(
+                "add_quiz_to_registry requires a numeric DB quiz_id"
+            )
 
-    kept = []
-    for q in registry:
-        # De-dupe strictly by DB quiz_id or html
-        if q.get("id") == quiz_id:
-            continue
-        if html and q.get("html") == html:
-            continue
-        kept.append(q)
+        kept = []
 
-    kept.append({
-        "id": quiz_id,          # ✅ DB PRIMARY KEY
-        "html": html,
-        "title": title,
-        "logo": logo,
-        "timestamp": int(time.time())
-    })
+        for q in registry:
+            # De-dupe by database quiz ID
+            same_id = (
+                q.get("id") == quiz_id
+                or str(q.get("id")) == str(quiz_id)
+            )
 
-    save_registry(kept)
+            # De-dupe by generated HTML filename
+            same_html = (
+                q.get("html") == html
+                if html
+                else False
+            )
 
+            if same_id or same_html:
+                continue
 
-    registry = load_registry()
+            kept.append(q)
 
-    # Normalize quiz_id to int if possible (registry IDs are timestamp-ish)
-    try:
-        qid_norm = int(quiz_id)
-    except Exception:
-        qid_norm = quiz_id  # keep as-is if it truly isn't numeric
+        kept.append({
+            "id": quiz_id,
+            "html": html,
+            "title": title,
+            "logo": logo,
+            "timestamp": int(time.time())
+        })
 
-    kept = []
-    for q in registry:
-        # Match by id
-        same_id = (q.get("id") == qid_norm) or (str(q.get("id")) == str(qid_norm))
-        # Match by html (safety)
-        same_html = (q.get("html") == html) if html else False
-
-        if same_id or same_html:
-            continue
-        kept.append(q)
-
-    kept.append({
-        "id": qid_norm,
-        "html": html,
-        "title": title,
-        "logo": logo,
-        "timestamp": int(time.time())
-    })
-
-    save_registry(kept)
+        save_registry(kept)
 
 
 
@@ -4258,15 +4291,19 @@ def save_edited_quiz(quiz_id):
             (new_title, quiz_id)
         )
 
-        registry = load_registry()
-        for q in registry:
-            if q.get("id") == quiz_id:
-                q["title"] = new_title
+        with registry_lock:
+            registry = load_registry()
 
-                if logo_filename:
-                    q["logo"] = logo_filename
+            for q in registry:
+                if q.get("id") == quiz_id:
+                    q["title"] = new_title
 
-        save_registry(registry)
+                    if logo_filename:
+                        q["logo"] = logo_filename
+
+                    break
+
+            save_registry(registry)
 
     questions = cur.execute(
         "SELECT id FROM questions WHERE quiz_id = ?",
@@ -4611,27 +4648,29 @@ def delete_quiz(quiz_id):
     # -------------------------
     # Load registry FIRST
     # -------------------------
-    registry = load_registry()
-    kept = []
+    with registry_lock:
+        registry = load_registry()
+        kept = []
 
-    html_file = None
-    json_file = None
-    logo_file = None
+        html_file = None
+        json_file = None
+        logo_file = None
 
-    for q in registry:
-        if q.get("id") == quiz_id:
-            print("[DELETE] Removing registry entry:", q)
+        for q in registry:
+            if q.get("id") == quiz_id:
+                print("[DELETE] Removing registry entry:", q)
 
-            html_file = q.get("html")
-            if html_file:
-                json_file = html_file.replace(".html", ".json")
+                html_file = q.get("html")
 
-            logo_file = q.get("logo")
-            continue
+                if html_file:
+                    json_file = html_file.replace(".html", ".json")
 
-        kept.append(q)
+                logo_file = q.get("logo")
+                continue
 
-    save_registry(kept)
+            kept.append(q)
+
+        save_registry(kept)
 
     # -------------------------
     # Delete DB rows (authoritative)
@@ -4696,12 +4735,9 @@ def wipe_database():
     # -----------------------------
     # 2️⃣ CLEAR QUIZ REGISTRY
     # -----------------------------
-    registry_path = os.path.join(APP_DATA_DIR, "config", "quizzes.json")
 
     try:
-        os.makedirs(os.path.dirname(registry_path), exist_ok=True)
-        with open(registry_path, "w") as f:
-            json.dump([], f, indent=2)
+        save_registry([])
         print("[REGISTRY] quizzes.json reset")
     except Exception as e:
         print("[REGISTRY ERROR]", e)
@@ -4747,17 +4783,18 @@ def save_order():
     data = request.get_json()
     order = data.get("order", [])
 
-    registry = load_registry()
+    with registry_lock:
+        registry = load_registry()
 
-    lookup = {q["html"]: q for q in registry}
-    new_list = []
+        lookup = {q["html"]: q for q in registry}
+        new_list = []
 
-    for html in order:
-        if html in lookup:
-            new_list.append(lookup.pop(html))
+        for html in order:
+            if html in lookup:
+                new_list.append(lookup.pop(html))
 
-    new_list.extend(lookup.values())
-    save_registry(new_list)
+        new_list.extend(lookup.values())
+        save_registry(new_list)
 
     return {"status": "ok"}
 
@@ -8685,13 +8722,7 @@ def api_attempts():
     # -------------------------
     # Load registry map (id -> entry)
     # -------------------------
-    registry = []
-    try:
-        with open(REGISTRY_FILE, "r", encoding="utf-8") as f:
-            registry = json.load(f) or []
-    except Exception as e:
-        print(f"[REGISTRY ERROR] Unable to read registry: {e}")
-        registry = []
+    registry = load_registry()
 
     registry_map = {}
     for q in registry:
