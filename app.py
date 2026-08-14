@@ -88,7 +88,7 @@ def get_app_data_dir(app_name: str = "DLMS") -> str:
     return path
 
 APP_NAME = "DLMS"
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.3.0"
 APP_DATA_DIR = get_app_data_dir(APP_NAME)
 
 # =========================
@@ -412,6 +412,94 @@ def user_static(filename):
         os.path.join(APP_DATA_DIR, "static"),
         filename
     )
+
+@app.route("/admin/maintenance")
+def admin_maintenance():
+    return render_template_string("""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Maintenance - DLMS</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/favicon.ico">
+</head>
+
+<body>
+<div class="container">
+
+    <h1 class="hero-title">🛠 Admin Maintenance</h1>
+
+    <div class="card">
+
+        <h2>Quiz Maintenance</h2>
+
+        <p style="opacity:.8;">
+            Rebuild all existing quiz pages using the current DLMS application template.
+            This is useful after upgrading DLMS so older quizzes receive new interface features.
+        </p>
+
+        <p style="opacity:.7; font-size:13px;">
+            Quiz questions, answers, IDs, registry entries, and attempt history are not changed.
+        </p>
+
+        <button id="rebuildAllBtn">
+            🔄 Rebuild All Quiz Pages
+        </button>
+
+        <p id="rebuildStatus" style="margin-top:10px;"></p>
+
+        <br>
+
+        <button onclick="location.href='/'">
+            ⬅ Back To Portal
+        </button>
+
+    </div>
+</div>
+
+<script>
+const rebuildBtn = document.getElementById("rebuildAllBtn");
+const rebuildStatus = document.getElementById("rebuildStatus");
+
+rebuildBtn.addEventListener("click", async () => {
+    const ok = confirm(
+        "Rebuild all quiz pages using the current DLMS template?\\n\\n" +
+        "Quiz questions, answers, IDs, and history will not be changed."
+    );
+
+    if (!ok) return;
+
+    rebuildBtn.disabled = true;
+    rebuildStatus.textContent = "Rebuilding quiz pages...";
+
+    try {
+        const response = await fetch("/admin/rebuild_all_quiz_html");
+
+        if (!response.ok) {
+            throw new Error("Rebuild request failed");
+        }
+
+        const data = await response.json();
+
+        rebuildStatus.textContent =
+            `Complete: ${data.rebuilt} rebuilt, ${data.failed.length} failed.`;
+
+    } catch (err) {
+        console.error(err);
+        rebuildStatus.textContent = "Rebuild failed. Check the server log.";
+    } finally {
+        rebuildBtn.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>
+""")
+
+
+
 
 # =========================
 # SHUTDOWN APPLICATION
@@ -4257,6 +4345,42 @@ def rebuild_quiz_html_from_registry(quiz_id):
 
     print("[EDIT] Rebuilt quiz HTML:", html_path)
     return True
+
+
+@app.route("/admin/rebuild_all_quiz_html")
+def rebuild_all_quiz_html():
+    registry = load_registry()
+
+    rebuilt = 0
+    failed = []
+
+    for entry in registry:
+        quiz_id = entry.get("id")
+
+        if quiz_id is None:
+            continue
+
+        try:
+            quiz_id = int(quiz_id)
+
+            if rebuild_quiz_html_from_registry(quiz_id):
+                rebuilt += 1
+            else:
+                failed.append(quiz_id)
+
+        except Exception as e:
+            print(
+                f"[REBUILD ALL] Failed quiz_id={quiz_id}: {e}"
+            )
+            failed.append(quiz_id)
+
+    return jsonify({
+        "status": "complete",
+        "rebuilt": rebuilt,
+        "failed": failed
+    })
+
+
 
 
 
@@ -9037,6 +9161,126 @@ def export_anki_quiz_tsv(quiz_id):
         }
     )
 
+# =====================================================
+# Anki Study Export (Selected Questions) → .apkg
+# =====================================================
+
+@app.route("/export/anki/study", methods=["POST"])
+def export_anki_study():
+    data = request.get_json(force=True) or {}
+
+    quiz_id = data.get("quiz_id")
+    question_numbers = data.get("question_numbers") or []
+
+    try:
+        quiz_id = int(quiz_id)
+        question_numbers = sorted({
+            int(n)
+            for n in question_numbers
+            if str(n).isdigit() and int(n) > 0
+        })
+    except (TypeError, ValueError):
+        return {"error": "Invalid quiz or question selection"}, 400
+
+    if not question_numbers:
+        return {"error": "No study questions selected"}, 400
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    quiz_row = cur.execute(
+        """
+        SELECT title
+        FROM quizzes
+        WHERE id = ?
+        """,
+        (quiz_id,)
+    ).fetchone()
+
+    if not quiz_row:
+        conn.close()
+        return {"error": "Quiz not found"}, 404
+
+    # Load questions in the same order used by the quiz.
+    questions = cur.execute(
+        """
+        SELECT id, question_number, question_text
+        FROM questions
+        WHERE quiz_id = ?
+        ORDER BY question_number, id
+        """,
+        (quiz_id,)
+    ).fetchall()
+
+    deck_rows = []
+
+    # question_numbers from Study Mode are 1-based positions
+    # in the currently displayed quiz.
+    for position in question_numbers:
+        question_index = position - 1
+
+        if question_index < 0 or question_index >= len(questions):
+            continue
+
+        question = questions[question_index]
+
+        choices = cur.execute(
+            """
+            SELECT label, text, is_correct
+            FROM choices
+            WHERE question_id = ?
+            ORDER BY label
+            """,
+            (question["id"],)
+        ).fetchall()
+
+        front_parts = [question["question_text"] or ""]
+
+        if choices:
+            front_parts.append("")
+
+            for choice in choices:
+                front_parts.append(
+                    f"{choice['label']}. {choice['text'] or ''}"
+                )
+
+        correct_parts = []
+
+        for choice in choices:
+            if choice["is_correct"]:
+                correct_parts.append(
+                    f"{choice['label']}. {choice['text'] or ''}"
+                )
+
+        back = "Correct Answer:\n" + "\n".join(correct_parts)
+
+        deck_rows.append({
+            "front": "\n".join(front_parts),
+            "back": back
+        })
+
+    conn.close()
+
+    if not deck_rows:
+        return {"error": "No valid questions were selected"}, 400
+
+    quiz_title = quiz_row["title"] or "DLMS Study Questions"
+    deck_name = f"{quiz_title} - Study Review"
+
+    apkg_path = export_quiz_to_apkg(
+        deck_name,
+        deck_rows
+    )
+
+    return send_file(
+        apkg_path,
+        as_attachment=True,
+        download_name="dlms_study_selected.apkg",
+        mimetype="application/octet-stream"
+    )
+
+
+
 
 # =====================================================
 # EXPORT MISSED QUESTIONS → GENANKI (.apkg)
@@ -9844,6 +10088,20 @@ def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_file
                         class="hidden"
                         onclick="reviewCurrentQuestionWithAI()">
                     ✨ Review This Question with AI
+                </button>
+
+                <button id="studyAnkiBtn"
+                        type="button"
+                        class="hidden"
+                        onclick="toggleCurrentQuestionForAnki()">
+                    ⭐ Mark for Anki
+                </button>
+
+                <button id="studyAnkiExportBtn"
+                        type="button"
+                        class="hidden"
+                        onclick="exportStudyAnkiSelections()">
+                    📦 Export Selected to Anki
                 </button>
             </div>
         </div>

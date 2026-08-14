@@ -5,6 +5,7 @@ let quiz = [];
 let index = 0;
 let examMode = false;
 let userAnswers = {};
+let studyAnkiSelections = new Set();
 let paused = false;
 let examTimer = null;
 let timeRemaining = 90 * 60; // 90 minutes
@@ -175,6 +176,8 @@ if (examMode && selected.includes(i)) {
     updatePauseButtonUI();
     updateTimerLabelUI();
     updateStudyModeBadge();
+    updateStudyAnkiButton();
+    updateStudyAnkiExportButton();
 }
 
 /* =====================================================
@@ -407,6 +410,102 @@ function applyStudyFeedback() {
 
 
 
+function toggleCurrentQuestionForAnki() {
+    if (examMode) return;
+
+    if (studyAnkiSelections.has(index)) {
+        studyAnkiSelections.delete(index);
+    } else {
+        studyAnkiSelections.add(index);
+    }
+
+    updateStudyAnkiButton();
+    updateStudyAnkiExportButton();
+}
+
+function updateStudyAnkiButton() {
+    const btn = document.getElementById("studyAnkiBtn");
+    if (!btn) return;
+
+    if (examMode) {
+        btn.style.display = "none";
+        return;
+    }
+
+    btn.style.display = "inline-block";
+
+    if (studyAnkiSelections.has(index)) {
+        btn.textContent = "✓ Marked for Anki";
+    } else {
+        btn.textContent = "⭐ Mark for Anki";
+    }
+}
+
+function updateStudyAnkiExportButton() {
+    const btn = document.getElementById("studyAnkiExportBtn");
+    if (!btn) return;
+
+    const isLastQuestion = (index === quiz.length - 1);
+    const selectedCount = studyAnkiSelections.size;
+
+    if (!examMode && isLastQuestion && selectedCount > 0) {
+        btn.style.display = "inline-block";
+        btn.textContent = `📦 Export ${selectedCount} Selected to Anki`;
+    } else {
+        btn.style.display = "none";
+    }
+}
+
+async function exportStudyAnkiSelections() {
+    if (examMode) return;
+
+    const selectedIndexes = Array.from(studyAnkiSelections).sort((a, b) => a - b);
+
+    if (selectedIndexes.length === 0) {
+        alert("No questions are marked for Anki.");
+        return;
+    }
+
+    const questionNumbers = selectedIndexes.map(i => i + 1);
+
+    try {
+        const response = await fetch("/export/anki/study", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                quiz_id: window.QUIZ_ID,
+                question_numbers: questionNumbers
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || "Anki export failed");
+        }
+
+        const blob = await response.blob();
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = `study_selected_${window.QUIZ_ID}.apkg`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+
+    } catch (err) {
+        console.error("Study Anki export failed:", err);
+        alert("Unable to export the selected questions to Anki.");
+    }
+}
+
+
 /* =====================================================
    PROGRESS BAR
 ===================================================== */
@@ -425,6 +524,7 @@ function startQuiz(isExam) {
     examMode = isExam;
     index = 0;
     userAnswers = {};
+    studyAnkiSelections.clear();
 
     if (examMode) {
         examStartTime = new Date().toISOString();
@@ -435,6 +535,11 @@ function startQuiz(isExam) {
     const studyAiBtn = document.getElementById("studyAiBtn");
     if (studyAiBtn) {
         studyAiBtn.style.display = examMode ? "none" : "inline-block";
+    }
+
+    const studyAnkiBtn = document.getElementById("studyAnkiBtn");
+    if (studyAnkiBtn) {
+        studyAnkiBtn.style.display = examMode ? "none" : "inline-block";
     }
 
 
