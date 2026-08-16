@@ -1,113 +1,330 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Training & Practice Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ portal_title }}</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/favicon.ico">
+</head>
 
-<!-- <script>
-fetch("/config/portal.json")
-  .then(r => r.json())
-  .then(cfg => {
-      if (cfg.background_image) {
-          document.documentElement.style.setProperty(
-              "--portal-bg",
-              `url(${cfg.background_image})`
-          );
-      }
-  });
-</script>
-</head> -->
+<body class="dashboard-home">
 
-<body>
+<div class="dashboard-shell">
 
-<div class="container">
-
-    <h1 class="hero-title">
-        {{ portal_title }}<br>
-        <span style="font-size:20px;opacity:.85">
-            Build • Study • Test • Improve
-        </span>
-    </h1>
-
-    <div class="card">
-
-        <h2 style="text-align:center">Welcome!</h2>
-        <p style="text-align:center">
-            This platform allows you to upload custom question banks,
-            generate quizzes, take exams, track performance, and review progress.
-        </p>
-
-        <div class="portal-grid">
-
-            <div class="portal-card" onclick="location.href='/library'">
-                <h2>📚 View Quiz Library</h2>
-                <p>Browse and launch available quizzes.</p>
+    <!-- =========================
+         LEFT SIDEBAR
+    ========================== -->
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-brand">
+            <div class="dashboard-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img">
+                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
-
-            <div class="portal-card" onclick="location.href='/upload'">
-                <h2>📤 Upload or Build Quiz</h2>
-                <p>Create or import a new quiz.</p>
+            <div>
+                <div class="dashboard-brand-title">DLMS</div>
+                <div class="dashboard-brand-subtitle">Training Center</div>
             </div>
-
-            <div class="portal-card" onclick="location.href='/law'">
-                <h2>⚖️ Law Study</h2>
-                <p>Case briefs, Socratic review, IRAC drills, and rule flashcards.</p>
-            </div>
-
-            <div class="portal-card" onclick="location.href='/history.html'">
-                <h2>📜 Test History</h2>
-                <p>Review your completed attempts.</p>
-            </div>
-
-            <div class="portal-card" onclick="location.href='/dashboard.html'">
-                <h2>📊 Analytics Dashboard</h2>
-                <p>See trends, improvements, and insights.</p>
-            </div>
-
-            <div class="portal-card settings-card" onclick="location.href='/settings'">
-                <h2>⚙️ Portal Settings</h2>
-                <p>Advanced options & maintenance tools.</p>
-            </div>
-
-            <div class="portal-card settings-card" onclick="location.href='/help'">
-                <h2>❓ Help & Documentation</h2>
-                <p>Learn how to use DLMS and its features.</p>
-            </div>
-
-            <!-- ✅ NEW: Shutdown card -->
-            <div class="portal-card settings-card"
-                 id="shutdownBtn"
-                 style="border:2px solid #b30000">
-                <h2>🛑 Shutdown DLMS</h2>
-                <p>Safely stop the application</p>
-            </div>
-
-            <div class="portal-card" onclick="location.href='/admin/maintenance'">
-                <h2>🛠 Admin Maintenance</h2>
-                <p>Rebuild existing quiz pages after application updates.</p>
-            </div>
-
         </div>
 
-    </div>
+        <nav class="dashboard-nav" aria-label="Primary navigation">
+            <a class="dashboard-nav-item active" href="/">
+                <span class="dashboard-nav-icon">⌂</span>
+                <span>Dashboard</span>
+            </a>
+            <a class="dashboard-nav-item" href="/library">
+                <span class="dashboard-nav-icon">▤</span>
+                <span>Quiz Library</span>
+            </a>
+            <a class="dashboard-nav-item" href="/upload">
+                <span class="dashboard-nav-icon">✎</span>
+                <span>Build Quiz</span>
+            </a>
+            <a class="dashboard-nav-item" href="/law">
+                <span class="dashboard-nav-icon">⚖</span>
+                <span>Law Study</span>
+            </a>
+            <a class="dashboard-nav-item" href="/history">
+                <span class="dashboard-nav-icon">↶</span>
+                <span>History</span>
+            </a>
+            <a class="dashboard-nav-item" href="/dashboard">
+                <span class="dashboard-nav-icon">▥</span>
+                <span>Analytics</span>
+            </a>
+        </nav>
 
+        <div class="dashboard-nav-section-label"><span>System</span></div>
+
+        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
+            <a class="dashboard-nav-item" href="/settings">
+                <span class="dashboard-nav-icon">⚙</span>
+                <span>Settings</span>
+            </a>
+            <a class="dashboard-nav-item" href="/help">
+                <span class="dashboard-nav-icon">?</span>
+                <span>Help</span>
+            </a>
+            <a class="dashboard-nav-item" href="/admin/maintenance">
+                <span class="dashboard-nav-icon">⌘</span>
+                <span>Maintenance</span>
+            </a>
+        </nav>
+
+        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
+            <span class="dashboard-shutdown-icon">⏻</span>
+            <span>Shutdown DLMS</span>
+        </button>
+
+        <div class="dashboard-sidebar-version">DLMS v{{ app_version }}</div>
+    </aside>
+
+    <!-- =========================
+         MAIN DASHBOARD
+    ========================== -->
+    <main class="dashboard-main">
+
+        <header class="dashboard-header">
+            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
+            <div>
+                <h1>{{ portal_title }}</h1>
+                <p>Build <span>•</span> Study <span>•</span> Test <span>•</span> Improve</p>
+            </div>
+        </header>
+
+        <section class="dashboard-welcome dashboard-panel">
+            <div class="dashboard-welcome-icon" aria-hidden="true">◉</div>
+            <div class="dashboard-welcome-copy">
+                <h2>Welcome back!</h2>
+                <p>Launch quizzes, create content, study, and track your progress from one place.</p>
+            </div>
+            <div class="dashboard-welcome-accent" aria-hidden="true"></div>
+        </section>
+
+        <section class="dashboard-action-grid" aria-label="Quick access">
+            <a class="dashboard-action-card" href="/library">
+                <div class="dashboard-action-icon icon-blue">▤</div>
+                <div class="dashboard-action-copy">
+                    <h2>Quiz Library</h2>
+                    <p>Browse and launch available quizzes.</p>
+                </div>
+                <div class="dashboard-action-arrow">›</div>
+            </a>
+
+            <a class="dashboard-action-card" href="/upload">
+                <div class="dashboard-action-icon icon-orange">✎</div>
+                <div class="dashboard-action-copy">
+                    <h2>Build Quiz</h2>
+                    <p>Create, paste, or import a new quiz.</p>
+                </div>
+                <div class="dashboard-action-arrow">›</div>
+            </a>
+
+            <a class="dashboard-action-card" href="/law">
+                <div class="dashboard-action-icon icon-green">⚖</div>
+                <div class="dashboard-action-copy">
+                    <h2>Law Study</h2>
+                    <p>Case briefs, Socratic review, IRAC drills, and flashcards.</p>
+                </div>
+                <div class="dashboard-action-arrow">›</div>
+            </a>
+
+            <a class="dashboard-action-card" href="/history">
+                <div class="dashboard-action-icon icon-purple">↶</div>
+                <div class="dashboard-action-copy">
+                    <h2>History</h2>
+                    <p>Review completed attempts and results.</p>
+                </div>
+                <div class="dashboard-action-arrow">›</div>
+            </a>
+
+            <a class="dashboard-action-card" href="/dashboard">
+                <div class="dashboard-action-icon icon-cyan">▥</div>
+                <div class="dashboard-action-copy">
+                    <h2>Analytics</h2>
+                    <p>See trends, insights, and performance data.</p>
+                </div>
+                <div class="dashboard-action-arrow">›</div>
+            </a>
+
+            <a class="dashboard-action-card" href="/settings">
+                <div class="dashboard-action-icon icon-blue">⚙</div>
+                <div class="dashboard-action-copy">
+                    <h2>Settings</h2>
+                    <p>Customize your portal and preferences.</p>
+                </div>
+                <div class="dashboard-action-arrow">›</div>
+            </a>
+        </section>
+
+        <section class="dashboard-lower-grid">
+            <div class="dashboard-panel dashboard-activity-panel">
+                <div class="dashboard-panel-heading">
+                    <div>
+                        <span class="dashboard-heading-icon">⌁</span>
+                        <h2>Recent Activity</h2>
+                    </div>
+                    <a href="/history">View all</a>
+                </div>
+
+                <div id="recentActivity" class="dashboard-activity-list">
+                    <div class="dashboard-loading">Loading recent activity…</div>
+                </div>
+            </div>
+
+            <div class="dashboard-panel dashboard-overview-panel">
+                <div class="dashboard-panel-heading">
+                    <div>
+                        <span class="dashboard-heading-icon">◔</span>
+                        <h2>Overview</h2>
+                    </div>
+                </div>
+
+                <div class="dashboard-stat-grid">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-icon icon-blue">▤</div>
+                        <div>
+                            <span>Total Attempts</span>
+                            <strong id="statAttempts">—</strong>
+                            <small>Saved quiz attempts</small>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-icon icon-green">◎</div>
+                        <div>
+                            <span>Average Score</span>
+                            <strong id="statAverage">—</strong>
+                            <small>Across all attempts</small>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-icon icon-orange">★</div>
+                        <div>
+                            <span>Best Score</span>
+                            <strong id="statBest">—</strong>
+                            <small>Highest recorded score</small>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-icon icon-purple">✓</div>
+                        <div>
+                            <span>Latest Score</span>
+                            <strong id="statLatest">—</strong>
+                            <small>Most recent attempt</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="dashboard-footer">DLMS v{{ app_version }}</footer>
+    </main>
 </div>
 
-<div style="
-    text-align:center;
-    margin-top:18px;
-    font-size:13px;
-    opacity:.65;
-">
-    DLMS v{{ app_version }}
-</div>
-
-<!-- ✅ Shutdown handler (known working pattern) -->
 <script>
-document.getElementById("shutdownBtn").addEventListener("click", async () => {
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
+function scoreClass(percent) {
+    const p = Number(percent || 0);
+    if (p >= 80) return "score-good";
+    if (p >= 70) return "score-warn";
+    return "score-bad";
+}
+
+function formatDate(value) {
+    if (!value) return "";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+    });
+}
+
+async function loadDashboardData() {
+    const activity = document.getElementById("recentActivity");
+
+    try {
+        const res = await fetch("/api/attempts", { cache: "no-store" });
+        if (!res.ok) throw new Error("Unable to load attempts");
+
+        const data = await res.json();
+        const attempts = Array.isArray(data) ? data : (data.attempts || []);
+
+        if (!attempts.length) {
+            activity.innerHTML = `
+                <div class="dashboard-empty-state">
+                    <strong>No quiz attempts yet.</strong>
+                    <span>Launch a quiz from the library to start building your history.</span>
+                </div>`;
+            document.getElementById("statAttempts").textContent = "0";
+            document.getElementById("statAverage").textContent = "—";
+            document.getElementById("statBest").textContent = "—";
+            document.getElementById("statLatest").textContent = "—";
+            return;
+        }
+
+        const sorted = [...attempts].sort((a, b) =>
+            String(b.completed_at || "").localeCompare(String(a.completed_at || ""))
+        );
+
+        const scores = attempts.map(a => Number(a.percent || 0));
+        const average = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+        const best = Math.max(...scores);
+        const latest = Number(sorted[0].percent || 0);
+
+        document.getElementById("statAttempts").textContent = attempts.length;
+        document.getElementById("statAverage").textContent = `${average}%`;
+        document.getElementById("statBest").textContent = `${best}%`;
+        document.getElementById("statLatest").textContent = `${latest}%`;
+
+        activity.innerHTML = sorted.slice(0, 5).map(a => {
+            const id = a.id || a.attemptId || "";
+            const href = id ? `/review?attempt=${encodeURIComponent(id)}` : "/history";
+            const title = escapeHtml(a.quiz_title || "Unknown Quiz");
+            const mode = escapeHtml(a.mode || "Quiz");
+            const percent = Number(a.percent || 0);
+            const date = escapeHtml(formatDate(a.completed_at || ""));
+
+            return `
+                <a class="dashboard-activity-row" href="${href}">
+                    <div class="dashboard-activity-status">✓</div>
+                    <div class="dashboard-activity-copy">
+                        <strong>${title}</strong>
+                        <span>${mode} attempt completed</span>
+                    </div>
+                    <span class="dashboard-score ${scoreClass(percent)}">${percent}%</span>
+                    <span class="dashboard-activity-date">${date}</span>
+                    <span class="dashboard-activity-arrow">›</span>
+                </a>`;
+        }).join("");
+
+    } catch (err) {
+        console.error("Dashboard data failed:", err);
+        activity.innerHTML = `
+            <div class="dashboard-empty-state dashboard-error-state">
+                <strong>Unable to load recent activity.</strong>
+                <span>The rest of DLMS is still available from the navigation above.</span>
+            </div>`;
+    }
+}
+
+document.getElementById("shutdownBtn").addEventListener("click", async () => {
     if (!confirm(
         "🛑 SHUTDOWN DLMS 🛑\n\n" +
         "This will stop the application.\n\n" +
@@ -118,17 +335,30 @@ document.getElementById("shutdownBtn").addEventListener("click", async () => {
     try {
         const res = await fetch("/api/shutdown", { method: "POST" });
         const data = await res.json();
-
         if (data.status === "ok") {
             alert("DLMS is shutting down.");
         } else {
             throw new Error();
         }
-
     } catch (err) {
         alert("❌ Failed to shut down DLMS.");
     }
 });
+
+const menuButton = document.getElementById("menuButton");
+const sidebar = document.getElementById("dashboardSidebar");
+menuButton.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+});
+
+document.addEventListener("click", (event) => {
+    if (window.innerWidth > 820) return;
+    if (!sidebar.classList.contains("open")) return;
+    if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
+    sidebar.classList.remove("open");
+});
+
+loadDashboardData();
 </script>
 
 </body>
