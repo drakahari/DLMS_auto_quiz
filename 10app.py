@@ -120,10 +120,8 @@ app.secret_key = "dlms-dev"
 
 
 
-# DEBUG - retained for troubleshooting static-file path issues
-# print("[DEBUG] Flask static folder =", app.static_folder)
-# DEBUG - retained for troubleshooting packaged/dev data-directory issues
-# print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
+print("[DEBUG] Flask static folder =", app.static_folder)
+print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
 
 
 
@@ -142,8 +140,7 @@ def dprint(*args, **kwargs):
         print(*args, **kwargs)
 
 #dprint("DEBUG TEST — YOU SHOULD NOT SEE THIS")
-# DEBUG - retained for troubleshooting static-file path issues
-# print("[DEBUG] Flask static folder =", app.static_folder)
+print("[DEBUG] Flask static folder =", app.static_folder)
 
 
 
@@ -189,8 +186,7 @@ IS_BUNDLED = hasattr(sys, "_MEIPASS")
 APP_NAME = "DLMS"
 APP_DATA_DIR = get_app_data_dir(APP_NAME)
 
-# DEBUG - retained for troubleshooting packaged/dev data-directory issues
-# print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
+print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
 
 
 
@@ -551,8 +547,7 @@ def serve_portal_config():
 def dynamic_css():
     cfg = load_portal_config()
 
-    # DEBUG - retained for troubleshooting configured background images
-# print("[DYNAMIC.CSS] background_image =", cfg.get("background_image"))
+    print("[DYNAMIC.CSS] background_image =", cfg.get("background_image"))
 
     bg = (cfg.get("background_image") or "").strip()
 
@@ -1285,145 +1280,120 @@ def home():
 def law_study_home():
     portal_title = get_portal_title()
     law_registry = load_law_registry()
-    saved_cases = len(law_registry.get("cases", []))
-    course_count = len(law_registry.get("folders", []))
 
     return render_template_string("""
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Law Study - DLMS</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home law-hub-page">
-<div class="dashboard-shell">
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="dashboard-brand">
-            <div class="dashboard-brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img">
-                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
+
+<body>
+<div class="container">
+
+    <h1 class="hero-title">
+        ⚖️ Law Study<br>
+        <span style="font-size:20px;opacity:.85">
+            Case Briefs • Socratic Review • IRAC Practice
+        </span>
+    </h1>
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        ">
             <div>
-                <div class="dashboard-brand-title">DLMS</div>
-                <div class="dashboard-brand-subtitle">Training Center</div>
+                <h2 style="margin-bottom:6px;">Law Study Hub</h2>
+                <p style="opacity:.85; margin-top:0;">
+                    Build structured law-school study packets from cases, notes, and AI-assisted review.
+                </p>
             </div>
+
+            <span style="
+                display:inline-block;
+                padding:7px 12px;
+                border-radius:999px;
+                background:rgba(0,180,100,.14);
+                border:1px solid rgba(0,180,100,.35);
+                font-size:13px;
+                font-weight:700;
+            ">
+                ✨ AI-ready
+            </span>
         </div>
 
-        <nav class="dashboard-nav" aria-label="Primary navigation">
-            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-            <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-            <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-            <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-        </nav>
+        <div class="portal-grid">
 
-        <div class="dashboard-nav-section-label"><span>System</span></div>
-        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-        </nav>
-
-        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
-            <span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span>
-        </button>
-        <div class="dashboard-sidebar-version">Law Study</div>
-    </aside>
-
-    <main class="dashboard-main law-hub-main">
-        <header class="dashboard-header law-hub-header">
-            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-            <div>
-                <div class="law-hub-eyebrow">LAW STUDY</div>
-                <h1>Casework &amp; Review</h1>
-                <p>Build structured case reviews, preserve AI-assisted study packets, and organize course material.</p>
+            <div class="portal-card" onclick="location.href='/law/create'">
+                <h2>📄 Create Case Review</h2>
+                <p>Build a case brief, Socratic questions, IRAC drill, and flashcards.</p>
             </div>
-        </header>
 
-        <section class="law-hub-summary" aria-label="Law Study summary">
-            <article class="law-hub-stat">
-                <span>Saved Cases</span><strong>{{ saved_cases }}</strong><small>case reviews</small>
-            </article>
-            <article class="law-hub-stat">
-                <span>Courses</span><strong>{{ course_count }}</strong><small>study folders</small>
-            </article>
-            <article class="law-hub-stat law-hub-stat-ai">
-                <span>Workflow</span><strong>AI Ready</strong><small>prompt + import workflow</small>
-            </article>
-        </section>
+            <div class="portal-card" onclick="location.href='/law/import'">
+                <h2>📥 Import Case Packet</h2>
+                <p>Paste AI-generated case study output for preview and future saving.</p>
+            </div>   
 
-        <section class="law-hub-grid" aria-label="Law Study tools">
-            <a class="law-hub-card primary" href="/law/create">
-                <div class="law-hub-card-icon">§</div>
-                <div><span class="law-hub-card-kicker">CREATE</span><h2>Create Case Review</h2><p>Build a case brief, Socratic questions, IRAC drill, and flashcards.</p></div>
-                <span class="law-hub-card-arrow">›</span>
-            </a>
+            <div class="portal-card" onclick="location.href='/law/imports'">
+                <h2>📁 Saved Imports</h2>
+                <p>View raw AI-generated case packets saved for future parsing.</p>
+            </div>                                    
 
-            <a class="law-hub-card" href="/law/import">
-                <div class="law-hub-card-icon">⇩</div>
-                <div><span class="law-hub-card-kicker">IMPORT</span><h2>Import Case Packet</h2><p>Paste AI-generated study output for preview and saving.</p></div>
-                <span class="law-hub-card-arrow">›</span>
-            </a>
-
-            <a class="law-hub-card" href="/law/cases">
-                <div class="law-hub-card-icon">⚖</div>
-                <div><span class="law-hub-card-kicker">LIBRARY</span><h2>My Case Reviews</h2><p>Browse saved cases organized by course and topic.</p></div>
-                <span class="law-hub-card-arrow">›</span>
-            </a>
-
-            <a class="law-hub-card" href="/law/imports">
-                <div class="law-hub-card-icon">▤</div>
-                <div><span class="law-hub-card-kicker">ARCHIVE</span><h2>Saved Imports</h2><p>Open raw AI-generated packets retained for future parsing.</p></div>
-                <span class="law-hub-card-arrow">›</span>
-            </a>
-        </section>
-
-        <section class="law-hub-coming dashboard-panel">
-            <div class="law-hub-coming-heading">
-                <div><span class="law-hub-eyebrow">PLANNED TOOLS</span><h2>Future Study Modes</h2></div>
-                <span class="law-hub-coming-badge">Coming later</span>
+            <div class="portal-card" onclick="location.href='/law/cases'">
+                <h2>⚖️ My Case Reviews</h2>
+                <p>View saved cases organized by course and topic.</p>
             </div>
-            <div class="law-hub-coming-grid">
-                <div class="law-hub-coming-item"><strong>IRAC Practice</strong><span>Issue spotting and structured analysis drills.</span></div>
-                <div class="law-hub-coming-item"><strong>Socratic Prep</strong><span>Cold-call style review before class.</span></div>
-                <div class="law-hub-coming-item"><strong>Rule Flashcards</strong><span>Rules and holdings from saved cases.</span></div>
-                <div class="law-hub-coming-item"><strong>Case Compare</strong><span>Compare facts, holdings, and reasoning.</span></div>
+
+            <div class="portal-card" onclick="alert('Coming soon: IRAC Practice')">
+                <h2>🧠 IRAC Practice</h2>
+                <p>Practice issue spotting, rule statements, analysis, and conclusions.</p>
             </div>
-        </section>
-    </main>
+
+            <div class="portal-card" onclick="alert('Coming soon: Socratic Prep')">
+                <h2>🎓 Socratic Prep</h2>
+                <p>Review cold-call style questions before class.</p>
+            </div>
+
+            <div class="portal-card" onclick="alert('Coming soon: Rule Flashcards')">
+                <h2>🃏 Rule Flashcards</h2>
+                <p>Study rules and holdings pulled from your saved cases.</p>
+            </div>
+
+            <div class="portal-card" onclick="alert('Coming soon: Case Compare')">
+                <h2>🔎 Case Compare</h2>
+                <p>Compare cases by facts, issue, rule, holding, and reasoning.</p>
+            </div>
+
+        </div>
+
+        <br>
+        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+
+    </div>
+
 </div>
 
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
+</div>
 
-document.addEventListener("click", (event) => {
-    if (window.innerWidth > 820) return;
-    if (!sidebar.classList.contains("open")) return;
-    if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-    sidebar.classList.remove("open");
-});
-
-document.getElementById("shutdownBtn").addEventListener("click", async () => {
-    if (!confirm("SHUTDOWN DLMS\\n\\nThis will stop the application.\\n\\nYou will need to restart it manually.\\n\\nContinue?")) return;
-    try {
-        await fetch("/api/shutdown", { method: "POST" });
-        document.body.innerHTML = '<div class="shutdown-screen"><div class="shutdown-screen-card"><h1>DLMS has been shut down.</h1><p>You can close this browser tab.</p></div></div>';
-    } catch (err) {
-        alert("DLMS may already be shutting down.");
-    }
-});
-</script>
 </body>
 </html>
-""", portal_title=portal_title, law_registry=law_registry, saved_cases=saved_cases, course_count=course_count)
+""", portal_title=portal_title, law_registry=law_registry)
 
 
 # =========================
@@ -7929,7 +7899,7 @@ def settings_page():
             <div class="settings-hub-copy">
                 <div class="settings-card-kicker">AVAILABLE</div>
                 <h2>Appearance</h2>
-                <p>Change the dashboard title and site background image.</p>
+                <p>Change the training portal title and site background image.</p>
             </div>
             <span class="settings-hub-arrow">›</span>
         </a>
@@ -8013,7 +7983,7 @@ def settings_appearance_page():
         <div>
             <span class="settings-eyebrow">SETTINGS / APPEARANCE</span>
             <h1>🎨 Appearance</h1>
-            <p>Customize the DLMS dashboard identity without changing quiz, AI, parsing, or history settings.</p>
+            <p>Customize the DLMS portal identity without changing quiz, AI, parsing, or history settings.</p>
         </div>
         <button type="button" class="settings-back-button" onclick="location.href='/settings'">← Settings</button>
     </div>
@@ -8079,7 +8049,7 @@ def settings_appearance_page():
     </form>
 
     <div class="settings-scope-note">
-        <strong>Safe migration behavior:</strong> saving this page changes only the dashboard title and background image. It does not touch parsing or AI settings.
+        <strong>Safe migration behavior:</strong> saving this page changes only the portal title and background image. It does not touch parsing or AI settings.
     </div>
 </div>
 </body>
@@ -8696,7 +8666,7 @@ fetch("/config/portal.json")
         <form action="/save_settings" method="POST" enctype="multipart/form-data">
 
             <!-- ============================
-                 DASHBOARD TITLE
+                 PORTAL TITLE
                  ============================ -->
             <h3>Dashboard Title</h3>
             <input type="text"
@@ -9102,7 +9072,7 @@ def save_settings():
     # =========================
     # Portal title
     # =========================
-    title = request.form.get("portal_title", cfg.get("title", "Training & Practice Center")).strip()
+    title = request.form.get("portal_title", cfg.get("title", "Training Portal")).strip()
     cfg["title"] = title
     dprint("[SETTINGS] Updated title:", title)
 
@@ -9425,8 +9395,7 @@ def api_attempts():
             continue
         registry_map[rid] = q
 
-    # DEBUG - retained for troubleshooting attempt-to-quiz registry matching
-# print(f"[DEBUG] Registry map keys: {sorted(registry_map.keys())}")
+    print(f"[DEBUG] Registry map keys: {sorted(registry_map.keys())}")
 
     # -------------------------
     # Query attempts

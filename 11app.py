@@ -120,10 +120,8 @@ app.secret_key = "dlms-dev"
 
 
 
-# DEBUG - retained for troubleshooting static-file path issues
-# print("[DEBUG] Flask static folder =", app.static_folder)
-# DEBUG - retained for troubleshooting packaged/dev data-directory issues
-# print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
+print("[DEBUG] Flask static folder =", app.static_folder)
+print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
 
 
 
@@ -142,8 +140,7 @@ def dprint(*args, **kwargs):
         print(*args, **kwargs)
 
 #dprint("DEBUG TEST — YOU SHOULD NOT SEE THIS")
-# DEBUG - retained for troubleshooting static-file path issues
-# print("[DEBUG] Flask static folder =", app.static_folder)
+print("[DEBUG] Flask static folder =", app.static_folder)
 
 
 
@@ -189,8 +186,7 @@ IS_BUNDLED = hasattr(sys, "_MEIPASS")
 APP_NAME = "DLMS"
 APP_DATA_DIR = get_app_data_dir(APP_NAME)
 
-# DEBUG - retained for troubleshooting packaged/dev data-directory issues
-# print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
+print("[BUILD CHECK] APP_DATA_DIR =", APP_DATA_DIR)
 
 
 
@@ -551,8 +547,7 @@ def serve_portal_config():
 def dynamic_css():
     cfg = load_portal_config()
 
-    # DEBUG - retained for troubleshooting configured background images
-# print("[DYNAMIC.CSS] background_image =", cfg.get("background_image"))
+    print("[DYNAMIC.CSS] background_image =", cfg.get("background_image"))
 
     bg = (cfg.get("background_image") or "").strip()
 
@@ -7929,7 +7924,7 @@ def settings_page():
             <div class="settings-hub-copy">
                 <div class="settings-card-kicker">AVAILABLE</div>
                 <h2>Appearance</h2>
-                <p>Change the dashboard title and site background image.</p>
+                <p>Change the training portal title and site background image.</p>
             </div>
             <span class="settings-hub-arrow">›</span>
         </a>
@@ -8013,7 +8008,7 @@ def settings_appearance_page():
         <div>
             <span class="settings-eyebrow">SETTINGS / APPEARANCE</span>
             <h1>🎨 Appearance</h1>
-            <p>Customize the DLMS dashboard identity without changing quiz, AI, parsing, or history settings.</p>
+            <p>Customize the DLMS portal identity without changing quiz, AI, parsing, or history settings.</p>
         </div>
         <button type="button" class="settings-back-button" onclick="location.href='/settings'">← Settings</button>
     </div>
@@ -8079,7 +8074,7 @@ def settings_appearance_page():
     </form>
 
     <div class="settings-scope-note">
-        <strong>Safe migration behavior:</strong> saving this page changes only the dashboard title and background image. It does not touch parsing or AI settings.
+        <strong>Safe migration behavior:</strong> saving this page changes only the portal title and background image. It does not touch parsing or AI settings.
     </div>
 </div>
 </body>
@@ -8696,7 +8691,7 @@ fetch("/config/portal.json")
         <form action="/save_settings" method="POST" enctype="multipart/form-data">
 
             <!-- ============================
-                 DASHBOARD TITLE
+                 PORTAL TITLE
                  ============================ -->
             <h3>Dashboard Title</h3>
             <input type="text"
@@ -9102,7 +9097,7 @@ def save_settings():
     # =========================
     # Portal title
     # =========================
-    title = request.form.get("portal_title", cfg.get("title", "Training & Practice Center")).strip()
+    title = request.form.get("portal_title", cfg.get("title", "Training Portal")).strip()
     cfg["title"] = title
     dprint("[SETTINGS] Updated title:", title)
 
@@ -9425,8 +9420,7 @@ def api_attempts():
             continue
         registry_map[rid] = q
 
-    # DEBUG - retained for troubleshooting attempt-to-quiz registry matching
-# print(f"[DEBUG] Registry map keys: {sorted(registry_map.keys())}")
+    print(f"[DEBUG] Registry map keys: {sorted(registry_map.keys())}")
 
     # -------------------------
     # Query attempts

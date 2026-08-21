@@ -850,7 +850,7 @@ function submitQuiz(force = false) {
             </button>
 
             <button onclick="location.href='/'">
-                🏠 Return to Portal
+                🏠 Return to Dashboard
             </button>
         `;
     }
