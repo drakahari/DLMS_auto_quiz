@@ -1,0 +1,785 @@
+@app.route("/library")
+def quiz_library():
+    registry = normalize_quiz_folders(load_registry())   # ← folder-safe registry
+
+    dprint("[REGISTRY DEBUG] Using registry file:", QUIZ_REGISTRY)
+    dprint("[REGISTRY DEBUG] Registry size:", len(registry))
+    dprint("[REGISTRY DEBUG] Registry entries:", [
+        {
+            "id": q.get("id"),
+            "title": q.get("title"),
+            "html": q.get("html"),
+            "hidden": q.get("hidden", False),
+        }
+        for q in registry
+    ])
+
+    # =========================
+    # DEBUG: Verify logo files exist on disk
+    # =========================
+    for q in registry:
+        logo = q.get("logo")
+        if logo:
+            path = os.path.join(LOGO_FOLDER, logo)
+            dprint("[DEBUG] Logo check:", logo, "exists =", os.path.exists(path), "path =", path)
+
+    portal_title = get_portal_title()
+
+    # =====================================================
+    # VIEW MODE RESOLUTION (BACKWARD COMPATIBLE)
+    # =====================================================
+    # Priority:
+    # 1) explicit ?view=
+    # 2) legacy ?show_hidden=1
+    # 3) default = visible only
+
+    view = request.args.get("view")
+
+    if not view and request.args.get("show_hidden") == "1":
+        view = "all"
+
+    if view == "hidden":
+        filtered = [q for q in registry if q.get("hidden", False)]
+    elif view == "all":
+        filtered = registry
+    else:
+        # default: visible only
+        view = "visible"
+        filtered = [q for q in registry if not q.get("hidden", False)]
+
+    quizzes = [
+        {**q, "logo": resolve_logo_filename(q.get("logo"))}
+        for q in filtered
+    ]
+
+    folder_names = get_quiz_folders()
+
+    grouped_quizzes = {
+        folder: []
+        for folder in folder_names
+    }
+
+    for q in quizzes:
+        folder = str(q.get("folder") or "Uncategorized").strip()
+
+        if not folder:
+            folder = "Uncategorized"
+
+        if folder not in grouped_quizzes:
+            grouped_quizzes[folder] = []
+
+        grouped_quizzes[folder].append(q)
+    folder_names = get_quiz_folders()
+
+    registry_folder_names = sorted({
+        str(q.get("folder") or "Uncategorized").strip() or "Uncategorized"
+        for q in registry
+    })
+
+    for folder in registry_folder_names:
+        if folder not in folder_names:
+            folder_names.append(folder)
+            grouped_quizzes[folder] = []
+
+
+    return render_template_string("""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Library</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/favicon.ico">
+                                  
+
+                                  
+
+    <!-- Drag + Drop -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</head>
+
+<body>
+<div class="container">
+
+    <h1 class="hero-title">
+        {{ portal_title }}<br>
+        <span style="font-size:22px;opacity:.85">📚 Quiz Library</span>
+    </h1>
+
+    <div class="card">
+
+        <!-- =============================
+             VIEW MODE CONTROLS (ALWAYS VISIBLE)
+        ============================== -->
+        <form method="GET"
+              action="/library"
+              style="
+                margin-bottom:18px;
+                display:flex;
+                gap:16px;
+                align-items:center;
+                flex-wrap:wrap;
+              ">
+
+            <span style="opacity:.8;font-size:14px;">View:</span>
+
+            <label>
+                <input type="radio"
+                       name="view"
+                       value="visible"
+                       onchange="this.form.submit()"
+                       {% if request.args.get('view','visible') == 'visible' %}checked{% endif %}>
+                Visible
+            </label>
+
+            <label>
+                <input type="radio"
+                       name="view"
+                       value="hidden"
+                       onchange="this.form.submit()"
+                       {% if request.args.get('view') == 'hidden' %}checked{% endif %}>
+                Hidden
+            </label>
+
+            <label>
+                <input type="radio"
+                       name="view"
+                       value="all"
+                       onchange="this.form.submit()"
+                       {% if request.args.get('view') == 'all' %}checked{% endif %}>
+                All
+            </label>
+
+        </form>
+                                  
+        <!-- =============================
+                ADD FOLDER CONTROL
+            ============================== -->
+            <div class="add-folder-control"
+                style="
+                    margin-bottom:18px;
+                    display:flex;
+                    gap:8px;
+                    align-items:center;
+                    flex-wrap:wrap;
+                ">
+
+                <button type="button"
+                        onclick="showAddFolderForm(event, this)">
+                    <span class="dlms-folder-icon" aria-hidden="true"></span>
+                    New Folder
+                </button>
+
+                <form method="POST"
+                    action="/add_quiz_folder"
+                    class="add-folder-form"
+                    style="
+                        display:none;
+                        gap:8px;
+                        align-items:center;
+                        flex-wrap:wrap;
+                    ">
+
+                    <input type="hidden"
+                        name="view"
+                        value="{{ request.args.get('view', 'visible') }}">
+
+                    <input type="text"
+                        name="folder"
+                        placeholder="New folder name"
+                        style="
+                                padding:8px;
+                                border-radius:8px;
+                                border:1px solid rgba(255,255,255,.25);
+                                min-width:220px;
+                        ">
+
+                    <button type="submit">
+                        💾 Save Folder
+                    </button>
+
+                    <button type="button"
+                            onclick="hideAddFolderForm(event, this)">
+                        Cancel
+                    </button>
+                </form>
+            </div>
+            <p style="
+                margin: 0 0 14px 0;
+                font-size: 13px;
+                opacity: .75;
+            ">
+                Tip: Drag folder headers to reorder folders. Drag quiz cards to reorder quizzes inside a folder.
+            </p>                    
+
+        {% if quizzes %}
+
+        <!-- =============================
+             QUIZ LIST
+        ============================== -->
+                <div id="quizList">
+
+        {% for folder_name, folder_quizzes in grouped_quizzes.items() %}
+
+        <div class="library-folder"
+                data-folder-name="{{ folder_name }}"
+                data-folder-draggable="true"
+                style="
+                margin:18px 0;
+                padding:12px;
+                border-radius:12px;
+                background:rgba(255,255,255,.06);
+                border:1px solid rgba(255,255,255,.16);
+            ">
+
+                <div class="library-folder-header"
+                    onclick="toggleLibraryFolder(event, this)"
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                        margin-bottom:10px;
+                        padding:6px 4px;
+                        cursor:pointer;
+                        user-select:none;
+                        flex-wrap:wrap;
+                    ">
+                <span class="folder-toggle-icon" style="font-size:18px;">▼</span>
+                <span class="dlms-folder-icon dlms-folder-icon-large" aria-hidden="true"></span>
+
+                <h2 style="
+                    margin:0;
+                    font-size:22px;
+                    font-weight:900;
+                    flex:1;
+                    min-width:180px;
+                ">
+                    {{ folder_name }}
+                </h2>
+
+                <span style="
+                    font-size:13px;
+                    opacity:.85;
+                    padding:5px 10px;
+                    border-radius:999px;
+                    background:rgba(255,255,255,.14);
+                    white-space:nowrap;
+                ">
+                    {{ folder_quizzes|length }} quiz{% if folder_quizzes|length != 1 %}zes{% endif %}
+                </span>
+                {% if folder_name|lower != "uncategorized" %}
+               <div class="folder-actions"
+     style="
+        display:inline-flex;
+        gap:6px;
+        align-items:center;
+        flex-wrap:wrap;
+        margin-left:auto;
+        justify-content:flex-end;
+     ">
+
+    <button type="button"
+            onclick="showRenameFolderForm(event, this)"
+            style="font-size:12px;">
+        ✏️ Rename
+    </button>
+
+    <form method="POST"
+          action="/rename_quiz_folder"
+          class="rename-folder-form"
+          style="
+            display:none;
+            gap:6px;
+            align-items:center;
+            flex-wrap:wrap;
+          ">
+        <input type="hidden"
+               name="old_folder"
+               value="{{ folder_name }}">
+
+        <input type="hidden"
+               name="view"
+               value="{{ request.args.get('view', 'visible') }}">
+
+        <input type="text"
+               name="new_folder"
+               value="{{ folder_name }}"
+               style="
+                    padding:6px;
+                    border-radius:6px;
+                    border:1px solid rgba(255,255,255,.25);
+                    font-size:12px;
+                    width:150px;
+               ">
+
+        <button type="submit" style="font-size:12px;">
+            💾 Save
+        </button>
+
+        <button type="button"
+                onclick="hideRenameFolderForm(event, this)"
+                style="font-size:12px;">
+            Cancel
+        </button>
+    </form>
+</div>
+
+<form method="POST"
+      action="/delete_quiz_folder"
+      onsubmit="return confirm('Delete this folder? Quizzes inside it will move to Uncategorized.');"
+      style="
+        display:inline-flex;
+        gap:6px;
+        align-items:center;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+      ">
+    <input type="hidden"
+           name="folder"
+           value="{{ folder_name }}">
+
+    <input type="hidden"
+           name="view"
+           value="{{ request.args.get('view', 'visible') }}">
+
+    <button type="submit"
+            class="btn-delete"
+            style="
+                font-size:12px;
+                background:#7a0000;
+                color:white;
+                border:none;
+                border-radius:6px;
+                padding:6px 10px;
+            ">
+        🗑 Delete Folder
+    </button>
+</form>
+{% endif %}                
+            </div>
+
+            <div class="library-folder-body"
+                    data-folder-name="{{ folder_name }}">                     
+            {% for q in folder_quizzes %}
+            <div class="quiz-card"
+                 data-id="{{ q['html'] }}"
+                 style="
+                    padding:14px;
+                    margin:10px;
+                    background:rgba(0,0,0,.6);
+                    border-radius:8px;
+                    display:flex;
+                    justify-content:space-between;
+                    gap:20px;
+                    cursor:default;
+                 ">
+
+                <!-- LEFT -->
+                <div style="flex:1;">
+                    <h3 style="
+                        margin-top:0;
+                        margin-bottom:6px;
+                        font-size:24px;
+                        font-weight:900;
+                    ">
+                        {{ q['title'] }}
+                        {% if q.get('hidden') %}
+                            <span style="font-size:14px;opacity:.6;">(Hidden)</span>
+                        {% endif %}
+                    </h3>
+
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button onclick="location.href='/quizzes/{{ q['html'] }}'">
+                            ▶ Open Quiz
+                        </button>
+                                      
+                        <button onclick="location.href='/edit_quiz/{{ q['id'] }}'">
+                            ✏️ Edit Quiz
+                        </button>
+
+                        <button onclick="location.href='/export/quiz/{{ q['id'] }}.txt'"
+                                title="Exports this quiz as an import-friendly DLMS text file.">
+                            📥 Export Quiz
+                        </button>
+
+                        <!-- HIDE / UNHIDE -->
+                        <form method="POST"
+                            action="/toggle_hidden"
+                            style="display:inline;">
+                            <input type="hidden" name="id" value="{{ q['id'] }}">
+                            <input type="hidden"
+                                    name="view"
+                                    value="{{ request.args.get('view', 'visible') }}">
+
+                            <button type="submit" style="font-size:12px;">
+                                {% if q.get('hidden') %}
+                                    👁 Unhide
+                                {% else %}
+                                    🙈 Hide
+                                {% endif %}
+                            </button>
+                        </form>
+                                  
+                        <!-- MOVE TO FOLDER -->
+            <div class="quiz-move-control"
+                style="display:inline-flex; gap:6px; align-items:center; flex-wrap:wrap;">
+
+                <button type="button"
+                        onclick="showMoveQuizForm(event, this)"
+                        style="font-size:12px;">
+                    📁 Move
+                </button>
+
+                <form method="POST"
+                    action="/move_quiz_folder"
+                    class="move-quiz-form"
+                    style="
+                        display:none;
+                        gap:6px;
+                        align-items:center;
+                        flex-wrap:wrap;
+                    ">
+                    <input type="hidden" name="id" value="{{ q['id'] }}">
+                    <input type="hidden"
+                        name="view"
+                        value="{{ request.args.get('view', 'visible') }}">
+
+                    <select name="folder"
+                            style="
+                                padding:6px;
+                                border-radius:6px;
+                                font-size:12px;
+                            ">
+                        {% for folder in folder_names %}
+                            <option value="{{ folder }}"
+                                    {% if q.get('folder', 'Uncategorized') == folder %}selected{% endif %}>
+                                {{ folder }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <button type="submit" style="font-size:12px;">
+                        💾 Save
+                    </button>
+
+                    <button type="button"
+                            onclick="hideMoveQuizForm(event, this)"
+                            style="font-size:12px;">
+                        Cancel
+                    </button>
+                </form>
+            </div>
+
+                    </div>
+                </div>
+
+                <!-- RIGHT -->
+                <div style="
+                    width:150px;
+                    min-width:150px;
+                    flex-shrink:0;
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    align-items:center;
+                ">
+
+                    {% if q['logo'] %}
+                    <img src="/user-static/logos/{{ q['logo'] }}"
+                         style="max-height:90px; width:auto;">
+                    {% else %}
+                    <div style="height:90px;"></div>
+                    {% endif %}
+
+                    <form method="POST"
+                          action="/delete_quiz/{{ q['id'] }}"
+                          onsubmit="return confirm('Delete this quiz permanently?');"
+                          style="margin-top:12px; width:100%; text-align:center;">
+
+                        <button type="submit"
+                                class="btn-delete"
+                                style="
+                                    width:100%;
+                                    background:#7a0000;
+                                    color:white;
+                                    border:none;
+                                    padding:7px 0;
+                                    font-size:13px;
+                                    border-radius:6px;
+                                ">
+                            🗑 Delete
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+                        {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+        </div>
+
+        {% else %}
+        <p style="opacity:.8;">
+            No quizzes found for this view.
+        </p>
+        {% endif %}
+
+        <br>
+        <button onclick="location.href='/upload'">📤 Upload New Quiz</button>
+        <button onclick="location.href='/paste'">📋 Paste Questions Instead</button>
+        <button onclick="location.href='/create_short_quiz'">✍️ Create Short Quiz</button>
+
+        <hr style="margin:24px 0; opacity:.35;">
+
+        <button onclick="location.href='/export/all_quizzes.txt'"
+                title="Export All creates a backup/reference file. Use Export Quiz on an individual quiz for an import-friendly file.">
+            📥 Export All Quizzes
+        </button>
+
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
+
+    </div>
+</div>
+
+
+
+<script>
+function getCollapsedLibraryFolders() {
+    try {
+        return JSON.parse(localStorage.getItem("dlmsCollapsedLibraryFolders") || "[]");
+    } catch {
+        return [];
+    }
+}
+
+function saveCollapsedLibraryFolders(folders) {
+    localStorage.setItem(
+        "dlmsCollapsedLibraryFolders",
+        JSON.stringify(folders)
+    );
+}
+
+function setLibraryFolderCollapsed(folder, collapsed) {
+    const body = folder.querySelector(".library-folder-body");
+    const icon = folder.querySelector(".folder-toggle-icon");
+
+    if (!body || !icon) return;
+
+    if (collapsed) {
+        body.style.display = "none";
+        icon.textContent = "▶";
+    } else {
+        body.style.display = "";
+        icon.textContent = "▼";
+    }
+}
+
+function toggleLibraryFolder(event, header) {
+    if (
+        event.target.closest("form") ||
+        event.target.closest("input") ||
+        event.target.closest("button") ||
+        event.target.closest("select") ||
+        event.target.closest("textarea")
+    ) {
+        return;
+    }
+
+    const folder = header.closest(".library-folder");
+    const folderName = folder.getAttribute("data-folder-name");
+
+    if (!folderName) return;
+
+    const collapsedFolders = getCollapsedLibraryFolders();
+    const isCurrentlyCollapsed = collapsedFolders.includes(folderName);
+
+    if (isCurrentlyCollapsed) {
+        setLibraryFolderCollapsed(folder, false);
+        saveCollapsedLibraryFolders(
+            collapsedFolders.filter(name => name !== folderName)
+        );
+    } else {
+        setLibraryFolderCollapsed(folder, true);
+        collapsedFolders.push(folderName);
+        saveCollapsedLibraryFolders(collapsedFolders);
+    }
+}
+                                  
+     function showRenameFolderForm(event, button) {
+    event.stopPropagation();
+
+    const actions = button.closest(".folder-actions");
+    const form = actions.querySelector(".rename-folder-form");
+
+    if (!form) return;
+
+    button.style.display = "none";
+    form.style.display = "inline-flex";
+
+    const input = form.querySelector('input[name="new_folder"]');
+    if (input) {
+        input.focus();
+        input.select();
+    }
+}
+
+function hideRenameFolderForm(event, button) {
+    event.stopPropagation();
+
+    const form = button.closest(".rename-folder-form");
+    const actions = form.closest(".folder-actions");
+    const renameButton = actions.querySelector('button[onclick*="showRenameFolderForm"]');
+
+    if (!form || !renameButton) return;
+
+    form.style.display = "none";
+    renameButton.style.display = "";
+}        
+
+       function showAddFolderForm(event, button) {
+    event.stopPropagation();
+
+    const control = button.closest(".add-folder-control");
+    const form = control.querySelector(".add-folder-form");
+
+    if (!form) return;
+
+    button.style.display = "none";
+    form.style.display = "flex";
+
+    const input = form.querySelector('input[name="folder"]');
+    if (input) {
+        input.focus();
+        input.select();
+    }
+}
+
+function hideAddFolderForm(event, button) {
+    event.stopPropagation();
+
+    const form = button.closest(".add-folder-form");
+    const control = form.closest(".add-folder-control");
+    const newFolderButton = control.querySelector('button[onclick*="showAddFolderForm"]');
+
+    if (!form || !newFolderButton) return;
+
+    form.style.display = "none";
+    newFolderButton.style.display = "";
+}  
+
+   document.addEventListener("DOMContentLoaded", function() {
+    const collapsedFolders = getCollapsedLibraryFolders();
+
+    document.querySelectorAll(".library-folder").forEach(folder => {
+        const folderName = folder.getAttribute("data-folder-name");
+
+        if (folderName && collapsedFolders.includes(folderName)) {
+            setLibraryFolderCollapsed(folder, true);
+        }
+    });
+});     
+
+       function showMoveQuizForm(event, button) {
+    event.stopPropagation();
+
+    const control = button.closest(".quiz-move-control");
+    const form = control.querySelector(".move-quiz-form");
+
+    if (!form) return;
+
+    button.style.display = "none";
+    form.style.display = "inline-flex";
+
+    const select = form.querySelector('select[name="folder"]');
+    if (select) {
+        select.focus();
+    }
+}
+
+function hideMoveQuizForm(event, button) {
+    event.stopPropagation();
+
+    const form = button.closest(".move-quiz-form");
+    const control = form.closest(".quiz-move-control");
+    const moveButton = control.querySelector('button[onclick*="showMoveQuizForm"]');
+
+    if (!form || !moveButton) return;
+
+    form.style.display = "none";
+    moveButton.style.display = "";
+}                           
+
+   document.addEventListener("DOMContentLoaded", function() {
+    const folderList = document.getElementById("quizList");
+
+    if (!folderList || !window.Sortable) return;
+
+    Sortable.create(folderList, {
+        animation: 150,
+        draggable: ".library-folder",
+        handle: ".library-folder-header",
+        filter: "form, input, button, select, textarea",
+        preventOnFilter: false,
+
+        onEnd: function() {
+            const folders = [...document.querySelectorAll(".library-folder")]
+                .map(folder => folder.getAttribute("data-folder-name"))
+                .filter(Boolean);
+
+            fetch("/save_folder_order", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ folders })
+            });
+        }
+    });
+});         
+
+ document.addEventListener("DOMContentLoaded", function() {
+    if (!window.Sortable) return;
+
+    document.querySelectorAll(".library-folder-body").forEach(body => {
+        Sortable.create(body, {
+            animation: 150,
+            draggable: ".quiz-card",
+            handle: ".quiz-card",
+
+            onEnd: function() {
+                const folderName = body.getAttribute("data-folder-name") || "Uncategorized";
+
+                const order = [...body.querySelectorAll(".quiz-card")]
+                    .map(card => card.getAttribute("data-id"))
+                    .filter(Boolean);
+
+                fetch("/save_quiz_order_in_folder", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        folder: folderName,
+                        order: order
+                    })
+                });
+            }
+        });
+    });
+});                                                                                                                              
+</script>
+</script>
+</body>
+</html>
+
+
+
+
+            """, quizzes=quizzes, grouped_quizzes=grouped_quizzes, folder_names=folder_names, portal_title=portal_title)
+
+
+
+
+
+

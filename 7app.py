@@ -452,7 +452,7 @@ def admin_maintenance():
         <br>
 
         <button onclick="location.href='/'">
-            ⬅ Back To Dashboard
+            ⬅ Back To Portal
         </button>
 
     </div>
@@ -1376,7 +1376,7 @@ def law_study_home():
         </div>
 
         <br>
-        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
 
     </div>
 
@@ -5409,9 +5409,7 @@ def quiz_library():
 
             <div class="add-folder-control library-add-folder">
                 <button type="button" class="library-secondary-action" onclick="showAddFolderForm(event, this)">
-                    <svg class="dlms-folder-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M3.5 7.25A2.25 2.25 0 0 1 5.75 5h4.1l2 2h6.4a2.25 2.25 0 0 1 2.25 2.25v7A2.25 2.25 0 0 1 18.25 18.5H5.75A2.25 2.25 0 0 1 3.5 16.25z"/>
-                    </svg> New Folder
+                    <span class="dlms-folder-icon" aria-hidden="true"></span> New Folder
                 </button>
                 <form method="POST" action="/add_quiz_folder" class="add-folder-form library-inline-form" style="display:none;">
                     <input type="hidden" name="view" value="{{ view }}">
@@ -5432,9 +5430,7 @@ def quiz_library():
                 <div class="library-folder-header" onclick="toggleLibraryFolder(event, this)">
                     <div class="library-folder-title-group">
                         <span class="folder-toggle-icon">▼</span>
-                        <svg class="dlms-folder-icon dlms-folder-icon-large" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M3.5 7.25A2.25 2.25 0 0 1 5.75 5h4.1l2 2h6.4a2.25 2.25 0 0 1 2.25 2.25v7A2.25 2.25 0 0 1 18.25 18.5H5.75A2.25 2.25 0 0 1 3.5 16.25z"/>
-                        </svg>
+                        <span class="dlms-folder-icon dlms-folder-icon-large" aria-hidden="true"></span>
                         <div>
                             <h2>{{ folder_name }}</h2>
                             <span class="library-folder-subtitle">{{ folder_quizzes|length }} quiz{% if folder_quizzes|length != 1 %}zes{% endif %}</span>
@@ -5467,12 +5463,7 @@ def quiz_library():
                     <article class="quiz-card library-quiz-card" data-id="{{ q['html'] }}" data-title="{{ q['title']|lower }}" data-search="{{ (q['title'] ~ ' ' ~ folder_name)|lower }}">
                         <div class="library-quiz-main">
                             <div class="library-quiz-title-row">
-                                {% if q['logo'] %}
-                                <div class="library-quiz-logo-frame" aria-hidden="true">
-                                    <img class="library-quiz-logo" src="/user-static/logos/{{ q['logo'] }}" alt="">
-                                </div>
-                                {% endif %}
-                                <div class="library-quiz-heading">
+                                <div>
                                     <h3>{{ q['title'] }}</h3>
                                     <div class="library-quiz-meta">
                                         <span>Quiz #{{ q['id'] }}</span>
@@ -5481,6 +5472,9 @@ def quiz_library():
                                         {% if q.get('hidden') %}<span class="library-hidden-badge">Hidden</span>{% endif %}
                                     </div>
                                 </div>
+                                {% if q['logo'] %}
+                                <img class="library-quiz-logo" src="/user-static/logos/{{ q['logo'] }}" alt="">
+                                {% endif %}
                             </div>
 
                             <div class="library-quiz-actions">
@@ -5508,20 +5502,12 @@ def quiz_library():
                                         <button type="button" class="library-quiet-button" onclick="hideMoveQuizForm(event, this)">Cancel</button>
                                     </form>
                                 </div>
-
-                                <form method="POST" action="/delete_quiz/{{ q['id'] }}" class="library-delete-form" onsubmit="return confirm('Delete this quiz permanently?');">
-                                    <button type="submit" class="library-delete-button" title="Delete quiz" aria-label="Delete quiz">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path d="M4 7h16"></path>
-                                            <path d="M9 7V4h6v3"></path>
-                                            <path d="M7 7l1 13h8l1-13"></path>
-                                            <path d="M10 11v5"></path>
-                                            <path d="M14 11v5"></path>
-                                        </svg>
-                                    </button>
-                                </form>
                             </div>
                         </div>
+
+                        <form method="POST" action="/delete_quiz/{{ q['id'] }}" class="library-delete-form" onsubmit="return confirm('Delete this quiz permanently?');">
+                            <button type="submit" class="library-delete-button" title="Delete quiz">🗑 Delete</button>
+                        </form>
                     </article>
                     {% endfor %}
                 </div>
@@ -5843,7 +5829,7 @@ def upload_page():
 </button>
 
 <br><br>
-<button onclick="location.href='/'">⬅ Back To Dashboard</button>
+<button onclick="location.href='/'">⬅ Back To Portal</button>
 
 </div>
     </div>
@@ -6038,7 +6024,7 @@ Question\\s*#\\d+ => "
             <br>
             <button onclick="location.href='/upload'">📤 Upload File Instead</button>
             <button onclick="location.href='/create_short_quiz'">✍️ Create Short Quiz Instead</button>
-            <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+            <button onclick="location.href='/'">⬅ Back To Portal</button>
 
         </div>
 
@@ -6163,7 +6149,7 @@ def create_short_quiz_page():
 
         <br>
         <button onclick="location.href='/upload'">⬅ Back To Create Options</button>
-        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
 
     </div>
 </div>
@@ -7374,7 +7360,7 @@ function runDiff() {
 
         <br>
         <button onclick="history.back()">⬅ Go Back & Edit</button>
-        <button onclick="location.href='/'">🏠 Return To Dashboard</button>
+        <button onclick="location.href='/'">🏠 Return To Portal</button>
     </div>
 </div>
 </body>
@@ -7549,7 +7535,7 @@ def process_paste():
                 </button>
 
                 <button onclick="location.href='/'">
-                    🏠 Return To Dashboard
+                    🏠 Return To Portal
                 </button>
             </div>
         </div>
@@ -7744,7 +7730,7 @@ def process_file():
                 </button>
 
                 <button onclick="location.href='/'">
-                    🏠 Return To Dashboard
+                    🏠 Return To Portal
                 </button>
             </div>
         </div>
@@ -7955,12 +7941,12 @@ def settings_appearance_page():
             <div class="settings-section-heading">
                 <div class="settings-section-icon icon-blue">Aa</div>
                 <div>
-                    <h2>Dashboard Title</h2>
-                    <p>This title appears on the DLMS dashboard.</p>
+                    <h2>Portal Title</h2>
+                    <p>This title appears on the DLMS dashboard and portal.</p>
                 </div>
             </div>
 
-            <label class="settings-field-label" for="portalTitle">Dashboard Title</label>
+            <label class="settings-field-label" for="portalTitle">Training Portal Title</label>
             <input class="settings-text-input"
                    id="portalTitle"
                    type="text"
@@ -8590,7 +8576,7 @@ def settings_legacy_page():
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dashboard Settings</title>
+<title>Portal Settings</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/favicon.ico">
 </head>
@@ -8615,7 +8601,7 @@ fetch("/config/portal.json")
 <div class="container">
 
     <h1 class="hero-title">
-        ⚙️ Dashboard Configuration
+        ⚙️ Portal Configuration
     </h1>
 
     <div class="card">
@@ -8626,7 +8612,7 @@ fetch("/config/portal.json")
             <!-- ============================
                  PORTAL TITLE
                  ============================ -->
-            <h3>Dashboard Title</h3>
+            <h3>Training Portal Title</h3>
             <input type="text"
                    name="portal_title"
                    value="{{ cfg.title }}"
@@ -8824,7 +8810,7 @@ fetch("/config/portal.json")
         <p id="clearDBStatus" style="margin-top:6px;"></p>
 
         <br>
-        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
 
     </div>
 
@@ -10608,7 +10594,7 @@ def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_file
 
         <div class="quiz-return-buttons">
             <button id="returnPortalBtn" onclick="location.href='/'">
-                🏠 Return To Dashboard
+                🏠 Return To Portal
             </button>
 
             <button id="returnLibraryBtn" onclick="location.href='/library'">

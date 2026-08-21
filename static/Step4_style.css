@@ -1189,40 +1189,66 @@ body.blurred .blur-wrapper {
 
 
 /* =======================
-   DLMS FOLDER ICON
-   Modern inline SVG outline icon used by the Quiz Library.
-   Uses currentColor so it stays consistent with the DLMS theme.
+   CROSS-PLATFORM FOLDER ICON
+   Replaces emoji folder so color is consistent on macOS/Windows/Linux
 ======================= */
 
 .dlms-folder-icon {
     display: inline-block;
+    position: relative;
     flex: 0 0 auto;
-    width: 18px;
-    height: 18px;
-    margin-right: 7px;
-    vertical-align: -3px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    color: #86b7ff;
-    filter: drop-shadow(0 0 5px rgba(72, 139, 255, .18));
+
+    width: 1.30em;
+    height: 0.84em;
+    margin-right: 0.45em;
+    vertical-align: -0.10em;
+
+    background: transparent;
+    border: 2px solid #facc15;
+    border-radius: 0.16em 0.16em 0.24em 0.24em;
+
+    box-shadow: none;
+}
+
+.dlms-folder-icon::before {
+    content: "";
+    position: absolute;
+
+    left: 0.08em;
+    top: -0.30em;
+
+    width: 0.56em;
+    height: 0.28em;
+
+    background: transparent;
+    border: 2px solid #facc15;
+    border-bottom: none;
+    border-radius: 0.14em 0.14em 0 0;
 }
 
 .dlms-folder-icon-large {
-    width: 24px;
-    height: 24px;
+    font-size: 24px;
     margin-right: 0;
-    vertical-align: 0;
-    color: #7db1ff;
 }
 
-.library-page .library-secondary-action .dlms-folder-icon {
-    width: 16px;
-    height: 16px;
-    margin-right: 3px;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* =========================================================
    COMMENTED OUT / REMOVED LEGACY SECTIONS
@@ -2894,12 +2920,9 @@ a.settings-hub-card:hover {
 
 .library-page .library-quiz-title-row {
     display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.library-page .library-quiz-heading {
-    min-width: 0;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
 }
 
 .library-page .library-quiz-title-row h3 {
@@ -2927,25 +2950,11 @@ a.settings-hub-card:hover {
     color: #f1c77b;
 }
 
-.library-page .library-quiz-logo-frame {
-    width: 54px;
-    height: 54px;
-    flex: 0 0 54px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px;
-    border: 1px solid rgba(116, 166, 236, .24);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, .045);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
-}
-
 .library-page .library-quiz-logo {
-    display: block;
-    width: 100%;
-    height: 100%;
+    max-width: 100px;
+    max-height: 54px;
     object-fit: contain;
+    opacity: .94;
 }
 
 .library-page .library-quiz-actions {
@@ -2965,35 +2974,20 @@ a.settings-hub-card:hover {
 .library-page .library-delete-form {
     display: flex;
     align-items: center;
-    margin-left: auto;
 }
 
 .library-page .library-delete-button {
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border-color: rgba(255, 86, 86, .28);
-    background: rgba(130, 22, 28, .10);
-    color: #ff9da3;
-}
-
-.library-page .library-delete-button svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    align-self: stretch;
+    min-width: 84px;
+    padding: 8px 12px;
+    border-color: rgba(255, 86, 86, .22);
+    background: rgba(130, 22, 28, .15);
+    color: #ffb0b4;
 }
 
 .library-page .library-delete-button:hover {
-    border-color: rgba(255, 91, 91, .55);
-    background: rgba(153, 26, 34, .24);
-    color: #ffc0c3;
+    border-color: rgba(255, 91, 91, .5);
+    background: rgba(153, 26, 34, .27);
 }
 
 .library-page .library-empty {
@@ -3067,332 +3061,5 @@ a.settings-hub-card:hover {
 
     .library-page .library-folder-actions {
         margin-left: auto;
-    }
-}
-
-/* =====================================================================
-   MODERN HISTORY TABLE PAGE
-   Revised: 2026-08-21
-   Restores the compact table workflow with the current DLMS visual system.
-   ===================================================================== */
-
-.history-table-page {
-    min-height: 100vh;
-}
-
-.history-table-main {
-    gap: 20px;
-}
-
-.history-table-header {
-    align-items: flex-start;
-    padding-bottom: 2px;
-}
-
-.history-table-header h1 {
-    margin: 4px 0 5px;
-}
-
-.history-table-header p {
-    max-width: 660px;
-}
-
-.history-eyebrow {
-    color: #78b8ff;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-}
-
-.history-table-stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.history-table-stat {
-    min-height: 110px;
-    padding: 17px 20px;
-    border: 1px solid rgba(91, 151, 224, 0.24);
-    border-radius: 16px;
-    background: linear-gradient(145deg, rgba(14, 31, 55, 0.82), rgba(7, 20, 39, 0.9));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
-}
-
-.history-table-stat span {
-    display: block;
-    margin-bottom: 7px;
-    color: #9db0c8;
-    font-size: 12px;
-    font-weight: 750;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.history-table-stat strong {
-    display: block;
-    margin-bottom: 4px;
-    color: #f5f8ff;
-    font-size: clamp(28px, 3vw, 36px);
-    line-height: 1;
-}
-
-.history-table-stat small {
-    color: #7f93ad;
-    font-size: 12px;
-}
-
-.history-table-panel {
-    padding: 0;
-    overflow: hidden;
-    border: 1px solid rgba(91, 151, 224, 0.26);
-    border-radius: 18px;
-    background: rgba(5, 17, 34, 0.78);
-}
-
-.history-table-heading {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 18px 20px 16px;
-    border-bottom: 1px solid rgba(91, 151, 224, 0.18);
-}
-
-.history-table-heading h2 {
-    margin: 4px 0 0;
-    color: #f0f5ff;
-    font-size: 20px;
-}
-
-.history-table-count {
-    padding: 6px 10px;
-    border: 1px solid rgba(91, 151, 224, 0.22);
-    border-radius: 999px;
-    background: rgba(15, 35, 61, 0.72);
-    color: #a9bbd1;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.history-table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.history-results-table {
-    width: 100%;
-    min-width: 760px;
-    border-collapse: collapse;
-    color: #dce7f5;
-}
-
-.history-results-table thead {
-    background: linear-gradient(180deg, rgba(18, 39, 68, 0.78), rgba(10, 28, 51, 0.72));
-}
-
-.history-results-table th {
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(91, 151, 224, 0.2);
-    color: #9eb2ca;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-align: left;
-    text-transform: uppercase;
-}
-
-.history-results-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid rgba(91, 151, 224, 0.13);
-    vertical-align: middle;
-}
-
-.history-result-row {
-    transition: background 0.16s ease, box-shadow 0.16s ease;
-}
-
-.history-result-row:hover {
-    background: rgba(19, 49, 84, 0.34);
-}
-
-.history-result-row:last-child td {
-    border-bottom: 0;
-}
-
-.history-result-row.selected {
-    background: rgba(35, 91, 158, 0.24);
-    box-shadow: inset 3px 0 0 #4d9cff;
-}
-
-.history-quiz-cell {
-    display: flex;
-    min-width: 170px;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.history-quiz-cell strong {
-    color: #f0f5ff;
-    font-size: 14px;
-    font-weight: 750;
-}
-
-.history-quiz-cell span {
-    color: #7489a3;
-    font-size: 11px;
-}
-
-.history-score-cell {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-}
-
-.history-score-cell small {
-    color: #7f93ad;
-    font-size: 11px;
-    white-space: nowrap;
-}
-
-.history-score-badge {
-    display: inline-flex;
-    min-width: 54px;
-    min-height: 30px;
-    align-items: center;
-    justify-content: center;
-    padding: 0 9px;
-    border: 1px solid rgba(126, 151, 180, 0.22);
-    border-radius: 999px;
-    background: rgba(27, 45, 67, 0.55);
-    color: #dbe7f5;
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.history-score-badge.good {
-    border-color: rgba(75, 212, 154, 0.28);
-    background: rgba(27, 114, 81, 0.18);
-    color: #86e8bb;
-}
-
-.history-score-badge.warn {
-    border-color: rgba(226, 189, 88, 0.28);
-    background: rgba(112, 87, 20, 0.18);
-    color: #edd681;
-}
-
-.history-score-badge.bad {
-    border-color: rgba(239, 119, 127, 0.28);
-    background: rgba(123, 41, 48, 0.2);
-    color: #ff9da3;
-}
-
-.history-date-cell {
-    color: #b4c4d6;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.history-mode-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 9px;
-    border: 1px solid rgba(91, 151, 224, 0.2);
-    border-radius: 8px;
-    background: rgba(15, 35, 61, 0.6);
-    color: #b8c8db;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.history-review-column {
-    width: 110px;
-    text-align: right !important;
-}
-
-.history-table-review {
-    display: inline-flex;
-    min-height: 34px;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 0 12px;
-    border: 1px solid rgba(88, 159, 246, 0.4);
-    border-radius: 9px;
-    background: rgba(22, 65, 116, 0.42);
-    color: #dcecff;
-    font-size: 12px;
-    font-weight: 750;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: background 0.16s ease, border-color 0.16s ease;
-}
-
-.history-table-review:hover {
-    border-color: rgba(89, 169, 255, 0.72);
-    background: rgba(31, 91, 158, 0.58);
-    color: #fff;
-}
-
-.history-table-review span {
-    font-size: 18px;
-    line-height: 1;
-}
-
-.history-table-empty {
-    padding: 44px 20px;
-    color: #91a5be;
-    text-align: center;
-}
-
-.history-table-empty-icon {
-    margin-bottom: 8px;
-    color: #76aff0;
-    font-size: 30px;
-}
-
-.history-table-empty h2 {
-    margin: 0 0 7px;
-    color: #eaf1fb;
-    font-size: 19px;
-}
-
-.history-table-empty p {
-    margin: 0;
-}
-
-.history-table-empty a {
-    display: inline-flex;
-    margin-top: 16px;
-    padding: 9px 14px;
-    border: 1px solid rgba(88, 159, 246, 0.38);
-    border-radius: 9px;
-    background: rgba(22, 65, 116, 0.42);
-    color: #dcecff;
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.history-table-error {
-    color: #ff9da3;
-}
-
-@media (max-width: 900px) {
-    .history-table-stats {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 620px) {
-    .history-table-heading {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .history-table-stat {
-        min-height: 96px;
     }
 }

@@ -5467,12 +5467,7 @@ def quiz_library():
                     <article class="quiz-card library-quiz-card" data-id="{{ q['html'] }}" data-title="{{ q['title']|lower }}" data-search="{{ (q['title'] ~ ' ' ~ folder_name)|lower }}">
                         <div class="library-quiz-main">
                             <div class="library-quiz-title-row">
-                                {% if q['logo'] %}
-                                <div class="library-quiz-logo-frame" aria-hidden="true">
-                                    <img class="library-quiz-logo" src="/user-static/logos/{{ q['logo'] }}" alt="">
-                                </div>
-                                {% endif %}
-                                <div class="library-quiz-heading">
+                                <div>
                                     <h3>{{ q['title'] }}</h3>
                                     <div class="library-quiz-meta">
                                         <span>Quiz #{{ q['id'] }}</span>
@@ -5481,6 +5476,9 @@ def quiz_library():
                                         {% if q.get('hidden') %}<span class="library-hidden-badge">Hidden</span>{% endif %}
                                     </div>
                                 </div>
+                                {% if q['logo'] %}
+                                <img class="library-quiz-logo" src="/user-static/logos/{{ q['logo'] }}" alt="">
+                                {% endif %}
                             </div>
 
                             <div class="library-quiz-actions">
@@ -5508,20 +5506,12 @@ def quiz_library():
                                         <button type="button" class="library-quiet-button" onclick="hideMoveQuizForm(event, this)">Cancel</button>
                                     </form>
                                 </div>
-
-                                <form method="POST" action="/delete_quiz/{{ q['id'] }}" class="library-delete-form" onsubmit="return confirm('Delete this quiz permanently?');">
-                                    <button type="submit" class="library-delete-button" title="Delete quiz" aria-label="Delete quiz">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path d="M4 7h16"></path>
-                                            <path d="M9 7V4h6v3"></path>
-                                            <path d="M7 7l1 13h8l1-13"></path>
-                                            <path d="M10 11v5"></path>
-                                            <path d="M14 11v5"></path>
-                                        </svg>
-                                    </button>
-                                </form>
                             </div>
                         </div>
+
+                        <form method="POST" action="/delete_quiz/{{ q['id'] }}" class="library-delete-form" onsubmit="return confirm('Delete this quiz permanently?');">
+                            <button type="submit" class="library-delete-button" title="Delete quiz">🗑 Delete</button>
+                        </form>
                     </article>
                     {% endfor %}
                 </div>

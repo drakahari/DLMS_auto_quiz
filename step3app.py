@@ -452,7 +452,7 @@ def admin_maintenance():
         <br>
 
         <button onclick="location.href='/'">
-            ⬅ Back To Dashboard
+            ⬅ Back To Portal
         </button>
 
     </div>
@@ -1376,7 +1376,7 @@ def law_study_home():
         </div>
 
         <br>
-        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
 
     </div>
 
@@ -5218,20 +5218,9 @@ def export_single_quiz_txt(quiz_id):
 # =========================
 # LIBRARY (WITH DRAG + DROP!)
 # =========================
-# =====================================================================
-# MODERN QUIZ LIBRARY UI
-# Introduced: 2026-08-21 (DLMS 2.3 UI modernization)
-#
-# Historical note:
-# The original embedded Quiz Library implementation was preserved at:
-# archive/legacy_library_ui_2026-08-21.txt
-#
-# Backend routes and quiz/folder behaviors remain unchanged. This block
-# modernizes presentation while preserving existing forms and APIs.
-# =====================================================================
 @app.route("/library")
 def quiz_library():
-    registry = normalize_quiz_folders(load_registry())
+    registry = normalize_quiz_folders(load_registry())   # ← folder-safe registry
 
     dprint("[REGISTRY DEBUG] Using registry file:", QUIZ_REGISTRY)
     dprint("[REGISTRY DEBUG] Registry size:", len(registry))
@@ -5245,6 +5234,9 @@ def quiz_library():
         for q in registry
     ])
 
+    # =========================
+    # DEBUG: Verify logo files exist on disk
+    # =========================
     for q in registry:
         logo = q.get("logo")
         if logo:
@@ -5260,6 +5252,7 @@ def quiz_library():
     # 1) explicit ?view=
     # 2) legacy ?show_hidden=1
     # 3) default = visible only
+
     view = request.args.get("view")
 
     if not view and request.args.get("show_hidden") == "1":
@@ -5270,6 +5263,7 @@ def quiz_library():
     elif view == "all":
         filtered = registry
     else:
+        # default: visible only
         view = "visible"
         filtered = [q for q in registry if not q.get("hidden", False)]
 
@@ -5279,13 +5273,23 @@ def quiz_library():
     ]
 
     folder_names = get_quiz_folders()
-    grouped_quizzes = {folder: [] for folder in folder_names}
+
+    grouped_quizzes = {
+        folder: []
+        for folder in folder_names
+    }
 
     for q in quizzes:
-        folder = str(q.get("folder") or "Uncategorized").strip() or "Uncategorized"
+        folder = str(q.get("folder") or "Uncategorized").strip()
+
+        if not folder:
+            folder = "Uncategorized"
+
         if folder not in grouped_quizzes:
             grouped_quizzes[folder] = []
+
         grouped_quizzes[folder].append(q)
+    folder_names = get_quiz_folders()
 
     registry_folder_names = sorted({
         str(q.get("folder") or "Uncategorized").strip() or "Uncategorized"
@@ -5297,453 +5301,705 @@ def quiz_library():
             folder_names.append(folder)
             grouped_quizzes[folder] = []
 
-    # Only render folders that contain quizzes in the selected view.
-    # Keep folder_names complete so Create/Move/Rename logic still has access
-    # to every configured folder, including currently empty folders.
-    display_folder_names = [
-        folder for folder in folder_names
-        if grouped_quizzes.get(folder)
-    ]
-
-    visible_count = sum(1 for q in registry if not q.get("hidden", False))
-    hidden_count = sum(1 for q in registry if q.get("hidden", False))
 
     return render_template_string("""
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Library - {{ portal_title }}</title>
+    <title>Quiz Library</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
+                                  
+
+                                  
+
+    <!-- Drag + Drop -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 </head>
-<body class="dashboard-home library-page">
-<div class="dashboard-shell">
 
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="dashboard-brand">
-            <div class="dashboard-brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img">
-                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <div class="dashboard-brand-title">DLMS</div>
-                <div class="dashboard-brand-subtitle">Training Center</div>
-            </div>
-        </div>
+<body>
+<div class="container">
 
-        <nav class="dashboard-nav" aria-label="Primary navigation">
-            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-            <a class="dashboard-nav-item active" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-            <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-            <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-        </nav>
+    <h1 class="hero-title">
+        {{ portal_title }}<br>
+        <span style="font-size:22px;opacity:.85">📚 Quiz Library</span>
+    </h1>
 
-        <div class="dashboard-nav-section-label"><span>System</span></div>
-        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-        </nav>
+    <div class="card">
 
-        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
-            <span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span>
-        </button>
-        <div class="dashboard-sidebar-version">DLMS v{{ app_version }}</div>
-    </aside>
+        <!-- =============================
+             VIEW MODE CONTROLS (ALWAYS VISIBLE)
+        ============================== -->
+        <form method="GET"
+              action="/library"
+              style="
+                margin-bottom:18px;
+                display:flex;
+                gap:16px;
+                align-items:center;
+                flex-wrap:wrap;
+              ">
 
-    <main class="dashboard-main library-main">
-        <header class="dashboard-header library-header">
-            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-            <div>
-                <h1>{{ portal_title }}</h1>
-                <p>Quiz Library <span>•</span> Organize <span>•</span> Launch <span>•</span> Manage</p>
-            </div>
-        </header>
+            <span style="opacity:.8;font-size:14px;">View:</span>
 
-        <section class="library-hero dashboard-panel">
-            <div>
-                <span class="library-eyebrow">QUIZ LIBRARY</span>
-                <h2>Your training content, organized.</h2>
-                <p>Launch quizzes, organize folders, manage visibility, and export content from one workspace.</p>
-            </div>
-            <div class="library-hero-actions">
-                <a class="library-primary-action" href="/upload">＋ Build Quiz</a>
-                <a class="library-secondary-action" href="/paste">Paste Questions</a>
-            </div>
-        </section>
+            <label>
+                <input type="radio"
+                       name="view"
+                       value="visible"
+                       onchange="this.form.submit()"
+                       {% if request.args.get('view','visible') == 'visible' %}checked{% endif %}>
+                Visible
+            </label>
 
-        <section class="library-summary-grid" aria-label="Library summary">
-            <div class="library-stat-card"><span>Visible</span><strong>{{ visible_count }}</strong><small>available quizzes</small></div>
-            <div class="library-stat-card"><span>Hidden</span><strong>{{ hidden_count }}</strong><small>hidden quizzes</small></div>
-            <div class="library-stat-card"><span>Folders</span><strong>{{ folder_names|length }}</strong><small>library folders</small></div>
-            <div class="library-stat-card"><span>This View</span><strong>{{ quizzes|length }}</strong><small>{{ view|capitalize }} items</small></div>
-        </section>
+            <label>
+                <input type="radio"
+                       name="view"
+                       value="hidden"
+                       onchange="this.form.submit()"
+                       {% if request.args.get('view') == 'hidden' %}checked{% endif %}>
+                Hidden
+            </label>
 
-        <section class="library-toolbar dashboard-panel">
-            <div class="library-toolbar-left">
-                <form method="GET" action="/library" class="library-view-switcher" aria-label="Library view">
-                    <span>View</span>
-                    <label class="library-view-option {% if view == 'visible' %}selected{% endif %}">
-                        <input type="radio" name="view" value="visible" onchange="this.form.submit()" {% if view == 'visible' %}checked{% endif %}>Visible
-                    </label>
-                    <label class="library-view-option {% if view == 'hidden' %}selected{% endif %}">
-                        <input type="radio" name="view" value="hidden" onchange="this.form.submit()" {% if view == 'hidden' %}checked{% endif %}>Hidden
-                    </label>
-                    <label class="library-view-option {% if view == 'all' %}selected{% endif %}">
-                        <input type="radio" name="view" value="all" onchange="this.form.submit()" {% if view == 'all' %}checked{% endif %}>All
-                    </label>
-                </form>
+            <label>
+                <input type="radio"
+                       name="view"
+                       value="all"
+                       onchange="this.form.submit()"
+                       {% if request.args.get('view') == 'all' %}checked{% endif %}>
+                All
+            </label>
 
-                <div class="library-search-wrap">
-                    <span aria-hidden="true">⌕</span>
-                    <input id="librarySearch" type="search" placeholder="Search quizzes..." autocomplete="off">
-                </div>
-            </div>
+        </form>
+                                  
+        <!-- =============================
+                ADD FOLDER CONTROL
+            ============================== -->
+            <div class="add-folder-control"
+                style="
+                    margin-bottom:18px;
+                    display:flex;
+                    gap:8px;
+                    align-items:center;
+                    flex-wrap:wrap;
+                ">
 
-            <div class="add-folder-control library-add-folder">
-                <button type="button" class="library-secondary-action" onclick="showAddFolderForm(event, this)">
-                    <svg class="dlms-folder-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M3.5 7.25A2.25 2.25 0 0 1 5.75 5h4.1l2 2h6.4a2.25 2.25 0 0 1 2.25 2.25v7A2.25 2.25 0 0 1 18.25 18.5H5.75A2.25 2.25 0 0 1 3.5 16.25z"/>
-                    </svg> New Folder
+                <button type="button"
+                        onclick="showAddFolderForm(event, this)">
+                    <span class="dlms-folder-icon" aria-hidden="true"></span>
+                    New Folder
                 </button>
-                <form method="POST" action="/add_quiz_folder" class="add-folder-form library-inline-form" style="display:none;">
-                    <input type="hidden" name="view" value="{{ view }}">
-                    <input type="text" name="folder" placeholder="New folder name" required>
-                    <button type="submit">Save</button>
-                    <button type="button" class="library-quiet-button" onclick="hideAddFolderForm(event, this)">Cancel</button>
+
+                <form method="POST"
+                    action="/add_quiz_folder"
+                    class="add-folder-form"
+                    style="
+                        display:none;
+                        gap:8px;
+                        align-items:center;
+                        flex-wrap:wrap;
+                    ">
+
+                    <input type="hidden"
+                        name="view"
+                        value="{{ request.args.get('view', 'visible') }}">
+
+                    <input type="text"
+                        name="folder"
+                        placeholder="New folder name"
+                        style="
+                                padding:8px;
+                                border-radius:8px;
+                                border:1px solid rgba(255,255,255,.25);
+                                min-width:220px;
+                        ">
+
+                    <button type="submit">
+                        💾 Save Folder
+                    </button>
+
+                    <button type="button"
+                            onclick="hideAddFolderForm(event, this)">
+                        Cancel
+                    </button>
                 </form>
             </div>
-        </section>
-
-        <div class="library-tip">Drag folder headers to reorder folders. Drag quiz cards to reorder quizzes inside a folder.</div>
+            <p style="
+                margin: 0 0 14px 0;
+                font-size: 13px;
+                opacity: .75;
+            ">
+                Tip: Drag folder headers to reorder folders. Drag quiz cards to reorder quizzes inside a folder.
+            </p>                    
 
         {% if quizzes %}
-        <section id="quizList" class="library-folder-list">
-            {% for folder_name in display_folder_names %}
-            {% set folder_quizzes = grouped_quizzes.get(folder_name, []) %}
-            <article class="library-folder" data-folder-name="{{ folder_name }}" data-folder-draggable="true">
-                <div class="library-folder-header" onclick="toggleLibraryFolder(event, this)">
-                    <div class="library-folder-title-group">
-                        <span class="folder-toggle-icon">▼</span>
-                        <svg class="dlms-folder-icon dlms-folder-icon-large" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M3.5 7.25A2.25 2.25 0 0 1 5.75 5h4.1l2 2h6.4a2.25 2.25 0 0 1 2.25 2.25v7A2.25 2.25 0 0 1 18.25 18.5H5.75A2.25 2.25 0 0 1 3.5 16.25z"/>
-                        </svg>
-                        <div>
-                            <h2>{{ folder_name }}</h2>
-                            <span class="library-folder-subtitle">{{ folder_quizzes|length }} quiz{% if folder_quizzes|length != 1 %}zes{% endif %}</span>
-                        </div>
-                    </div>
 
-                    {% if folder_name|lower != "uncategorized" %}
-                    <div class="library-folder-actions">
-                        <div class="folder-actions">
-                            <button type="button" class="library-icon-button" onclick="showRenameFolderForm(event, this)" title="Rename folder">✎</button>
-                            <form method="POST" action="/rename_quiz_folder" class="rename-folder-form library-inline-form" style="display:none;">
-                                <input type="hidden" name="old_folder" value="{{ folder_name }}">
-                                <input type="hidden" name="view" value="{{ view }}">
-                                <input type="text" name="new_folder" value="{{ folder_name }}" required>
-                                <button type="submit">Save</button>
-                                <button type="button" class="library-quiet-button" onclick="hideRenameFolderForm(event, this)">Cancel</button>
-                            </form>
-                        </div>
-                        <form method="POST" action="/delete_quiz_folder" onsubmit="return confirm('Delete this folder? Quizzes inside it will move to Uncategorized.');">
-                            <input type="hidden" name="folder" value="{{ folder_name }}">
-                            <input type="hidden" name="view" value="{{ view }}">
-                            <button type="submit" class="library-icon-button library-danger-icon" title="Delete folder">🗑</button>
-                        </form>
-                    </div>
-                    {% endif %}
-                </div>
+        <!-- =============================
+             QUIZ LIST
+        ============================== -->
+                <div id="quizList">
 
-                <div class="library-folder-body" data-folder-name="{{ folder_name }}">
-                    {% for q in folder_quizzes %}
-                    <article class="quiz-card library-quiz-card" data-id="{{ q['html'] }}" data-title="{{ q['title']|lower }}" data-search="{{ (q['title'] ~ ' ' ~ folder_name)|lower }}">
-                        <div class="library-quiz-main">
-                            <div class="library-quiz-title-row">
-                                {% if q['logo'] %}
-                                <div class="library-quiz-logo-frame" aria-hidden="true">
-                                    <img class="library-quiz-logo" src="/user-static/logos/{{ q['logo'] }}" alt="">
-                                </div>
+        {% for folder_name, folder_quizzes in grouped_quizzes.items() %}
+
+        <div class="library-folder"
+                data-folder-name="{{ folder_name }}"
+                data-folder-draggable="true"
+                style="
+                margin:18px 0;
+                padding:12px;
+                border-radius:12px;
+                background:rgba(255,255,255,.06);
+                border:1px solid rgba(255,255,255,.16);
+            ">
+
+                <div class="library-folder-header"
+                    onclick="toggleLibraryFolder(event, this)"
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                        margin-bottom:10px;
+                        padding:6px 4px;
+                        cursor:pointer;
+                        user-select:none;
+                        flex-wrap:wrap;
+                    ">
+                <span class="folder-toggle-icon" style="font-size:18px;">▼</span>
+                <span class="dlms-folder-icon dlms-folder-icon-large" aria-hidden="true"></span>
+
+                <h2 style="
+                    margin:0;
+                    font-size:22px;
+                    font-weight:900;
+                    flex:1;
+                    min-width:180px;
+                ">
+                    {{ folder_name }}
+                </h2>
+
+                <span style="
+                    font-size:13px;
+                    opacity:.85;
+                    padding:5px 10px;
+                    border-radius:999px;
+                    background:rgba(255,255,255,.14);
+                    white-space:nowrap;
+                ">
+                    {{ folder_quizzes|length }} quiz{% if folder_quizzes|length != 1 %}zes{% endif %}
+                </span>
+                {% if folder_name|lower != "uncategorized" %}
+               <div class="folder-actions"
+     style="
+        display:inline-flex;
+        gap:6px;
+        align-items:center;
+        flex-wrap:wrap;
+        margin-left:auto;
+        justify-content:flex-end;
+     ">
+
+    <button type="button"
+            onclick="showRenameFolderForm(event, this)"
+            style="font-size:12px;">
+        ✏️ Rename
+    </button>
+
+    <form method="POST"
+          action="/rename_quiz_folder"
+          class="rename-folder-form"
+          style="
+            display:none;
+            gap:6px;
+            align-items:center;
+            flex-wrap:wrap;
+          ">
+        <input type="hidden"
+               name="old_folder"
+               value="{{ folder_name }}">
+
+        <input type="hidden"
+               name="view"
+               value="{{ request.args.get('view', 'visible') }}">
+
+        <input type="text"
+               name="new_folder"
+               value="{{ folder_name }}"
+               style="
+                    padding:6px;
+                    border-radius:6px;
+                    border:1px solid rgba(255,255,255,.25);
+                    font-size:12px;
+                    width:150px;
+               ">
+
+        <button type="submit" style="font-size:12px;">
+            💾 Save
+        </button>
+
+        <button type="button"
+                onclick="hideRenameFolderForm(event, this)"
+                style="font-size:12px;">
+            Cancel
+        </button>
+    </form>
+</div>
+
+<form method="POST"
+      action="/delete_quiz_folder"
+      onsubmit="return confirm('Delete this folder? Quizzes inside it will move to Uncategorized.');"
+      style="
+        display:inline-flex;
+        gap:6px;
+        align-items:center;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+      ">
+    <input type="hidden"
+           name="folder"
+           value="{{ folder_name }}">
+
+    <input type="hidden"
+           name="view"
+           value="{{ request.args.get('view', 'visible') }}">
+
+    <button type="submit"
+            class="btn-delete"
+            style="
+                font-size:12px;
+                background:#7a0000;
+                color:white;
+                border:none;
+                border-radius:6px;
+                padding:6px 10px;
+            ">
+        🗑 Delete Folder
+    </button>
+</form>
+{% endif %}                
+            </div>
+
+            <div class="library-folder-body"
+                    data-folder-name="{{ folder_name }}">                     
+            {% for q in folder_quizzes %}
+            <div class="quiz-card"
+                 data-id="{{ q['html'] }}"
+                 style="
+                    padding:14px;
+                    margin:10px;
+                    background:rgba(0,0,0,.6);
+                    border-radius:8px;
+                    display:flex;
+                    justify-content:space-between;
+                    gap:20px;
+                    cursor:default;
+                 ">
+
+                <!-- LEFT -->
+                <div style="flex:1;">
+                    <h3 style="
+                        margin-top:0;
+                        margin-bottom:6px;
+                        font-size:24px;
+                        font-weight:900;
+                    ">
+                        {{ q['title'] }}
+                        {% if q.get('hidden') %}
+                            <span style="font-size:14px;opacity:.6;">(Hidden)</span>
+                        {% endif %}
+                    </h3>
+
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button onclick="location.href='/quizzes/{{ q['html'] }}'">
+                            ▶ Open Quiz
+                        </button>
+                                      
+                        <button onclick="location.href='/edit_quiz/{{ q['id'] }}'">
+                            ✏️ Edit Quiz
+                        </button>
+
+                        <button onclick="location.href='/export/quiz/{{ q['id'] }}.txt'"
+                                title="Exports this quiz as an import-friendly DLMS text file.">
+                            📥 Export Quiz
+                        </button>
+
+                        <!-- HIDE / UNHIDE -->
+                        <form method="POST"
+                            action="/toggle_hidden"
+                            style="display:inline;">
+                            <input type="hidden" name="id" value="{{ q['id'] }}">
+                            <input type="hidden"
+                                    name="view"
+                                    value="{{ request.args.get('view', 'visible') }}">
+
+                            <button type="submit" style="font-size:12px;">
+                                {% if q.get('hidden') %}
+                                    👁 Unhide
+                                {% else %}
+                                    🙈 Hide
                                 {% endif %}
-                                <div class="library-quiz-heading">
-                                    <h3>{{ q['title'] }}</h3>
-                                    <div class="library-quiz-meta">
-                                        <span>Quiz #{{ q['id'] }}</span>
-                                        <span>•</span>
-                                        <span>{{ folder_name }}</span>
-                                        {% if q.get('hidden') %}<span class="library-hidden-badge">Hidden</span>{% endif %}
-                                    </div>
-                                </div>
-                            </div>
+                            </button>
+                        </form>
+                                  
+                        <!-- MOVE TO FOLDER -->
+            <div class="quiz-move-control"
+                style="display:inline-flex; gap:6px; align-items:center; flex-wrap:wrap;">
 
-                            <div class="library-quiz-actions">
-                                <a class="library-primary-action compact" href="/quizzes/{{ q['html'] }}">▶ Open Quiz</a>
-                                <a class="library-secondary-action compact" href="/edit_quiz/{{ q['id'] }}">✎ Edit</a>
-                                <a class="library-secondary-action compact" href="/export/quiz/{{ q['id'] }}.txt" title="Exports this quiz as an import-friendly DLMS text file.">⇩ Export</a>
+                <button type="button"
+                        onclick="showMoveQuizForm(event, this)"
+                        style="font-size:12px;">
+                    📁 Move
+                </button>
 
-                                <form method="POST" action="/toggle_hidden" class="library-action-form">
-                                    <input type="hidden" name="id" value="{{ q['id'] }}">
-                                    <input type="hidden" name="view" value="{{ view }}">
-                                    <button type="submit" class="library-secondary-action compact">{% if q.get('hidden') %}👁 Unhide{% else %}◌ Hide{% endif %}</button>
-                                </form>
+                <form method="POST"
+                    action="/move_quiz_folder"
+                    class="move-quiz-form"
+                    style="
+                        display:none;
+                        gap:6px;
+                        align-items:center;
+                        flex-wrap:wrap;
+                    ">
+                    <input type="hidden" name="id" value="{{ q['id'] }}">
+                    <input type="hidden"
+                        name="view"
+                        value="{{ request.args.get('view', 'visible') }}">
 
-                                <div class="quiz-move-control">
-                                    <button type="button" class="library-secondary-action compact" onclick="showMoveQuizForm(event, this)">▣ Move</button>
-                                    <form method="POST" action="/move_quiz_folder" class="move-quiz-form library-inline-form" style="display:none;">
-                                        <input type="hidden" name="id" value="{{ q['id'] }}">
-                                        <input type="hidden" name="view" value="{{ view }}">
-                                        <select name="folder">
-                                            {% for folder in folder_names %}
-                                            <option value="{{ folder }}" {% if q.get('folder', 'Uncategorized') == folder %}selected{% endif %}>{{ folder }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <button type="submit">Save</button>
-                                        <button type="button" class="library-quiet-button" onclick="hideMoveQuizForm(event, this)">Cancel</button>
-                                    </form>
-                                </div>
+                    <select name="folder"
+                            style="
+                                padding:6px;
+                                border-radius:6px;
+                                font-size:12px;
+                            ">
+                        {% for folder in folder_names %}
+                            <option value="{{ folder }}"
+                                    {% if q.get('folder', 'Uncategorized') == folder %}selected{% endif %}>
+                                {{ folder }}
+                            </option>
+                        {% endfor %}
+                    </select>
 
-                                <form method="POST" action="/delete_quiz/{{ q['id'] }}" class="library-delete-form" onsubmit="return confirm('Delete this quiz permanently?');">
-                                    <button type="submit" class="library-delete-button" title="Delete quiz" aria-label="Delete quiz">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path d="M4 7h16"></path>
-                                            <path d="M9 7V4h6v3"></path>
-                                            <path d="M7 7l1 13h8l1-13"></path>
-                                            <path d="M10 11v5"></path>
-                                            <path d="M14 11v5"></path>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </article>
-                    {% endfor %}
+                    <button type="submit" style="font-size:12px;">
+                        💾 Save
+                    </button>
+
+                    <button type="button"
+                            onclick="hideMoveQuizForm(event, this)"
+                            style="font-size:12px;">
+                        Cancel
+                    </button>
+                </form>
+            </div>
+
+                    </div>
                 </div>
-            </article>
-            {% endfor %}
-        </section>
+
+                <!-- RIGHT -->
+                <div style="
+                    width:150px;
+                    min-width:150px;
+                    flex-shrink:0;
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    align-items:center;
+                ">
+
+                    {% if q['logo'] %}
+                    <img src="/user-static/logos/{{ q['logo'] }}"
+                         style="max-height:90px; width:auto;">
+                    {% else %}
+                    <div style="height:90px;"></div>
+                    {% endif %}
+
+                    <form method="POST"
+                          action="/delete_quiz/{{ q['id'] }}"
+                          onsubmit="return confirm('Delete this quiz permanently?');"
+                          style="margin-top:12px; width:100%; text-align:center;">
+
+                        <button type="submit"
+                                class="btn-delete"
+                                style="
+                                    width:100%;
+                                    background:#7a0000;
+                                    color:white;
+                                    border:none;
+                                    padding:7px 0;
+                                    font-size:13px;
+                                    border-radius:6px;
+                                ">
+                            🗑 Delete
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+                        {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+        </div>
+
         {% else %}
-        <section class="library-empty dashboard-panel">
-            <div class="library-empty-icon">▤</div>
-            <h2>No quizzes found</h2>
-            <p>There are no quizzes in the selected {{ view }} view.</p>
-            <a class="library-primary-action" href="/upload">Build a Quiz</a>
-        </section>
+        <p style="opacity:.8;">
+            No quizzes found for this view.
+        </p>
         {% endif %}
 
-        <section class="library-footer-actions dashboard-panel">
-            <div>
-                <h2>Library Tools</h2>
-                <p>Create new content or export a backup/reference copy of your complete library.</p>
-            </div>
-            <div class="library-footer-buttons">
-                <a class="library-secondary-action" href="/create_short_quiz">✎ Create Short Quiz</a>
-                <a class="library-secondary-action" href="/export/all_quizzes.txt" title="Export All creates a backup/reference file. Use Export Quiz on an individual quiz for an import-friendly file.">⇩ Export All Quizzes</a>
-            </div>
-        </section>
-    </main>
+        <br>
+        <button onclick="location.href='/upload'">📤 Upload New Quiz</button>
+        <button onclick="location.href='/paste'">📋 Paste Questions Instead</button>
+        <button onclick="location.href='/create_short_quiz'">✍️ Create Short Quiz</button>
+
+        <hr style="margin:24px 0; opacity:.35;">
+
+        <button onclick="location.href='/export/all_quizzes.txt'"
+                title="Export All creates a backup/reference file. Use Export Quiz on an individual quiz for an import-friendly file.">
+            📥 Export All Quizzes
+        </button>
+
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
+
+    </div>
 </div>
+
+
 
 <script>
 function getCollapsedLibraryFolders() {
-    try { return JSON.parse(localStorage.getItem("dlmsCollapsedLibraryFolders") || "[]"); }
-    catch { return []; }
+    try {
+        return JSON.parse(localStorage.getItem("dlmsCollapsedLibraryFolders") || "[]");
+    } catch {
+        return [];
+    }
 }
 
 function saveCollapsedLibraryFolders(folders) {
-    localStorage.setItem("dlmsCollapsedLibraryFolders", JSON.stringify(folders));
+    localStorage.setItem(
+        "dlmsCollapsedLibraryFolders",
+        JSON.stringify(folders)
+    );
 }
 
 function setLibraryFolderCollapsed(folder, collapsed) {
     const body = folder.querySelector(".library-folder-body");
     const icon = folder.querySelector(".folder-toggle-icon");
+
     if (!body || !icon) return;
-    body.style.display = collapsed ? "none" : "";
-    icon.textContent = collapsed ? "▶" : "▼";
-    folder.classList.toggle("collapsed", collapsed);
+
+    if (collapsed) {
+        body.style.display = "none";
+        icon.textContent = "▶";
+    } else {
+        body.style.display = "";
+        icon.textContent = "▼";
+    }
 }
 
 function toggleLibraryFolder(event, header) {
-    if (event.target.closest("form, input, button, select, textarea, a")) return;
+    if (
+        event.target.closest("form") ||
+        event.target.closest("input") ||
+        event.target.closest("button") ||
+        event.target.closest("select") ||
+        event.target.closest("textarea")
+    ) {
+        return;
+    }
+
     const folder = header.closest(".library-folder");
     const folderName = folder.getAttribute("data-folder-name");
-    if (!folderName) return;
-    const collapsedFolders = getCollapsedLibraryFolders();
-    const isCollapsed = collapsedFolders.includes(folderName);
-    setLibraryFolderCollapsed(folder, !isCollapsed);
-    saveCollapsedLibraryFolders(
-        isCollapsed ? collapsedFolders.filter(name => name !== folderName) : [...collapsedFolders, folderName]
-    );
-}
 
-function showRenameFolderForm(event, button) {
+    if (!folderName) return;
+
+    const collapsedFolders = getCollapsedLibraryFolders();
+    const isCurrentlyCollapsed = collapsedFolders.includes(folderName);
+
+    if (isCurrentlyCollapsed) {
+        setLibraryFolderCollapsed(folder, false);
+        saveCollapsedLibraryFolders(
+            collapsedFolders.filter(name => name !== folderName)
+        );
+    } else {
+        setLibraryFolderCollapsed(folder, true);
+        collapsedFolders.push(folderName);
+        saveCollapsedLibraryFolders(collapsedFolders);
+    }
+}
+                                  
+     function showRenameFolderForm(event, button) {
     event.stopPropagation();
+
     const actions = button.closest(".folder-actions");
-    const form = actions && actions.querySelector(".rename-folder-form");
+    const form = actions.querySelector(".rename-folder-form");
+
     if (!form) return;
+
     button.style.display = "none";
     form.style.display = "inline-flex";
+
     const input = form.querySelector('input[name="new_folder"]');
-    if (input) { input.focus(); input.select(); }
+    if (input) {
+        input.focus();
+        input.select();
+    }
 }
 
 function hideRenameFolderForm(event, button) {
     event.stopPropagation();
+
     const form = button.closest(".rename-folder-form");
-    const actions = form && form.closest(".folder-actions");
-    const renameButton = actions && actions.querySelector('button[onclick*="showRenameFolderForm"]');
+    const actions = form.closest(".folder-actions");
+    const renameButton = actions.querySelector('button[onclick*="showRenameFolderForm"]');
+
     if (!form || !renameButton) return;
+
     form.style.display = "none";
     renameButton.style.display = "";
-}
+}        
 
-function showAddFolderForm(event, button) {
+       function showAddFolderForm(event, button) {
     event.stopPropagation();
+
     const control = button.closest(".add-folder-control");
-    const form = control && control.querySelector(".add-folder-form");
+    const form = control.querySelector(".add-folder-form");
+
     if (!form) return;
+
     button.style.display = "none";
-    form.style.display = "inline-flex";
+    form.style.display = "flex";
+
     const input = form.querySelector('input[name="folder"]');
-    if (input) input.focus();
+    if (input) {
+        input.focus();
+        input.select();
+    }
 }
 
 function hideAddFolderForm(event, button) {
     event.stopPropagation();
+
     const form = button.closest(".add-folder-form");
-    const control = form && form.closest(".add-folder-control");
-    const newFolderButton = control && control.querySelector('button[onclick*="showAddFolderForm"]');
+    const control = form.closest(".add-folder-control");
+    const newFolderButton = control.querySelector('button[onclick*="showAddFolderForm"]');
+
     if (!form || !newFolderButton) return;
+
     form.style.display = "none";
     newFolderButton.style.display = "";
-}
+}  
 
-function showMoveQuizForm(event, button) {
+   document.addEventListener("DOMContentLoaded", function() {
+    const collapsedFolders = getCollapsedLibraryFolders();
+
+    document.querySelectorAll(".library-folder").forEach(folder => {
+        const folderName = folder.getAttribute("data-folder-name");
+
+        if (folderName && collapsedFolders.includes(folderName)) {
+            setLibraryFolderCollapsed(folder, true);
+        }
+    });
+});     
+
+       function showMoveQuizForm(event, button) {
     event.stopPropagation();
+
     const control = button.closest(".quiz-move-control");
-    const form = control && control.querySelector(".move-quiz-form");
+    const form = control.querySelector(".move-quiz-form");
+
     if (!form) return;
+
     button.style.display = "none";
     form.style.display = "inline-flex";
+
     const select = form.querySelector('select[name="folder"]');
-    if (select) select.focus();
+    if (select) {
+        select.focus();
+    }
 }
 
 function hideMoveQuizForm(event, button) {
     event.stopPropagation();
+
     const form = button.closest(".move-quiz-form");
-    const control = form && form.closest(".quiz-move-control");
-    const moveButton = control && control.querySelector('button[onclick*="showMoveQuizForm"]');
+    const control = form.closest(".quiz-move-control");
+    const moveButton = control.querySelector('button[onclick*="showMoveQuizForm"]');
+
     if (!form || !moveButton) return;
+
     form.style.display = "none";
     moveButton.style.display = "";
-}
+}                           
 
-document.addEventListener("DOMContentLoaded", function() {
-    const collapsedFolders = getCollapsedLibraryFolders();
-    document.querySelectorAll(".library-folder").forEach(folder => {
-        const folderName = folder.getAttribute("data-folder-name");
-        if (folderName && collapsedFolders.includes(folderName)) setLibraryFolderCollapsed(folder, true);
-    });
-
-    const search = document.getElementById("librarySearch");
-    if (search) {
-        search.addEventListener("input", function() {
-            const term = search.value.trim().toLowerCase();
-            document.querySelectorAll(".library-folder").forEach(folder => {
-                let visibleCards = 0;
-                folder.querySelectorAll(".library-quiz-card").forEach(card => {
-                    const searchableText = card.dataset.search || card.dataset.title || "";
-                    const matches = !term || searchableText.includes(term);
-                    card.style.display = matches ? "" : "none";
-                    if (matches) visibleCards += 1;
-                });
-                folder.classList.toggle("library-search-empty", visibleCards === 0);
-            });
-        });
-    }
-
+   document.addEventListener("DOMContentLoaded", function() {
     const folderList = document.getElementById("quizList");
-    if (folderList && window.Sortable) {
-        Sortable.create(folderList, {
+
+    if (!folderList || !window.Sortable) return;
+
+    Sortable.create(folderList, {
+        animation: 150,
+        draggable: ".library-folder",
+        handle: ".library-folder-header",
+        filter: "form, input, button, select, textarea",
+        preventOnFilter: false,
+
+        onEnd: function() {
+            const folders = [...document.querySelectorAll(".library-folder")]
+                .map(folder => folder.getAttribute("data-folder-name"))
+                .filter(Boolean);
+
+            fetch("/save_folder_order", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ folders })
+            });
+        }
+    });
+});         
+
+ document.addEventListener("DOMContentLoaded", function() {
+    if (!window.Sortable) return;
+
+    document.querySelectorAll(".library-folder-body").forEach(body => {
+        Sortable.create(body, {
             animation: 150,
-            draggable: ".library-folder",
-            handle: ".library-folder-header",
-            filter: "form, input, button, select, textarea, a",
-            preventOnFilter: false,
+            draggable: ".quiz-card",
+            handle: ".quiz-card",
+
             onEnd: function() {
-                const folders = [...document.querySelectorAll(".library-folder")]
-                    .map(folder => folder.getAttribute("data-folder-name"))
+                const folderName = body.getAttribute("data-folder-name") || "Uncategorized";
+
+                const order = [...body.querySelectorAll(".quiz-card")]
+                    .map(card => card.getAttribute("data-id"))
                     .filter(Boolean);
-                fetch("/save_folder_order", {
+
+                fetch("/save_quiz_order_in_folder", {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ folders })
+                    body: JSON.stringify({
+                        folder: folderName,
+                        order: order
+                    })
                 });
             }
         });
-    }
-
-    if (window.Sortable) {
-        document.querySelectorAll(".library-folder-body").forEach(body => {
-            Sortable.create(body, {
-                animation: 150,
-                draggable: ".quiz-card",
-                handle: ".quiz-card",
-                filter: "form, input, button, select, textarea, a",
-                preventOnFilter: false,
-                onEnd: function() {
-                    const folderName = body.getAttribute("data-folder-name") || "Uncategorized";
-                    const order = [...body.querySelectorAll(".quiz-card")]
-                        .map(card => card.getAttribute("data-id"))
-                        .filter(Boolean);
-                    fetch("/save_quiz_order_in_folder", {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({ folder: folderName, order: order })
-                    });
-                }
-            });
-        });
-    }
-});
-
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("🛑 SHUTDOWN DLMS 🛑\\n\\nThis will stop the application.\\n\\nYou will need to restart it manually.\\n\\nContinue?")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) { alert("❌ Failed to shut down DLMS."); }
     });
-}
-
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", (event) => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
+});                                                                                                                              
+</script>
 </script>
 </body>
 </html>
-""", quizzes=quizzes, grouped_quizzes=grouped_quizzes, folder_names=folder_names,
-       display_folder_names=display_folder_names, portal_title=portal_title,
-       visible_count=visible_count, hidden_count=hidden_count,
-       view=view, app_version=APP_VERSION)
+
+
+
+
+            """, quizzes=quizzes, grouped_quizzes=grouped_quizzes, folder_names=folder_names, portal_title=portal_title)
+
+
+
 
 
 
@@ -5843,7 +6099,7 @@ def upload_page():
 </button>
 
 <br><br>
-<button onclick="location.href='/'">⬅ Back To Dashboard</button>
+<button onclick="location.href='/'">⬅ Back To Portal</button>
 
 </div>
     </div>
@@ -6038,7 +6294,7 @@ Question\\s*#\\d+ => "
             <br>
             <button onclick="location.href='/upload'">📤 Upload File Instead</button>
             <button onclick="location.href='/create_short_quiz'">✍️ Create Short Quiz Instead</button>
-            <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+            <button onclick="location.href='/'">⬅ Back To Portal</button>
 
         </div>
 
@@ -6163,7 +6419,7 @@ def create_short_quiz_page():
 
         <br>
         <button onclick="location.href='/upload'">⬅ Back To Create Options</button>
-        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
 
     </div>
 </div>
@@ -7374,7 +7630,7 @@ function runDiff() {
 
         <br>
         <button onclick="history.back()">⬅ Go Back & Edit</button>
-        <button onclick="location.href='/'">🏠 Return To Dashboard</button>
+        <button onclick="location.href='/'">🏠 Return To Portal</button>
     </div>
 </div>
 </body>
@@ -7549,7 +7805,7 @@ def process_paste():
                 </button>
 
                 <button onclick="location.href='/'">
-                    🏠 Return To Dashboard
+                    🏠 Return To Portal
                 </button>
             </div>
         </div>
@@ -7744,7 +8000,7 @@ def process_file():
                 </button>
 
                 <button onclick="location.href='/'">
-                    🏠 Return To Dashboard
+                    🏠 Return To Portal
                 </button>
             </div>
         </div>
@@ -7829,7 +8085,11 @@ def process_file():
 # =====================================================
 @app.route("/settings")
 def settings_page():
-    """Settings landing page for the completed category-based settings UI."""
+    """Settings landing page.
+
+    This hub lets DLMS migrate the old all-in-one settings screen one
+    category at a time without removing any existing functionality.
+    """
     return render_template_string("""
 <!DOCTYPE html>
 <html lang="en">
@@ -7846,7 +8106,7 @@ def settings_page():
         <div>
             <span class="settings-eyebrow">SYSTEM</span>
             <h1>⚙️ Settings</h1>
-            <p>Configure DLMS by category. Each settings area saves independently.</p>
+            <p>Configure DLMS by category. Settings are being migrated here one section at a time.</p>
         </div>
         <button type="button" class="settings-back-button" onclick="location.href='/'">← Dashboard</button>
     </div>
@@ -7872,49 +8132,47 @@ def settings_page():
             <span class="settings-hub-arrow">›</span>
         </a>
 
-        <a class="settings-hub-card is-ready" href="/settings/parsing">
+        <div class="settings-hub-card is-coming">
             <div class="settings-hub-icon icon-orange">🧩</div>
             <div class="settings-hub-copy">
-                <div class="settings-card-kicker">AVAILABLE</div>
+                <div class="settings-card-kicker">PLANNED</div>
                 <h2>Parsing</h2>
                 <p>Confidence analysis, regex tools, BOM cleanup, and invisible characters.</p>
             </div>
-            <span class="settings-hub-arrow">›</span>
-        </a>
+        </div>
 
-        <a class="settings-hub-card is-ready" href="/settings/data">
+        <div class="settings-hub-card is-coming">
             <div class="settings-hub-icon icon-green">💾</div>
             <div class="settings-hub-copy">
-                <div class="settings-card-kicker">AVAILABLE</div>
-                <h2>Data &amp; History</h2>
+                <div class="settings-card-kicker">PLANNED</div>
+                <h2>Data & History</h2>
                 <p>Manage persistent attempt history and missed-question records.</p>
             </div>
-            <span class="settings-hub-arrow">›</span>
-        </a>
+        </div>
 
-        <a class="settings-hub-card is-ready settings-danger-card" href="/settings/reset">
+        <div class="settings-hub-card is-coming settings-danger-card">
             <div class="settings-hub-icon icon-red">⚠</div>
             <div class="settings-hub-copy">
-                <div class="settings-card-kicker">DESTRUCTIVE ACTIONS</div>
-                <h2>Reset &amp; Recovery</h2>
-                <p>Factory reset and destructive recovery operations.</p>
+                <div class="settings-card-kicker">PLANNED</div>
+                <h2>Reset & Recovery</h2>
+                <p>Factory reset and other destructive recovery actions.</p>
             </div>
-            <span class="settings-hub-arrow">›</span>
-        </a>
+        </div>
 
-        <a class="settings-hub-card is-ready" href="/admin/maintenance">
-            <div class="settings-hub-icon icon-cyan">🛠</div>
+        <a class="settings-hub-card settings-legacy-card" href="/settings/legacy">
+            <div class="settings-hub-icon icon-cyan">🔧</div>
             <div class="settings-hub-copy">
-                <div class="settings-card-kicker">SYSTEM TOOL</div>
-                <h2>Maintenance</h2>
-                <p>Rebuild existing quiz pages using the current DLMS template.</p>
+                <div class="settings-card-kicker">TEMPORARY SAFETY NET</div>
+                <h2>Current / Legacy Settings</h2>
+                <p>Open the original all-in-one settings page while migration is in progress.</p>
             </div>
             <span class="settings-hub-arrow">›</span>
         </a>
     </div>
 
     <div class="settings-migration-note">
-        <strong>Settings migration complete:</strong> Appearance, AI Integration, Parsing, Data &amp; History, and Reset &amp; Recovery now have dedicated pages. The original settings page remains available at <code>/settings/legacy</code> during this test phase as a hidden safety fallback.
+        <strong>Step 2 migration:</strong>
+        Appearance and AI Integration now have dedicated settings pages. Parsing, data cleanup, and factory reset remain fully available on Current / Legacy Settings.
     </div>
 </div>
 </body>
@@ -7955,12 +8213,12 @@ def settings_appearance_page():
             <div class="settings-section-heading">
                 <div class="settings-section-icon icon-blue">Aa</div>
                 <div>
-                    <h2>Dashboard Title</h2>
-                    <p>This title appears on the DLMS dashboard.</p>
+                    <h2>Portal Title</h2>
+                    <p>This title appears on the DLMS dashboard and portal.</p>
                 </div>
             </div>
 
-            <label class="settings-field-label" for="portalTitle">Dashboard Title</label>
+            <label class="settings-field-label" for="portalTitle">Training Portal Title</label>
             <input class="settings-text-input"
                    id="portalTitle"
                    type="text"
@@ -8131,16 +8389,16 @@ def settings_ai_page():
 
             <label class="settings-field-label" for="aiCustomUrl">Custom AI URL</label>
             <input class="settings-text-input"
-                   id="aiCustomUrl"
-                   type="text"
-                   name="ai_custom_url"
-                   value="{{ cfg.ai_custom_url }}"
-                   placeholder="Example: http://192.168.1.50:3000"
-                   style="margin-bottom:10px;">
+                    id="aiCustomUrl"
+                    type="text"
+                    name="ai_custom_url"
+                    value="{{ cfg.ai_custom_url }}"
+                    placeholder="Example: http://192.168.1.50:3000"
+                    style="margin-bottom:10px;">
 
-            <div class="settings-field-help">
-                Used only when the provider is Local / Custom URL.
-            </div>
+                <div class="settings-field-help">
+                    Used only when the provider is Local / Custom URL.
+                </div>
         </section>
 
         <section class="settings-form-section">
@@ -8232,350 +8490,6 @@ def save_ai_settings():
     return redirect("/settings/ai?saved=1")
 
 
-
-@app.route("/settings/parsing")
-def settings_parsing_page():
-    cfg = load_portal_config()
-
-    cfg.setdefault("show_confidence", True)
-    cfg.setdefault("enable_regex_replace", False)
-    cfg.setdefault("auto_bom_clean", False)
-    cfg.setdefault("enable_show_invisibles", True)
-
-    return render_template_string(r"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parsing Settings - DLMS</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="/static/favicon.ico">
-</head>
-<body class="settings-detail-page">
-<div class="settings-page-shell settings-detail-shell">
-    <div class="settings-page-header">
-        <div>
-            <span class="settings-eyebrow">SETTINGS / PARSING</span>
-            <h1>🧩 Parsing</h1>
-            <p>Control optional quiz-preview and text-cleanup tools used when preparing imported or pasted question content.</p>
-        </div>
-        <button type="button" class="settings-back-button" onclick="location.href='/settings'">← Settings</button>
-    </div>
-
-    {% if request.args.get('saved') == '1' %}
-    <div class="settings-success-banner">✓ Parsing settings saved.</div>
-    {% endif %}
-
-    <form class="settings-detail-card" action="/settings/parsing/save" method="POST">
-        <section class="settings-form-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-blue">🧠</div>
-                <div>
-                    <h2>Confidence Analysis</h2>
-                    <p>Controls whether the Confidence Analysis panel appears on quiz preview.</p>
-                </div>
-            </div>
-
-            <label class="settings-toggle-row">
-                <input type="checkbox"
-                       name="show_confidence"
-                       value="1"
-                       {% if cfg.show_confidence %}checked{% endif %}>
-                <span>
-                    <strong>Enable Confidence Analysis on Preview</strong>
-                    <small>Shows the optional confidence-analysis panel while reviewing parsed quiz content.</small>
-                </span>
-            </label>
-        </section>
-
-        <section class="settings-form-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-orange">.*</div>
-                <div>
-                    <h2>Regex Strip / Replace Engine</h2>
-                    <p>Enables advanced regular-expression cleanup tools when pasting quiz content.</p>
-                </div>
-            </div>
-
-            <label class="settings-toggle-row">
-                <input type="checkbox"
-                       name="enable_regex_replace"
-                       value="1"
-                       {% if cfg.enable_regex_replace %}checked{% endif %}>
-                <span>
-                    <strong>Enable Regex Replace Engine</strong>
-                    <small>Makes the regex cleanup workflow available before quiz parsing.</small>
-                </span>
-            </label>
-        </section>
-
-        <section class="settings-form-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-green">⌫</div>
-                <div>
-                    <h2>Invisible / BOM Cleanup</h2>
-                    <p>Automatically removes hidden Unicode characters that can interfere with parsing.</p>
-                </div>
-            </div>
-
-            <label class="settings-toggle-row">
-                <input type="checkbox"
-                       name="auto_bom_clean"
-                       value="1"
-                       {% if cfg.auto_bom_clean %}checked{% endif %}>
-                <span>
-                    <strong>Enable Invisible Character &amp; BOM Cleanup</strong>
-                    <small>Removes BOM characters, zero-width spaces, and similar hidden text artifacts commonly introduced by PDF or Word copy/paste.</small>
-                </span>
-            </label>
-        </section>
-
-        <section class="settings-form-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-purple">¶</div>
-                <div>
-                    <h2>Show Invisible Characters Tool</h2>
-                    <p>Controls whether hidden-character visualization is available during preview.</p>
-                </div>
-            </div>
-
-            <label class="settings-toggle-row">
-                <input type="checkbox"
-                       name="enable_show_invisibles"
-                       value="1"
-                       {% if cfg.enable_show_invisibles %}checked{% endif %}>
-                <span>
-                    <strong>Enable “Show Invisible Characters” Debug Tool</strong>
-                    <small>Lets you reveal hidden characters when diagnosing difficult parsing problems.</small>
-                </span>
-            </label>
-        </section>
-
-        <div class="settings-form-actions">
-            <button type="submit" class="settings-primary-button">💾 Save Parsing Settings</button>
-            <button type="button" class="settings-secondary-button" onclick="location.href='/settings'">Cancel</button>
-        </div>
-    </form>
-
-    <div class="settings-scope-note">
-        <strong>Safe migration behavior:</strong> saving this page changes only parsing-related configuration. Appearance and AI settings are not modified.
-    </div>
-</div>
-</body>
-</html>
-""", cfg=cfg)
-
-
-@app.route("/settings/parsing/save", methods=["POST"])
-def save_parsing_settings():
-    """Save only Parsing settings.
-
-    Checkbox values are intentionally scoped to this dedicated form so
-    Appearance and AI configuration remain untouched.
-    """
-    cfg = load_portal_config()
-
-    cfg["show_confidence"] = ("show_confidence" in request.form)
-    cfg["enable_regex_replace"] = ("enable_regex_replace" in request.form)
-    cfg["auto_bom_clean"] = ("auto_bom_clean" in request.form)
-    cfg["enable_show_invisibles"] = ("enable_show_invisibles" in request.form)
-
-    with open(PORTAL_CONFIG, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=4)
-
-    return redirect("/settings/parsing?saved=1")
-
-
-@app.route("/settings/data")
-def settings_data_page():
-    return render_template_string(r"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data & History Settings - DLMS</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="/static/favicon.ico">
-</head>
-<body class="settings-detail-page">
-<div class="settings-page-shell settings-detail-shell">
-    <div class="settings-page-header">
-        <div>
-            <span class="settings-eyebrow">SETTINGS / DATA &amp; HISTORY</span>
-            <h1>💾 Data &amp; History</h1>
-            <p>Manage persistent quiz-attempt and missed-question history without deleting quizzes.</p>
-        </div>
-        <button type="button" class="settings-back-button" onclick="location.href='/settings'">← Settings</button>
-    </div>
-
-    <div class="settings-detail-card">
-        <section class="settings-form-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-green">↶</div>
-                <div>
-                    <h2>Persistent Exam Result Storage</h2>
-                    <p>DLMS stores completed attempts and missed-question history in the application database.</p>
-                </div>
-            </div>
-
-            <div class="settings-warning-panel">
-                <strong>This action cannot be undone.</strong>
-                <span>Clearing history permanently removes all saved attempts, attempt answers, and missed-question records. Quizzes remain in the Quiz Library.</span>
-            </div>
-
-            <button id="clearDBBtn" class="settings-danger-button" type="button">
-                🗑 Clear Saved Results from Database and Dashboard
-            </button>
-            <div id="clearDBStatus" class="settings-operation-status" aria-live="polite"></div>
-        </section>
-
-        <div class="settings-form-actions">
-            <button type="button" class="settings-secondary-button" onclick="location.href='/settings'">← Back to Settings</button>
-            <button type="button" class="settings-secondary-button" onclick="location.href='/history'">📜 View History</button>
-        </div>
-    </div>
-
-    <div class="settings-scope-note">
-        <strong>Scope:</strong> this page uses the existing DLMS history-clear API. It does not delete quizzes or change configuration settings.
-    </div>
-</div>
-
-<script>
-const clearDBBtn = document.getElementById("clearDBBtn");
-const clearDBStatus = document.getElementById("clearDBStatus");
-
-clearDBBtn.addEventListener("click", async () => {
-    if (!confirm(
-        "Clear all saved quiz attempts and missed-question history?\n\n" +
-        "Your quizzes will remain available.\n\n" +
-        "This cannot be undone."
-    )) return;
-
-    clearDBBtn.disabled = true;
-    clearDBStatus.textContent = "Clearing saved history...";
-
-    try {
-        const res = await fetch("/api/clear_db_history", { method: "POST" });
-        const data = await res.json();
-        if (!res.ok || data.status !== "ok") {
-            throw new Error(data.error || "History clear failed");
-        }
-        clearDBStatus.textContent = "✅ Saved attempt and missed-question history cleared.";
-    } catch (err) {
-        console.error("[SETTINGS] Clear history failed:", err);
-        clearDBStatus.textContent = "❌ History clear failed. Check the server log.";
-    } finally {
-        clearDBBtn.disabled = false;
-    }
-});
-</script>
-</body>
-</html>
-""")
-
-
-@app.route("/settings/reset")
-def settings_reset_page():
-    return render_template_string(r"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset & Recovery Settings - DLMS</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="/static/favicon.ico">
-</head>
-<body class="settings-detail-page settings-reset-page">
-<div class="settings-page-shell settings-detail-shell">
-    <div class="settings-page-header">
-        <div>
-            <span class="settings-eyebrow">SETTINGS / RESET &amp; RECOVERY</span>
-            <h1>⚠️ Reset &amp; Recovery</h1>
-            <p>Destructive database reset operations are isolated here to reduce the chance of accidental use.</p>
-        </div>
-        <button type="button" class="settings-back-button" onclick="location.href='/settings'">← Settings</button>
-    </div>
-
-    <div class="settings-detail-card settings-reset-card">
-        <section class="settings-form-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-red">!</div>
-                <div>
-                    <h2>Full Factory Reset</h2>
-                    <p>Return the quiz database and quiz registry to a fresh state.</p>
-                </div>
-            </div>
-
-            <div class="settings-critical-panel">
-                <strong>Factory Reset permanently deletes:</strong>
-                <ul>
-                    <li>All quizzes</li>
-                    <li>All quiz questions and choices</li>
-                    <li>All attempts and missed-question history</li>
-                    <li>Generated quiz files and quiz records handled by the existing reset operation</li>
-                    <li>Database sequence state, resetting quiz IDs back to 1</li>
-                </ul>
-                <span>This cannot be undone. Use only when you intentionally want to start over.</span>
-            </div>
-
-            <button id="wipeDBBtn" class="settings-critical-button" type="button">
-                🧨 Clear ALL DATABASE AND QUIZ RECORDS (FULL RESET)
-            </button>
-            <div id="wipeDBStatus" class="settings-operation-status" aria-live="polite"></div>
-        </section>
-
-        <div class="settings-form-actions">
-            <button type="button" class="settings-secondary-button" onclick="location.href='/settings'">← Back to Settings</button>
-        </div>
-    </div>
-
-    <div class="settings-scope-note">
-        <strong>Safety:</strong> this page calls the existing DLMS factory-reset API. The backend reset logic itself has not been rewritten as part of the settings migration.
-    </div>
-</div>
-
-<script>
-const wipeDBBtn = document.getElementById("wipeDBBtn");
-const wipeDBStatus = document.getElementById("wipeDBStatus");
-
-wipeDBBtn.addEventListener("click", async () => {
-    if (!confirm(`⚠ FACTORY RESET ⚠
-
-This will permanently delete ALL quizzes, attempts, and history.
-
-Quiz IDs will be reset back to 1.
-
-This cannot be undone.
-
-Continue?`)) return;
-
-    wipeDBBtn.disabled = true;
-    wipeDBStatus.textContent = "Factory reset in progress...";
-
-    try {
-        const res = await fetch("/api/wipe_database", { method: "POST" });
-        const data = await res.json();
-        if (!res.ok || data.status !== "ok") {
-            throw new Error(data.error || "Factory reset returned non-ok status");
-        }
-        wipeDBStatus.textContent = "✅ FULL RESET completed successfully.";
-        alert("Factory reset completed. Application will reload.");
-        location.href = "/";
-    } catch (err) {
-        console.error("[SETTINGS] Factory reset failed:", err);
-        wipeDBStatus.textContent = "❌ FULL RESET failed. Check the server log.";
-        wipeDBBtn.disabled = false;
-    }
-});
-</script>
-</body>
-</html>
-""")
-
-
 @app.route("/settings/legacy")
 def settings_legacy_page():
     cfg = load_portal_config()
@@ -8590,7 +8504,7 @@ def settings_legacy_page():
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dashboard Settings</title>
+<title>Portal Settings</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/favicon.ico">
 </head>
@@ -8615,7 +8529,7 @@ fetch("/config/portal.json")
 <div class="container">
 
     <h1 class="hero-title">
-        ⚙️ Dashboard Configuration
+        ⚙️ Portal Configuration
     </h1>
 
     <div class="card">
@@ -8626,7 +8540,7 @@ fetch("/config/portal.json")
             <!-- ============================
                  PORTAL TITLE
                  ============================ -->
-            <h3>Dashboard Title</h3>
+            <h3>Training Portal Title</h3>
             <input type="text"
                    name="portal_title"
                    value="{{ cfg.title }}"
@@ -8824,7 +8738,7 @@ fetch("/config/portal.json")
         <p id="clearDBStatus" style="margin-top:6px;"></p>
 
         <br>
-        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+        <button onclick="location.href='/'">⬅ Back To Portal</button>
 
     </div>
 
@@ -10608,7 +10522,7 @@ def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_file
 
         <div class="quiz-return-buttons">
             <button id="returnPortalBtn" onclick="location.href='/'">
-                🏠 Return To Dashboard
+                🏠 Return To Portal
             </button>
 
             <button id="returnLibraryBtn" onclick="location.href='/library'">
