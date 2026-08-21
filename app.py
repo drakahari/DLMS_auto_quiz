@@ -5405,7 +5405,6 @@ def quiz_library():
             </div>
             <div class="library-hero-actions">
                 <a class="library-primary-action" href="/upload">＋ Build Quiz</a>
-                <a class="library-secondary-action" href="/paste">Paste Questions</a>
             </div>
         </section>
 

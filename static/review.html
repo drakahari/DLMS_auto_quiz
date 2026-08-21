@@ -1,97 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Review Missed Questions</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/favicon.ico">
-
-<style>
-.review-container {
-    max-width: 980px;
-    margin: auto;
-}
-
-.info-box {
-    background: rgba(0,0,0,.75);
-    border: 1px solid rgba(255,255,255,.3);
-    padding: 14px;
-    border-radius: 8px;
-    margin-bottom: 14px;
-}
-
-.reviewCard {
-    background: rgba(0,0,0,.85);
-    padding: 12px;
-    margin: 12px 0;
-    border-radius: 8px;
-    border-left: 8px solid #ff4d4d;
-}
-
-.correctBox {
-    color: #00ff80;
-    margin-top: 6px;
-}
-
-.userBox {
-    color: #ff6b6b;
-    margin-top: 6px;
-}
-
-.ankiRow {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-}
-
-.aiRow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-}
-
-small { color:#ccc; }
-</style>
 </head>
 
-<body>
+<body class="dashboard-home review-modern-page">
+<div class="dashboard-shell">
 
-<div class="container review-container">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-brand">
+            <div class="dashboard-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img">
+                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <div class="dashboard-brand-title">DLMS</div>
+                <div class="dashboard-brand-subtitle">Training Center</div>
+            </div>
+        </div>
 
-    <h1 class="hero-title">🔁 Review Missed Questions</h1>
+        <nav class="dashboard-nav" aria-label="Primary navigation">
+            <a class="dashboard-nav-item" href="/">
+                <span class="dashboard-nav-icon">⌂</span><span>Dashboard</span>
+            </a>
+            <a class="dashboard-nav-item" href="/library">
+                <span class="dashboard-nav-icon">▤</span><span>Quiz Library</span>
+            </a>
+            <a class="dashboard-nav-item" href="/upload">
+                <span class="dashboard-nav-icon">✎</span><span>Build Quiz</span>
+            </a>
+            <a class="dashboard-nav-item" href="/law">
+                <span class="dashboard-nav-icon">⚖</span><span>Law Study</span>
+            </a>
+            <a class="dashboard-nav-item active" href="/history">
+                <span class="dashboard-nav-icon">↶</span><span>History</span>
+            </a>
+            <a class="dashboard-nav-item" href="/dashboard">
+                <span class="dashboard-nav-icon">▥</span><span>Analytics</span>
+            </a>
+        </nav>
 
-    <div id="info" class="info-box">Loading…</div>
-    <div id="reviewArea"></div>
+        <div class="dashboard-nav-section-label"><span>System</span></div>
 
-    <div style="margin: 14px 0; display:flex; gap:18px; flex-wrap:wrap;">
-        <label style="cursor:pointer;">
-            <input type="checkbox" id="ankiSelectAll" onclick="toggleSelectAllAnki(this)">
-            <b>Select all missed questions for Anki</b>
-        </label>
+        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
+            <a class="dashboard-nav-item" href="/settings">
+                <span class="dashboard-nav-icon">⚙</span><span>Settings</span>
+            </a>
+            <a class="dashboard-nav-item" href="/help">
+                <span class="dashboard-nav-icon">?</span><span>Help</span>
+            </a>
+            <a class="dashboard-nav-item" href="/admin/maintenance">
+                <span class="dashboard-nav-icon">⌘</span><span>Maintenance</span>
+            </a>
+        </nav>
 
-        <label style="cursor:pointer;">
-            <input type="checkbox" id="aiSelectAll" onclick="toggleSelectAllAI(this)">
-            <b>Select all missed questions for AI</b>
-        </label>
-    </div>
-
-    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button onclick="exportMissedAnkiApkg()">
-            📦 Export Missed to Anki (APKG)
+        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
+            <span class="dashboard-shutdown-icon">⏻</span>
+            <span>Shutdown DLMS</span>
         </button>
 
-        <button type="button" onclick="explainSelectedWithAI()">
-            🤖 Explain Selected with AI
-        </button>
-    </div>
+        <div class="dashboard-sidebar-version">Review</div>
+    </aside>
 
-    <br>
-    <button onclick="location.href='/'">⬅ Back to Dashboard</button>
-    <button onclick="location.href='/history'">📜 Back to History</button>
+    <main class="dashboard-main review-modern-main">
+        <header class="dashboard-header review-page-header">
+            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
+            <div>
+                <div class="review-eyebrow">ATTEMPT REVIEW</div>
+                <h1>Missed Questions</h1>
+                <p>Review what you missed, send questions to AI, or build an Anki deck.</p>
+            </div>
+        </header>
 
+        <section id="info" class="review-attempt-summary dashboard-panel">Loading attempt…</section>
+
+        <section id="reviewArea" class="review-question-list"></section>
+
+        <section class="review-bulk-panel dashboard-panel">
+            <div class="review-bulk-copy">
+                <span class="review-eyebrow">BULK ACTIONS</span>
+                <h2>Work with selected questions</h2>
+            </div>
+
+            <div class="review-bulk-selectors">
+                <label>
+                    <input type="checkbox" id="ankiSelectAll" onclick="toggleSelectAllAnki(this)">
+                    <span>Select all for Anki</span>
+                </label>
+                <label>
+                    <input type="checkbox" id="aiSelectAll" onclick="toggleSelectAllAI(this)">
+                    <span>Select all for AI</span>
+                </label>
+            </div>
+
+            <div class="review-bulk-actions">
+                <button type="button" onclick="exportMissedAnkiApkg()">📦 Export Selected to Anki</button>
+                <button type="button" onclick="explainSelectedWithAI()">🤖 Explain Selected with AI</button>
+            </div>
+        </section>
+
+        <div class="review-return-row">
+            <a class="review-return-link" href="/history">← Back to History</a>
+            <a class="review-return-link" href="/">Dashboard</a>
+        </div>
+    </main>
 </div>
 
 <script>
@@ -108,6 +126,19 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+function formatReviewDate(value) {
+    if (!value) return "Date unavailable";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString([], {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+    });
 }
 
 async function loadAIConfig() {
@@ -202,10 +233,23 @@ async function loadReview() {
         }
 
         info.innerHTML = `
-            <b>Quiz:</b> ${escapeHtml(attempt.quiz_title)}<br>
-            <b>Score:</b> ${escapeHtml(attempt.score)}/${escapeHtml(attempt.total)} (${escapeHtml(attempt.percent)}%)<br>
-            <b>Date:</b> ${escapeHtml(attempt.completed_at)}<br>
-            <b>Mode:</b> ${escapeHtml(attempt.mode)}
+            <div class="review-attempt-primary">
+                <div>
+                    <span class="review-attempt-label">QUIZ</span>
+                    <strong>${escapeHtml(attempt.quiz_title || "Unknown Quiz")}</strong>
+                </div>
+                <div class="review-score-pill">
+                    <strong>${escapeHtml(attempt.percent)}%</strong>
+                    <span>${escapeHtml(attempt.score)}/${escapeHtml(attempt.total)}</span>
+                </div>
+            </div>
+            <div class="review-attempt-meta">
+                <span>${escapeHtml(formatReviewDate(attempt.completed_at))}</span>
+                <span class="review-meta-dot">•</span>
+                <span>${escapeHtml(attempt.mode || "Quiz")}</span>
+                <span class="review-meta-dot">•</span>
+                <span>Attempt #${escapeHtml(attempt.id)}</span>
+            </div>
         `;
 
         const mqRes = await fetch(`/api/missed_questions?attempt=${encodeURIComponent(attemptId)}`, { cache: "no-store" });
@@ -235,39 +279,45 @@ async function loadReview() {
                 : "<i>(No answer recorded)</i>";
 
             html += `
-            <div class="reviewCard">
-                <div class="ankiRow">
-                    <input type="checkbox"
-                        class="anki-select"
-                        data-qnum="${qnum}"
-                        onchange="syncSelectAllAnki()">
-                    <span>Add to Anki deck</span>
+            <article class="review-question-card">
+                <div class="review-question-head">
+                    <div>
+                        <span class="review-question-kicker">MISSED QUESTION</span>
+                        <h2>Question ${qnum}</h2>
+                    </div>
+                    <div class="review-question-selectors">
+                        <label>
+                            <input type="checkbox"
+                                class="anki-select"
+                                data-qnum="${qnum}"
+                                onchange="syncSelectAllAnki()">
+                            <span>Anki</span>
+                        </label>
+                        <label>
+                            <input type="checkbox"
+                                class="ai-select"
+                                data-index="${index}"
+                                onchange="syncSelectAllAI()">
+                            <span>AI</span>
+                        </label>
+                    </div>
                 </div>
 
-                <div class="ankiRow">
-                    <input type="checkbox"
-                        class="ai-select"
-                        data-index="${index}"
-                        onchange="syncSelectAllAI()">
-                    <span>Explain with AI</span>
+                <div class="review-question-text">${questionText}</div>
+
+                <div class="review-answer-grid">
+                    <section class="review-answer-panel correct">
+                        <span class="review-answer-label">CORRECT ANSWER</span>
+                        <div>${correctText}</div>
+                    </section>
+                    <section class="review-answer-panel incorrect">
+                        <span class="review-answer-label">YOUR ANSWER</span>
+                        <div>${selectedText}</div>
+                    </section>
                 </div>
 
-                <h3>Question ${qnum}</h3>
-
-                <div>${questionText}</div>
-
-                <div class="correctBox">
-                    <b>Correct Answer</b><br>
-                    ${correctText}
-                </div>
-
-                <div class="userBox">
-                    <b>Your Answer</b><br>
-                    ${selectedText}
-                </div>
-
-                <div class="aiRow">
-                    <button type="button" onclick="copyAIExplainPrompt(${index}, this)">
+                <div class="review-question-actions">
+                    <button type="button" class="review-secondary-btn" onclick="copyAIExplainPrompt(${index}, this)">
                         📋 Copy Explain Prompt
                     </button>
 
@@ -275,7 +325,7 @@ async function loadReview() {
                         🤖 Explain with AI
                     </button>
                 </div>
-            </div>`;
+            </article>`;
         });
 
         box.innerHTML = html;
@@ -551,9 +601,36 @@ window.exportMissedAnkiApkg = function() {
 /* =====================================================
    STARTUP
 ===================================================== */
+const reviewMenuButton = document.getElementById("menuButton");
+const reviewSidebar = document.getElementById("dashboardSidebar");
+
+if (reviewMenuButton && reviewSidebar) {
+    reviewMenuButton.addEventListener("click", () => reviewSidebar.classList.toggle("open"));
+
+    document.addEventListener("click", (event) => {
+        if (window.innerWidth > 820) return;
+        if (!reviewSidebar.classList.contains("open")) return;
+        if (reviewSidebar.contains(event.target) || reviewMenuButton.contains(event.target)) return;
+        reviewSidebar.classList.remove("open");
+    });
+}
+
+const reviewShutdownButton = document.getElementById("shutdownBtn");
+if (reviewShutdownButton) {
+    reviewShutdownButton.addEventListener("click", async () => {
+        if (!confirm("SHUTDOWN DLMS\n\nThis will stop the application.\n\nYou will need to restart it manually.\n\nContinue?")) return;
+
+        try {
+            await fetch("/api/shutdown", { method: "POST" });
+            alert("DLMS is shutting down.");
+        } catch (err) {
+            alert("DLMS may already be shutting down.");
+        }
+    });
+}
+
 loadAIConfig();
 loadReview();
 </script>
-
 </body>
 </html>

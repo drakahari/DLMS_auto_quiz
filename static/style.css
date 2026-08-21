@@ -4509,3 +4509,358 @@ a.settings-hub-card:hover {
         font-size: 22px;
     }
 }
+
+/* =========================================================
+   DLMS MODERN REVIEW PAGE
+   Added 2026-08-21.
+   Presentation-only modernization of static/review.html.
+   Existing AI and Anki workflows remain unchanged.
+   ========================================================= */
+
+.review-modern-page .review-modern-main {
+    min-width: 0;
+}
+
+.review-page-header {
+    min-height: 126px;
+    padding-bottom: 24px;
+}
+
+.review-page-header h1 {
+    font-size: clamp(34px, 3vw, 48px);
+}
+
+.review-page-header p {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 17px;
+}
+
+.review-eyebrow {
+    margin-bottom: 8px;
+    color: #5eb5ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+}
+
+.review-attempt-summary {
+    margin-bottom: 16px;
+    padding: 18px 20px;
+}
+
+.review-attempt-primary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+}
+
+.review-attempt-primary > div:first-child {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.review-attempt-label {
+    color: #7facdd;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+.review-attempt-primary strong {
+    overflow-wrap: anywhere;
+    color: #fff;
+    font-size: 22px;
+}
+
+.review-score-pill {
+    flex: 0 0 auto;
+    min-width: 92px;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 14px;
+    border: 1px solid rgba(87,163,255,.34);
+    border-radius: 12px;
+    background: rgba(15,53,98,.50);
+}
+
+.review-score-pill strong {
+    color: #80c8ff;
+    font-size: 24px;
+}
+
+.review-score-pill span {
+    color: #b9cce3;
+    font-size: 13px;
+}
+
+.review-attempt-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    color: #aebed1;
+    font-size: 13px;
+}
+
+.review-meta-dot {
+    color: #4d8dcb;
+}
+
+.review-question-list {
+    display: grid;
+    gap: 14px;
+}
+
+.review-question-card {
+    padding: 18px;
+    border: 1px solid rgba(91,154,234,.30);
+    border-left: 4px solid #f05f6c;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(5,18,40,.88), rgba(4,14,31,.82));
+    box-shadow: 0 10px 26px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.review-question-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding-bottom: 13px;
+    border-bottom: 1px solid rgba(88,143,208,.18);
+}
+
+.review-question-kicker {
+    color: #7ba9db;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.3px;
+}
+
+.review-question-head h2 {
+    margin: 4px 0 0;
+    font-size: 20px;
+}
+
+.review-question-selectors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.review-question-selectors label,
+.review-bulk-selectors label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid rgba(99,151,217,.27);
+    border-radius: 9px;
+    color: #dce9f8;
+    background: rgba(11,34,66,.48);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.review-question-selectors input,
+.review-bulk-selectors input {
+    width: 16px;
+    height: 16px;
+    accent-color: #2d91ee;
+}
+
+.review-question-text {
+    padding: 17px 2px;
+    color: #f2f7ff;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.review-answer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.review-answer-panel {
+    min-height: 86px;
+    padding: 13px 14px;
+    border-radius: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.review-answer-panel.correct {
+    color: #c8f9dc;
+    border: 1px solid rgba(57,205,117,.30);
+    background: rgba(20,105,61,.19);
+}
+
+.review-answer-panel.incorrect {
+    color: #ffd2d6;
+    border: 1px solid rgba(240,91,106,.29);
+    background: rgba(131,31,43,.18);
+}
+
+.review-answer-label {
+    display: block;
+    margin-bottom: 7px;
+    color: inherit;
+    opacity: .78;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.25px;
+}
+
+.review-question-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 14px;
+}
+
+.review-question-actions button {
+    min-height: 40px;
+    margin: 0;
+    padding: 9px 13px;
+    font-size: 13px;
+}
+
+.review-question-actions .review-secondary-btn {
+    background: rgba(17,45,79,.80);
+    border-color: rgba(103,159,225,.34);
+}
+
+.review-bulk-panel {
+    margin-top: 18px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: minmax(180px, .8fr) minmax(280px, 1.15fr) auto;
+    align-items: center;
+    gap: 18px;
+}
+
+.review-bulk-copy h2 {
+    margin: 3px 0 0;
+    font-size: 17px;
+}
+
+.review-bulk-selectors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.review-bulk-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+.review-bulk-actions button {
+    margin: 0;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+.review-return-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 17px 2px 4px;
+}
+
+.review-return-link {
+    color: #79bbf6;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.review-return-link:hover {
+    color: #b5dcff;
+    text-decoration: none;
+}
+
+.review-modern-page #info:empty,
+.review-modern-page #reviewArea:empty {
+    display: none;
+}
+
+.review-modern-page #reviewArea > p {
+    margin: 0;
+    padding: 20px;
+    border: 1px solid rgba(91,154,234,.28);
+    border-radius: 14px;
+    background: rgba(5,18,40,.80);
+    color: #cbd9eb;
+}
+
+@media (max-width: 1100px) {
+    .review-bulk-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .review-bulk-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 760px) {
+    .review-page-header {
+        padding-left: 52px;
+        padding-right: 10px;
+        text-align: left;
+    }
+
+    .review-page-header p {
+        margin-left: 0;
+    }
+
+    .review-attempt-primary,
+    .review-question-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .review-score-pill {
+        width: fit-content;
+    }
+
+    .review-answer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .review-question-selectors {
+        align-self: flex-start;
+    }
+
+    .review-question-actions,
+    .review-bulk-actions,
+    .review-bulk-selectors {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .review-question-actions button,
+    .review-bulk-actions button,
+    .review-question-selectors label,
+    .review-bulk-selectors label {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
