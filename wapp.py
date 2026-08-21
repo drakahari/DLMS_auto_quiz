@@ -3743,229 +3743,148 @@ def edit_quiz(quiz_id):
 
     return render_template_string("""
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Quiz - DLMS</title>
+    <title>Edit Quiz</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home build-modern-page edit-quiz-page">
-<div class="dashboard-shell">
+<body>
+<div class="container">
+    <h1 class="hero-title">✏️ Edit Quiz</h1>
 
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="dashboard-brand">
-            <div class="dashboard-brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img">
-                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <div class="dashboard-brand-title">DLMS</div>
-                <div class="dashboard-brand-subtitle">Training Center</div>
-            </div>
-        </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-        <nav class="dashboard-nav" aria-label="Primary navigation">
-            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-            <a class="dashboard-nav-item active" href="/library" aria-current="page"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-            <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-            <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-        </nav>
+    <div class="card">
+        <form id="edit-quiz-form" method="POST" action="/edit_quiz/{{ quiz['id'] }}" enctype="multipart/form-data">
+            <label><b>Quiz Title</b></label><br>
+            <input type="text" name="quiz_title" value="{{ quiz['title'] }}" style="width:100%; padding:8px;">
 
-        <div class="dashboard-nav-section-label"><span>System</span></div>
-        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-        </nav>
+            <p><b>Quiz ID:</b> {{ quiz["id"] }}</p>
+            <p><b>Source file:</b> {{ quiz["source_file"] }}</p>
 
-        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
-            <span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span>
-        </button>
-        <div class="dashboard-sidebar-version">DLMS v{{ app_version }}</div>
-    </aside>
+            <label><b>Exam Mode Timer (minutes)</b></label><br>
+            <input type="number"
+                   name="exam_minutes"
+                   min="1"
+                   max="1440"
+                   value="{{ exam_minutes }}"
+                   style="width:180px; padding:8px;">
+            <p style="opacity:0.7; font-size:12px">
+                Existing quizzes default to 90 minutes. Change this value to customize Exam Mode for this quiz.
+            </p>
 
-    <main class="dashboard-main build-modern-main edit-quiz-main">
-        <header class="dashboard-header build-page-header edit-quiz-header">
-            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-            <div>
-                <div class="build-eyebrow">QUIZ LIBRARY</div>
-                <h1>Edit Quiz</h1>
-                <p>Update quiz details, questions, answer choices, and Exam Mode settings.</p>
-            </div>
-        </header>
+             <br>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+            <h3>Quiz Logo</h3>
+            <input type="file" name="quiz_logo" accept="image/*">
+            <p style="opacity:0.7; font-size:12px">
+                Optional. Uploading a new logo will replace the current quiz logo.
+            </p>                     
 
-        <form id="edit-quiz-form"
-              class="build-workspace"
-              method="POST"
-              action="/edit_quiz/{{ quiz['id'] }}"
-              enctype="multipart/form-data">
+            {% for q in questions %}
+            <div class="card question-block" style="margin-top:18px;">
+                <h3>Question {{ q.number }}</h3>
 
-            <section class="dashboard-panel build-section">
-                <div class="build-section-heading">
-                    <div class="build-step-number">1</div>
-                    <div>
-                        <h2>Quiz Basics</h2>
-                        <p>Update the quiz title, Exam Mode timer, or logo.</p>
-                    </div>
-                </div>
+                <button type="submit"
+                        form="delete-question-{{ q.id }}"
+                        class="btn-delete"
+                        onclick="return confirm('Delete this question permanently?');"
+                        style="margin-bottom:10px;">
+                    🗑 Delete Question
+                </button>
 
-                <div class="edit-quiz-meta-row" aria-label="Quiz metadata">
-                    <span><strong>Quiz ID</strong> {{ quiz["id"] }}</span>
-                    <span class="edit-quiz-source"><strong>Source</strong> {{ quiz["source_file"] }}</span>
-                </div>
+                <textarea name="question_{{ q.id }}" style="width:100%; min-height:90px;">{{ q.text }}</textarea>
 
-                <div class="build-two-column-fields edit-quiz-basics-grid">
-                    <label class="build-field">
-                        <span>Quiz Display Title</span>
+                <ul>
+                {% for c in q.choices %}
+                    <li style="margin-bottom:6px;">
+                        <b>{{ c["label"] }}.</b>
+
                         <input type="text"
-                               name="quiz_title"
-                               value="{{ quiz['title'] }}"
-                               required>
-                    </label>
+                               name="choice_{{ c['id'] }}"
+                               value="{{ c['text'] }}"
+                               style="width:65%; padding:6px;">
 
-                    <label class="build-field">
-                        <span>Quiz Logo <em>Optional</em></span>
-                        <input type="file" name="quiz_logo" accept="image/*">
-                        <small>Uploading a new logo replaces the current quiz logo.</small>
-                    </label>
+                        <input type="checkbox"
+                               name="correct_{{ c['id'] }}"
+                               {% if c["is_correct"] %}checked{% endif %}>
+                        Correct
 
-                    <label class="build-field">
-                        <span>Exam Mode Timer <em>Minutes</em></span>
+                        <button type="submit"
+                                form="delete-choice-{{ c.id }}"
+                                class="btn-delete"
+                                onclick="return confirm('Delete this answer choice?');"
+                                style="font-size:11px; padding:4px 6px;">
+                            ❌
+                        </button>
+
+                        {% if c["is_correct"] %}
+                            <span style="color:#00ff80;">✅ Correct</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+                </ul>
+
+                <div style="margin-top:10px;">
+                    <label>
+                        Add answer choices:
                         <input type="number"
-                               name="exam_minutes"
+                               name="choice_count"
+                               value="1"
                                min="1"
-                               max="1440"
-                               value="{{ exam_minutes }}"
-                               inputmode="numeric">
-                        <small>Existing quizzes default to 90 minutes. Change this value to customize Exam Mode.</small>
+                               max="10"
+                               
+                               style="width:70px; padding:5px;">
                     </label>
+
+                    <button type="submit"
+                            name="action"
+                            value="add_choices_{{ q.id }}">
+                        ➕ Add Choices
+                    </button>
                 </div>
-            </section>
+            </div>
+            {% endfor %}
 
-            <section class="build-question-section">
-                <div class="build-section-heading build-question-section-heading">
-                    <div class="build-step-number">2</div>
-                    <div>
-                        <h2>Questions &amp; Answers</h2>
-                        <p>Edit question text and answer choices. Every question must retain at least one correct answer.</p>
-                    </div>
-                </div>
+            <br>
 
-                <div class="build-question-list">
-                    {% for q in questions %}
-                    <article class="build-question-card question-block">
-                        <div class="build-question-heading-row">
-                            <h3>Question {{ q.number }}</h3>
-                            <button type="submit"
-                                    form="delete-question-{{ q.id }}"
-                                    class="build-icon-danger btn-delete"
-                                    onclick="return confirm('Delete this question permanently?');"
-                                    title="Delete question"
-                                    aria-label="Delete question">×</button>
-                        </div>
+            <button type="submit" name="action" value="add_question">
+                ➕ Add New Question
+            </button>
 
-                        <label class="build-field">
-                            <span>Question Text</span>
-                            <textarea class="question-text"
-                                      name="question_{{ q.id }}">{{ q.text }}</textarea>
-                        </label>
-
-                        <div class="build-choice-heading">
-                            <span>Answer Choices</span>
-                            <small>Select Correct for every valid answer.</small>
-                        </div>
-
-                        <ul class="build-choice-list edit-quiz-choice-list">
-                        {% for c in q.choices %}
-                            <li>
-                                <b class="choice-label">{{ c["label"] }}.</b>
-
-                                <input type="text"
-                                       name="choice_{{ c['id'] }}"
-                                       value="{{ c['text'] }}">
-
-                                <label class="build-correct-toggle">
-                                    <input type="checkbox"
-                                           name="correct_{{ c['id'] }}"
-                                           {% if c["is_correct"] %}checked{% endif %}>
-                                    <span>Correct</span>
-                                </label>
-
-                                <button type="submit"
-                                        form="delete-choice-{{ c.id }}"
-                                        class="build-choice-delete btn-delete"
-                                        onclick="return confirm('Delete this answer choice?');"
-                                        title="Delete choice"
-                                        aria-label="Delete choice">×</button>
-                            </li>
-                        {% endfor %}
-                        </ul>
-
-                        <div class="edit-quiz-add-choice-row">
-                            <label class="build-field edit-quiz-choice-count">
-                                <span>Add answer choices</span>
-                                <input type="number"
-                                       name="choice_count"
-                                       value="1"
-                                       min="1"
-                                       max="10"
-                                       inputmode="numeric">
-                            </label>
-
-                            <button class="build-add-choice"
-                                    type="submit"
-                                    name="action"
-                                    value="add_choices_{{ q.id }}">＋ Add Choices</button>
-                        </div>
-                    </article>
-                    {% endfor %}
-                </div>
-
-                <button class="build-add-question"
-                        type="submit"
-                        name="action"
-                        value="add_question">＋ Add New Question</button>
-            </section>
-
-            <section class="dashboard-panel build-finalize-bar edit-quiz-finalize">
-                <div>
-                    <strong>Ready to save?</strong>
-                    <span>DLMS will validate the quiz and rebuild its generated quiz page.</span>
-                </div>
-                <div class="build-submit-row">
-                    <a class="build-secondary-link" href="/library">Back to Quiz Library</a>
-                    <button class="build-primary-button" type="submit">Save Changes</button>
-                </div>
-            </section>
+            <button type="submit">💾 Save Changes</button>
         </form>
 
-        <!-- Kept outside the main form so destructive actions remain isolated. -->
+        <!-- ✅ OUTSIDE FORMS: SAFE DELETE + ADD CHOICES + DELETE CHOICES -->
         {% for q in questions %}
         <form id="delete-question-{{ q.id }}"
               method="POST"
-              action="/delete_question/{{ quiz['id'] }}/{{ q.id }}"></form>
+              action="/delete_question/{{ quiz['id'] }}/{{ q.id }}">
+        </form>
+
+        <form id="add-choices-{{ q.id }}"
+              method="POST"
+              action="/add_choices/{{ quiz['id'] }}/{{ q.id }}">
+        </form>
 
             {% for c in q.choices %}
             <form id="delete-choice-{{ c.id }}"
                   method="POST"
-                  action="/delete_choice/{{ quiz['id'] }}/{{ c.id }}"></form>
+                  action="/delete_choice/{{ quiz['id'] }}/{{ c.id }}">
+            </form>
             {% endfor %}
         {% endfor %}
-    </main>
+
+        <button onclick="location.href='/library'">⬅ Back to Library</button>
+    </div>
 </div>
 
 <script>
@@ -3983,39 +3902,11 @@ document.getElementById("edit-quiz-form").addEventListener("submit", function(e)
         }
     }
 });
-
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-
-const shutdownBtn = document.getElementById("shutdownBtn");
-
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("SHUTDOWN DLMS\\n\\nThis will stop the application.\\n\\nYou will need to restart it manually.\\n\\nContinue?")) return;
-
-        try {
-            await fetch("/api/shutdown", { method: "POST" });
-            document.body.innerHTML = '<div class="shutdown-screen"><div class="shutdown-screen-card"><h1>DLMS has been shut down.</h1><p>You can close this browser tab.</p></div></div>';
-        } catch (err) {
-            alert("DLMS may already be shutting down.");
-        }
-    });
-}
 </script>
 
 </body>
 </html>
-""", quiz=quiz, questions=question_list, exam_minutes=exam_minutes, app_version=APP_VERSION)
+""", quiz=quiz, questions=question_list, exam_minutes=exam_minutes)
 
 
 # =========================
