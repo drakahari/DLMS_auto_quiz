@@ -1,250 +1,321 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Analytics Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/favicon.ico">
-
-<style>
-
-.container {
-    max-width: 960px;
-    margin: auto;
-}
-
-.stat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
-    gap: 14px;
-}
-
-.stat-card {
-    background: rgba(0,0,0,.75);
-    border: 1px solid rgba(255,255,255,.25);
-    padding: 12px;
-    border-radius: 10px;
-    text-align:center;
-    box-shadow: 0 0 25px rgba(0,0,0,.9);
-}
-
-.big {
-    font-size: 30px;
-    font-weight: bold;
-}
-
-.good { color:#00ff80; }
-.warn { color:#ffeb3b; }
-.bad  { color:#ff5050; }
-
-.section {
-    margin-top:18px;
-    padding:12px;
-    border-radius:10px;
-    background:rgba(0,0,0,.65);
-    border:1px solid rgba(255,255,255,.25);
-}
-
-</style>
 </head>
 
-<body>
-<div class="container">
+<body class="dashboard-home analytics-modern-page">
+<div class="dashboard-shell">
 
-<!-- <script>
-fetch("/config/portal.json")
-  .then(r => r.json())
-  .then(cfg => {
-      if (cfg.background_image) {
-          document.documentElement.style.setProperty(
-              "--portal-bg",
-              `url(${cfg.background_image})`
-          );
-      }
-  });
-</script> -->
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-brand">
+            <div class="dashboard-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img">
+                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <div class="dashboard-brand-title">DLMS</div>
+                <div class="dashboard-brand-subtitle">Training Center</div>
+            </div>
+        </div>
 
-<h1 class="hero-title">
-📊 Performance & Study Analytics
-</h1>
+        <nav class="dashboard-nav" aria-label="Primary navigation">
+            <a class="dashboard-nav-item" href="/">
+                <span class="dashboard-nav-icon">⌂</span><span>Dashboard</span>
+            </a>
+            <a class="dashboard-nav-item" href="/library">
+                <span class="dashboard-nav-icon">▤</span><span>Quiz Library</span>
+            </a>
+            <a class="dashboard-nav-item" href="/upload">
+                <span class="dashboard-nav-icon">✎</span><span>Build Quiz</span>
+            </a>
+            <a class="dashboard-nav-item" href="/law">
+                <span class="dashboard-nav-icon">⚖</span><span>Law Study</span>
+            </a>
+            <a class="dashboard-nav-item" href="/history">
+                <span class="dashboard-nav-icon">↶</span><span>History</span>
+            </a>
+            <a class="dashboard-nav-item active" href="/dashboard" aria-current="page">
+                <span class="dashboard-nav-icon">▥</span><span>Analytics</span>
+            </a>
+        </nav>
 
-<div id="analytics"></div>
+        <div class="dashboard-nav-section-label"><span>System</span></div>
 
-<br>
-<button onclick="location.href='/'">🏠 Back to Dashboard</button>
-<button onclick="location.href='/history.html'">📜 View Detailed History</button>
+        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
+            <a class="dashboard-nav-item" href="/settings">
+                <span class="dashboard-nav-icon">⚙</span><span>Settings</span>
+            </a>
+            <a class="dashboard-nav-item" href="/help">
+                <span class="dashboard-nav-icon">?</span><span>Help</span>
+            </a>
+            <a class="dashboard-nav-item" href="/admin/maintenance">
+                <span class="dashboard-nav-icon">⌘</span><span>Maintenance</span>
+            </a>
+        </nav>
 
+        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
+            <span class="dashboard-shutdown-icon">⏻</span>
+            <span>Shutdown DLMS</span>
+        </button>
+
+        <div class="dashboard-sidebar-version">Analytics</div>
+    </aside>
+
+    <main class="dashboard-main analytics-modern-main">
+        <header class="dashboard-header analytics-page-header">
+            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
+            <div>
+                <div class="analytics-eyebrow">PERFORMANCE ANALYTICS</div>
+                <h1>Progress &amp; Performance</h1>
+                <p>See overall results and compare performance across your quizzes.</p>
+            </div>
+        </header>
+
+        <section class="analytics-summary-grid" aria-label="Overall analytics">
+            <article class="analytics-summary-card">
+                <span>Total Attempts</span>
+                <strong id="analyticsTotalAttempts">—</strong>
+                <small>saved quiz attempts</small>
+            </article>
+            <article class="analytics-summary-card">
+                <span>Quizzes Studied</span>
+                <strong id="analyticsQuizCount">—</strong>
+                <small>with recorded results</small>
+            </article>
+            <article class="analytics-summary-card">
+                <span>Average Score</span>
+                <strong id="analyticsAverage">—</strong>
+                <small>across all attempts</small>
+            </article>
+            <article class="analytics-summary-card">
+                <span>Best Score</span>
+                <strong id="analyticsBest">—</strong>
+                <small>highest recorded result</small>
+            </article>
+        </section>
+
+        <section class="analytics-table-panel dashboard-panel">
+            <div class="analytics-section-heading">
+                <div>
+                    <span class="analytics-eyebrow">BY QUIZ</span>
+                    <h2>Quiz Performance</h2>
+                </div>
+                <a class="analytics-history-link" href="/history">View History</a>
+            </div>
+
+            <div id="analyticsContent" class="analytics-content" aria-live="polite">
+                <div class="analytics-loading">Loading analytics…</div>
+            </div>
+        </section>
+    </main>
 </div>
 
 <script>
-
-// =============== LOAD FROM DB ==================
-async function fetchAttempts() {
-    const res = await fetch("/api/attempts");
-    if (!res.ok) throw new Error("DB API Failed");
-    const data = await res.json();
-    return data.attempts || [];
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-// =============== MAIN DASHBOARD ================
-async function buildDashboard() {
-    const div = document.getElementById("analytics");
+function asNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function scoreTone(percent) {
+    const p = asNumber(percent);
+    if (p >= 80) return "good";
+    if (p >= 60) return "warn";
+    return "bad";
+}
+
+function trendFor(list) {
+    if (list.length < 2) {
+        return { label: "Not enough data", className: "neutral", symbol: "—" };
+    }
+
+    const newest = asNumber(list[0].percent);
+    const previous = asNumber(list[1].percent);
+    if (newest > previous) return { label: "Improving", className: "good", symbol: "↑" };
+    if (newest < previous) return { label: "Down", className: "bad", symbol: "↓" };
+    return { label: "Steady", className: "neutral", symbol: "→" };
+}
+
+function formatDate(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return escapeHtml(value);
+    return d.toLocaleDateString([], {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+    });
+}
+
+async function fetchAttempts() {
+    const res = await fetch("/api/attempts", { cache: "no-store" });
+    if (!res.ok) throw new Error("DB API failed");
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data.attempts || []);
+}
+
+function updateSummary(attempts, grouped) {
+    document.getElementById("analyticsTotalAttempts").textContent = attempts.length;
+    document.getElementById("analyticsQuizCount").textContent = Object.keys(grouped).length;
+
+    if (!attempts.length) {
+        document.getElementById("analyticsAverage").textContent = "—";
+        document.getElementById("analyticsBest").textContent = "—";
+        return;
+    }
+
+    const scores = attempts.map(a => asNumber(a.percent));
+    const average = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+    const best = Math.max(...scores);
+
+    document.getElementById("analyticsAverage").textContent = `${average}%`;
+    document.getElementById("analyticsBest").textContent = `${Math.round(best)}%`;
+}
+
+async function buildAnalytics() {
+    const content = document.getElementById("analyticsContent");
 
     let attempts = [];
     try {
         attempts = await fetchAttempts();
-    } catch(e) {
-        console.error(e);
-        div.innerHTML = "<p>⚠️ Unable to load analytics (database error)</p>";
+    } catch (err) {
+        console.error("Analytics load failed:", err);
+        content.innerHTML = `
+            <div class="analytics-empty-state analytics-error-state">
+                <strong>Unable to load analytics.</strong>
+                <span>The saved-attempt database API did not respond successfully.</span>
+            </div>`;
         return;
     }
+
+    const grouped = {};
+    attempts.forEach(attempt => {
+        const key = attempt.quiz_title || "Unknown Quiz";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(attempt);
+    });
+
+    updateSummary(attempts, grouped);
 
     if (!attempts.length) {
-        div.innerHTML = "<p>No data yet. Take some exams 😊</p>";
+        content.innerHTML = `
+            <div class="analytics-empty-state">
+                <strong>No analytics yet.</strong>
+                <span>Complete a quiz and your performance data will appear here.</span>
+                <a href="/library">Open Quiz Library</a>
+            </div>`;
         return;
     }
 
-    // ---- GROUP BY QUIZ ----
-    const grouped = {};
-    attempts.forEach(a => {
-        const key = a.quiz_title || "Unknown Quiz";
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(a);
-    });
+    const rows = Object.entries(grouped).map(([quizTitle, list]) => {
+        list.sort((a, b) => String(b.completed_at || "").localeCompare(String(a.completed_at || "")));
 
-    let html = "";
-
-    Object.keys(grouped).forEach(key => {
-        const list = grouped[key];
-        if (!list.length) return;
-
-        // Sort newest → oldest
-        list.sort((a,b) => (b.completed_at || "").localeCompare(a.completed_at || ""));
-
-        const scores = list.map(a => Number(a.percent || 0));
-        const avg = Math.round(scores.reduce((a,b)=>a+b,0) / scores.length);
+        const scores = list.map(a => asNumber(a.percent));
+        const average = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
         const best = Math.max(...scores);
-        const passes = list.filter(a => a.percent >= 75).length;
+        const passes = list.filter(a => asNumber(a.percent) >= 75).length;
         const passRate = Math.round((passes / list.length) * 100);
+        const latest = list[0];
+        const latestPercent = Math.round(asNumber(latest.percent));
+        const trend = trendFor(list);
+        const attemptId = latest.id || latest.attemptId || "";
+        const reviewHref = attemptId ? `/review?attempt=${encodeURIComponent(attemptId)}` : "/history";
 
-        // ===== PERFORMANCE TREND =====
-        let trendMsg = "Keep going!";
-        let trendClass = "";
-        if (list.length >= 2) {
-            const last = list[0].percent;
-            const prev = list[1].percent;
+        return {
+            quizTitle,
+            attempts: list.length,
+            average,
+            best: Math.round(best),
+            passRate,
+            latestPercent,
+            latestDate: latest.completed_at || "",
+            trend,
+            reviewHref
+        };
+    }).sort((a, b) => b.attempts - a.attempts || a.quizTitle.localeCompare(b.quizTitle));
 
-            if (last > prev) { trendMsg = "📈 Improving — Great work!"; trendClass="good"; }
-            else if (last < prev) { trendMsg = "📉 Slight drop — review weak spots"; trendClass="bad"; }
-            else { trendMsg = "➡️ Holding steady"; trendClass="warn"; }
-        }
-
-        // ===== MISSED QUESTIONS =====
-        let hasMissed = false;
-        list.forEach(a => {
-            if (a.missedQuestions && a.missedQuestions.length) hasMissed = true;
-        });
-
-        let missedHtml = "";
-
-        if (hasMissed) {
-            const latest = list[0];
-            const attemptId = latest.attemptId || latest.id;
-
-            const reviewUrl = attemptId
-                ? `/review.html?attempt=${attemptId}`
-                : `/review.html`;
-
-            // Build dropdown for attempts
-            const options = list.map((a, i) => {
-                const label = `Attempt ${list.length - i} — ${a.percent}% — ${a.completed_at || "Unknown Date"}`;
-                return `<option value="${a.id || a.attemptId}">${label}</option>`;
-            }).join("");
-
-            missedHtml = `
-                <button onclick="location.href='${reviewUrl}'">
-                    🔍 View Most Recent Attempt Review
-                </button>
-
-                <br><br>
-
-                <label style="font-weight:bold;">Select Attempt to Review:</label>
-                <select id="select-${key.replace(/\\s+/g,'')}">
-                    ${options}
-                </select>
-
-                <button onclick="reviewSelected('${key.replace(/\\s+/g,'')}')">
-                    📜 Review Selected Attempt
-                </button>
-            `;
-        }
-
-
-        html += `
-        <div class="section">
-
-            <h2>📘 ${key}</h2>
-
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <div>Total Attempts</div>
-                    <div class="big">${list.length}</div>
-                </div>
-
-                <div class="stat-card">
-                    <div>Average Score</div>
-                    <div class="big">${avg}%</div>
-                </div>
-
-                <div class="stat-card">
-                    <div>Best Score</div>
-                    <div class="big good">${best}%</div>
-                </div>
-
-                <div class="stat-card">
-                    <div>Pass Rate</div>
-                    <div class="big ${passRate>=75?'good':passRate>=50?'warn':'bad'}">
-                        ${passRate}%
-                    </div>
-                </div>
-            </div>
-
-            <div class="section ${trendClass}">
-                <h3>📈 Performance Trend</h3>
-                <p>${trendMsg}</p>
-            </div>
-
-            <div class="section">
-                ${missedHtml}
-            </div>
-
+    content.innerHTML = `
+        <div class="analytics-table-wrap">
+            <table class="analytics-table">
+                <thead>
+                    <tr>
+                        <th>Quiz</th>
+                        <th>Attempts</th>
+                        <th>Average</th>
+                        <th>Best</th>
+                        <th>Pass Rate</th>
+                        <th>Trend</th>
+                        <th>Latest</th>
+                        <th class="analytics-review-column">Review</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(row => `
+                        <tr>
+                            <td class="analytics-quiz-cell">
+                                <strong>${escapeHtml(row.quizTitle)}</strong>
+                            </td>
+                            <td>${row.attempts}</td>
+                            <td><span class="analytics-score-pill ${scoreTone(row.average)}">${row.average}%</span></td>
+                            <td><span class="analytics-score-pill ${scoreTone(row.best)}">${row.best}%</span></td>
+                            <td><span class="analytics-score-pill ${scoreTone(row.passRate)}">${row.passRate}%</span></td>
+                            <td>
+                                <span class="analytics-trend ${row.trend.className}">
+                                    <span aria-hidden="true">${row.trend.symbol}</span>
+                                    ${row.trend.label}
+                                </span>
+                            </td>
+                            <td class="analytics-latest-cell">
+                                <strong>${row.latestPercent}%</strong>
+                                <span>${escapeHtml(formatDate(row.latestDate))}</span>
+                            </td>
+                            <td class="analytics-review-column">
+                                <a class="analytics-review-button" href="${row.reviewHref}">Review ›</a>
+                            </td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
         </div>`;
-    });
-
-    div.innerHTML = html;
 }
 
-function reviewSelected(key) {
-    const sel = document.getElementById(`select-${key}`);
-    if (!sel) return;
+document.getElementById("menuButton").addEventListener("click", () => {
+    document.getElementById("dashboardSidebar").classList.toggle("open");
+});
 
-    const id = sel.value;
-    if (!id) {
-        alert("No attempt selected.");
-        return;
+document.getElementById("shutdownBtn").addEventListener("click", async () => {
+    if (!confirm("SHUTDOWN DLMS\n\nThis will stop the application.\n\nYou will need to restart it manually.\n\nContinue?")) return;
+
+    try {
+        await fetch("/api/shutdown", { method: "POST" });
+        document.body.innerHTML = `
+            <div class="shutdown-screen">
+                <div class="shutdown-screen-card">
+                    <h1>DLMS has been shut down.</h1>
+                    <p>You can close this browser tab.</p>
+                </div>
+            </div>`;
+    } catch (err) {
+        alert("DLMS may already be shutting down.");
     }
+});
 
-    location.href = `/review.html?attempt=${id}`;
-}
-
-
-
-
-
-// ================= RUN ==================
-buildDashboard();
-
+buildAnalytics();
 </script>
-
 </body>
 </html>

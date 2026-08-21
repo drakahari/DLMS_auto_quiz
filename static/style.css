@@ -3396,3 +3396,312 @@ a.settings-hub-card:hover {
         min-height: 96px;
     }
 }
+
+/* =====================================================================
+   MODERN ANALYTICS PAGE
+   Introduced: 2026-08-21
+   Preserves the existing /api/attempts data source and analytics logic
+   while aligning the page with the modern Dashboard/Library/History UI.
+   ===================================================================== */
+
+.analytics-modern-main {
+    min-width: 0;
+}
+
+.analytics-page-header {
+    margin-bottom: 18px;
+}
+
+.analytics-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #5eb4ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+}
+
+.analytics-page-header h1 {
+    margin: 0;
+}
+
+.analytics-page-header p {
+    margin: 7px 0 0;
+    color: #aabbd0;
+}
+
+.analytics-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.analytics-summary-card {
+    min-width: 0;
+    padding: 17px 18px;
+    border: 1px solid rgba(87, 154, 224, 0.24);
+    border-radius: 14px;
+    background: rgba(7, 20, 39, 0.78);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.analytics-summary-card span,
+.analytics-summary-card small {
+    display: block;
+}
+
+.analytics-summary-card span {
+    color: #9fb0c7;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.analytics-summary-card strong {
+    display: block;
+    margin: 7px 0 2px;
+    color: #f2f7ff;
+    font-size: 29px;
+    line-height: 1;
+}
+
+.analytics-summary-card small {
+    color: #74869e;
+    font-size: 12px;
+}
+
+.analytics-table-panel {
+    padding: 0;
+    overflow: hidden;
+}
+
+.analytics-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(89, 144, 201, 0.2);
+}
+
+.analytics-section-heading h2 {
+    margin: 2px 0 0;
+    font-size: 20px;
+}
+
+.analytics-history-link {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    border: 1px solid rgba(76, 151, 232, 0.35);
+    border-radius: 9px;
+    color: #9fd0ff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.analytics-history-link:hover {
+    border-color: rgba(76, 151, 232, 0.65);
+    background: rgba(37, 112, 202, 0.12);
+    color: #d7ecff;
+}
+
+.analytics-content {
+    min-width: 0;
+}
+
+.analytics-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: 0 0 18px 18px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.analytics-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+}
+
+.analytics-table th,
+.analytics-table td {
+    white-space: nowrap;
+}
+
+.analytics-table th:first-child,
+.analytics-table td:first-child {
+    white-space: normal;
+}
+
+.analytics-table th,
+.analytics-table td {
+    padding: 14px 15px;
+    border-bottom: 1px solid rgba(91, 139, 190, 0.14);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.analytics-table th {
+    background: rgba(13, 31, 55, 0.72);
+    color: #91a8c4;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.analytics-table td {
+    color: #d4dfed;
+    font-size: 13px;
+}
+
+.analytics-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.analytics-table tbody tr:hover td {
+    background: rgba(28, 83, 145, 0.08);
+}
+
+.analytics-quiz-cell {
+    min-width: 170px;
+}
+
+.analytics-quiz-cell strong {
+    color: #edf5ff;
+    font-size: 14px;
+}
+
+.analytics-score-pill {
+    display: inline-flex;
+    min-width: 54px;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+.analytics-score-pill.good {
+    color: #7ee5ab;
+    border-color: rgba(65, 195, 126, 0.26);
+    background: rgba(35, 129, 81, 0.12);
+}
+
+.analytics-score-pill.warn {
+    color: #ffd37a;
+    border-color: rgba(237, 176, 66, 0.27);
+    background: rgba(153, 104, 22, 0.12);
+}
+
+.analytics-score-pill.bad {
+    color: #ff9eaa;
+    border-color: rgba(224, 83, 102, 0.28);
+    background: rgba(144, 41, 59, 0.12);
+}
+
+.analytics-trend {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.analytics-trend.good { color: #7ee5ab; }
+.analytics-trend.bad { color: #ff9eaa; }
+.analytics-trend.neutral { color: #9fb0c7; }
+
+.analytics-latest-cell strong,
+.analytics-latest-cell span {
+    display: block;
+}
+
+.analytics-latest-cell strong {
+    color: #eef6ff;
+}
+
+.analytics-latest-cell span {
+    margin-top: 2px;
+    color: #7f92aa;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.analytics-review-column {
+    text-align: right !important;
+}
+
+.analytics-review-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 11px;
+    border: 1px solid rgba(68, 148, 237, 0.4);
+    border-radius: 8px;
+    background: rgba(31, 105, 195, 0.15);
+    color: #a9d4ff;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.analytics-review-button:hover {
+    background: rgba(37, 121, 221, 0.24);
+    border-color: rgba(79, 163, 255, 0.7);
+    color: #e2f1ff;
+}
+
+.analytics-loading,
+.analytics-empty-state {
+    padding: 34px 22px;
+    color: #8fa4bd;
+    text-align: center;
+}
+
+.analytics-empty-state strong,
+.analytics-empty-state span {
+    display: block;
+}
+
+.analytics-empty-state strong {
+    margin-bottom: 5px;
+    color: #e7f1ff;
+    font-size: 17px;
+}
+
+.analytics-empty-state a {
+    display: inline-flex;
+    margin-top: 15px;
+    padding: 8px 12px;
+    border: 1px solid rgba(68, 148, 237, 0.4);
+    border-radius: 8px;
+    color: #a9d4ff;
+    text-decoration: none;
+}
+
+.analytics-error-state strong {
+    color: #ff9eaa;
+}
+
+@media (max-width: 1050px) {
+    .analytics-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    .analytics-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
