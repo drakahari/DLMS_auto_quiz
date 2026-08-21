@@ -88,7 +88,7 @@ def get_app_data_dir(app_name: str = "DLMS") -> str:
     return path
 
 APP_NAME = "DLMS"
-APP_VERSION = "2.4.0"
+APP_VERSION = "2.4.1"
 APP_DATA_DIR = get_app_data_dir(APP_NAME)
 
 # =========================
