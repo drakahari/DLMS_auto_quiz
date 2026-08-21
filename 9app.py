@@ -5755,140 +5755,103 @@ def upload_page():
     portal_title = get_portal_title()
 
     return render_template_string("""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Build Quiz</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="/static/favicon.ico">
-</head>
-<body class="dashboard-home build-modern-page">
-<div class="dashboard-shell">
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Upload Quiz File</title>
+        <link rel="stylesheet" href="/static/style.css">
+        <link rel="icon" href="/static/favicon.ico">
+    </head>
 
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="dashboard-brand">
-            <div class="dashboard-brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img">
-                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <div class="dashboard-brand-title">DLMS</div>
-                <div class="dashboard-brand-subtitle">Training Center</div>
-            </div>
-        </div>
-        <nav class="dashboard-nav" aria-label="Primary navigation">
-            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-            <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-            <a class="dashboard-nav-item active" href="/upload" aria-current="page"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-            <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-        </nav>
-        <div class="dashboard-nav-section-label"><span>System</span></div>
-        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-        </nav>
-        <button class="dashboard-shutdown" id="shutdownBtn" type="button"><span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span></button>
-        <div class="dashboard-sidebar-version">Build Quiz</div>
-    </aside>
-    <main class="dashboard-main build-modern-main">
-        <header class="dashboard-header build-page-header">
-            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-            <div>
-                <div class="build-eyebrow">QUIZ BUILDER</div>
-                <h1>Create a New Quiz</h1>
-                <p>Choose the workflow that fits the source material you already have.</p>
-            </div>
-        </header>
+    <body>
 
-        <section class="build-method-grid" aria-label="Quiz creation methods">
-            <article class="build-method-card build-method-primary">
-                <div class="build-method-icon" aria-hidden="true">⇧</div>
-                <div class="build-method-copy">
-                    <span class="build-method-label">UPLOAD FILE</span>
-                    <h2>Build from a text file</h2>
-                    <p>Upload a properly formatted .txt file and optionally attach a quiz logo.</p>
-                </div>
-                <form class="build-upload-form" action="/process" method="POST" enctype="multipart/form-data">
-                    <label class="build-field">
-                        <span>Quiz Display Title</span>
-                        <input type="text" name="quiz_title" placeholder="Example: Cloud+ Networking Practice" required>
-                    </label>
-                    <label class="build-field">
-                        <span>Quiz Text File</span>
-                        <input type="file" name="file" accept=".txt" required>
-                        <small>Use a properly formatted .txt question file.</small>
-                    </label>
-                    <label class="build-field">
-                        <span>Quiz Logo <em>Optional</em></span>
-                        <input type="file" name="quiz_logo" accept="image/*">
-                        <small>PNG, JPG, GIF, or WEBP.</small>
-                    </label>
-                    <button class="build-primary-button" type="submit">Upload &amp; Build Quiz</button>
-                </form>
-            </article>
+#     <script>
+# fetch("/config/portal.json")
+#   .then(r => r.json())
+#   .then(cfg => {
+#       if (cfg.background_image) {
+#           document.documentElement.style.setProperty(
+#               "--portal-bg",
+#               `url(${cfg.background_image})`
+#           );
+#       }
+#   });
+# </script>
 
-            <div class="build-alternate-stack">
-                <a class="build-option-card" href="/paste">
-                    <div class="build-option-icon" aria-hidden="true">▤</div>
-                    <div>
-                        <span class="build-method-label">PASTE TEXT</span>
-                        <h2>Paste questions</h2>
-                        <p>Paste a full question set, preview parsing, then create the quiz.</p>
-                    </div>
-                    <span class="build-option-arrow" aria-hidden="true">›</span>
-                </a>
-                <a class="build-option-card" href="/create_short_quiz">
-                    <div class="build-option-icon" aria-hidden="true">✎</div>
-                    <div>
-                        <span class="build-method-label">MANUAL ENTRY</span>
-                        <h2>Create a short quiz</h2>
-                        <p>Enter questions and answers manually with guided fields.</p>
-                    </div>
-                    <span class="build-option-arrow" aria-hidden="true">›</span>
-                </a>
-                <div class="build-tip-card">
-                    <strong>Not sure which to use?</strong>
-                    <span>Paste Text is best for copied exam material. Manual Entry is best for a smaller custom set.</span>
-                </div>
-            </div>
-        </section>
-    </main>
+
+    <div class="container">
+
+        <h1 class="hero-title">
+            📤 Create a New Quiz
+        </h1>
+
+        <div class="card">
+
+            <h2>Option 1 — Upload a Text File</h2>
+<p style="opacity:.8">
+    Use this if you already have a .txt question file.
+</p>
+
+<form action="/process" method="POST" enctype="multipart/form-data">
+
+    <h3>Quiz Display Title</h3>
+    <input type="text" name="quiz_title"
+           placeholder="Example: Cloud+ Networking Practice"
+           required style="width:100%;padding:6px">
+
+    <br><br>
+
+    <h3>Select Quiz Text File</h3>
+    <p style="opacity:.7; font-size:12px">
+        Upload any properly formatted .txt file
+    </p>
+
+    <input type="file" name="file" accept=".txt" required>
+
+    <br><br>
+
+    <h3>Upload Logo (Optional)</h3>
+    <input type="file" name="quiz_logo" accept="image/*">
+    <p style="opacity:0.7; font-size:12px">
+        Supported: PNG / JPG / GIF
+    </p>
+
+    <button type="submit">📤 Upload & Build Quiz</button>
+</form>
+
+<hr style="margin:30px 0; opacity:.5">
+
+<h2>Option 2 — Paste Questions Instead</h2>
+<p style="opacity:.8">
+    Use this if you do NOT have a .txt file. Just paste your questions.
+</p>
+
+<button onclick="location.href='/paste'">
+    📋 Paste Questions to Build Quiz
+</button>
+
+<hr style="margin:30px 0; opacity:.5">
+
+<h2>Option 3 — Create Short Quiz</h2>
+<p style="opacity:.8">
+    Build a quiz manually with guided question and answer entry.
+</p>
+
+<button onclick="location.href='/create_short_quiz'">
+    ✍️ Create Short Quiz
+</button>
+
+<br><br>
+<button onclick="location.href='/'">⬅ Back To Dashboard</button>
+
 </div>
-
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("SHUTDOWN DLMS\\n\\nThis will stop the application.\\n\\nYou will need to restart it manually.\\n\\nContinue?")) return;
-        try {
-            await fetch("/api/shutdown", { method: "POST" });
-            document.body.innerHTML = '<div class="shutdown-screen"><div class="shutdown-screen-card"><h1>DLMS has been shut down.</h1><p>You can close this browser tab.</p></div></div>';
-        } catch (err) {
-            alert("DLMS may already be shutting down.");
-        }
-    });
-}
-</script>
-</body>
-</html>
+    </div>
+    </body>
+    </html>
     """, portal_title=portal_title)
+
+
 
 
 # =========================
@@ -5900,161 +5863,190 @@ def paste_page():
     cfg = load_portal_config()
 
     return render_template_string("""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paste Quiz Questions</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="/static/favicon.ico">
-</head>
-<body class="dashboard-home build-modern-page">
-<div class="dashboard-shell">
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Paste Quiz Questions</title>
+        <link rel="stylesheet" href="/static/style.css">
+        <link rel="icon" href="/static/favicon.ico">
+    </head>
 
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="dashboard-brand">
-            <div class="dashboard-brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img">
-                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <div class="dashboard-brand-title">DLMS</div>
-                <div class="dashboard-brand-subtitle">Training Center</div>
-            </div>
-        </div>
-        <nav class="dashboard-nav" aria-label="Primary navigation">
-            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-            <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-            <a class="dashboard-nav-item active" href="/upload" aria-current="page"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-            <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-        </nav>
-        <div class="dashboard-nav-section-label"><span>System</span></div>
-        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-        </nav>
-        <button class="dashboard-shutdown" id="shutdownBtn" type="button"><span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span></button>
-        <div class="dashboard-sidebar-version">Build Quiz</div>
-    </aside>
-    <main class="dashboard-main build-modern-main">
-        <header class="dashboard-header build-page-header">
-            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-            <div>
-                <div class="build-eyebrow">PASTE QUESTIONS</div>
-                <h1>Create from Pasted Text</h1>
-                <p>Paste the source, optionally clean it up, then preview before the quiz is created.</p>
-            </div>
-        </header>
+    <body>
 
-        <form class="build-workspace" action="/preview_paste" method="POST" enctype="multipart/form-data">
-            <section class="dashboard-panel build-section">
-                <div class="build-section-heading">
-                    <div class="build-step-number">1</div>
-                    <div><h2>Quiz Basics</h2><p>Name the quiz and paste your questions.</p></div>
-                </div>
-                <label class="build-field">
-                    <span>Quiz Display Title</span>
-                    <input type="text" name="quiz_title" placeholder="Example: Linux+ Practice Set" required>
-                </label>
-                <label class="build-field">
-                    <span>Questions + Answers</span>
-                    <textarea class="build-source-textarea" name="quiz_text" required placeholder="Paste your formatted questions here..."></textarea>
-                </label>
-                <div class="build-format-note">
-                    <strong>Required answer format</strong>
-                    <p>Each question needs a final line such as <code>Suggested Answer: B</code> or <code>Correct Answer: D</code>. A bare letter or <code>Answer: B</code> is not detected.</p>
-                </div>
-            </section>
-
-            <section class="dashboard-panel build-section">
-                <div class="build-section-heading">
-                    <div class="build-step-number">2</div>
-                    <div><h2>Clean Up Source Text</h2><p>Optional tools that run before parsing.</p></div>
-                </div>
-                <label class="build-field">
-                    <span>Remove Unwanted Lines <em>Optional</em></span>
-                    <textarea name="strip_text" class="build-small-textarea" placeholder="Topic
-Exam Version
-Practice Only"></textarea>
-                    <small>One value per line, case-insensitive. Any matching line will be removed.</small>
-                </label>
-
-                {% if cfg.enable_regex_replace %}
-                <div class="build-advanced-block">
-                    <div class="build-advanced-heading">
-                        <div>
-                            <span class="build-method-label">ADVANCED PARSING</span>
-                            <h3>Regex Replace Rules</h3>
-                        </div>
-                        <a class="build-help-link" href="/static/regex-help.html" target="_blank" rel="noopener">Regex Help ↗</a>
-                    </div>
-                    <label class="build-field">
-                        <span>Manual Rules <em>Optional</em></span>
-                        <textarea name="replace_rules" class="build-small-textarea" placeholder="^\\d+\\.\\s* => 
-Question\\s*#\\d+ => "></textarea>
-                        <small>Format: REGEX =&gt; REPLACEMENT. Rules run before parsing.</small>
-                    </label>
-                    <div class="build-preset-list">
-                        <label><input type="checkbox" name="preset_number_prefix" value="1"><span><strong>Remove numbered prefixes</strong><small>Removes leading values such as 1., 22., or 5.</small></span></label>
-                        <label><input type="checkbox" name="preset_pdf_spacing" value="1"><span><strong>Fix PDF / Microsoft wrapping</strong><small>Attempts to repair broken line wrapping and hyphenation.</small></span></label>
-                        <label><input type="checkbox" name="preset_headers" value="1"><span><strong>Remove page headers / footers</strong><small>Attempts to strip repeating header and footer text.</small></span></label>
-                    </div>
-                </div>
-                {% endif %}
-            </section>
-
-            <section class="dashboard-panel build-section">
-                <div class="build-section-heading">
-                    <div class="build-step-number">3</div>
-                    <div><h2>Logo &amp; Preview</h2><p>Add an optional logo, then inspect the parsed result before committing.</p></div>
-                </div>
-                <label class="build-field">
-                    <span>Quiz Logo <em>Optional</em></span>
-                    <input type="file" name="quiz_logo" accept="image/*">
-                    <small>PNG, JPG, GIF, or WEBP.</small>
-                </label>
-                <div class="build-submit-row">
-                    <a class="build-secondary-link" href="/upload">Back to Build Options</a>
-                    <button class="build-primary-button" type="submit">Preview &amp; Continue</button>
-                </div>
-            </section>
-        </form>
-    </main>
-</div>
-
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("SHUTDOWN DLMS\\n\\nThis will stop the application.\\n\\nYou will need to restart it manually.\\n\\nContinue?")) return;
-        try {
-            await fetch("/api/shutdown", { method: "POST" });
-            document.body.innerHTML = '<div class="shutdown-screen"><div class="shutdown-screen-card"><h1>DLMS has been shut down.</h1><p>You can close this browser tab.</p></div></div>';
-        } catch (err) {
-            alert("DLMS may already be shutting down.");
+    <script>
+    fetch("/config/portal.json")
+    .then(r => r.json())
+    .then(cfg => {
+        if (cfg.background_image) {
+            document.documentElement.style.setProperty(
+                "--portal-bg",
+                `url(${cfg.background_image})`
+            );
         }
     });
-}
-</script>
-</body>
-</html>
+    </script>
+
+
+    <div class="container">
+
+        <h1 class="hero-title">
+            📋 Create Quiz From Pasted Text
+        </h1>
+
+        <div class="card">
+
+            <!-- IMPORTANT: Goes to PREVIEW first -->
+            <form action="/preview_paste" method="POST" enctype="multipart/form-data">
+
+                <h3>Quiz Display Title</h3>
+                <input type="text" name="quiz_title"
+                       placeholder="Example: Linux+ Practice Set"
+                       required style="width:100%; padding:6px">
+
+                <br><br>
+
+                <h3>Paste Questions + Answers</h3>
+
+                <p style="opacity:.85; font-size:13px">
+                    <strong>Important:</strong> Each question <u>must include</u> a final answer line in one of the following formats
+                    for parsing to work correctly:
+                </p>
+
+                <div style="font-size:13px; margin-left:12px;">
+                    <code>Suggested Answer: B</code><br>
+                    <code>Correct Answer: D</code>
+                </div>
+
+                <p style="opacity:.75; font-size:12px; margin-top:8px">
+                    The answer letter (<code>A</code>, <code>B</code>, <code>C</code>, etc.) must match one of the listed choices.
+                </p>
+
+                <p style="opacity:.75; font-size:12px; margin-top:10px">
+                    <strong>Supported example:</strong><br>
+                    1. Question text<br>
+                    A. Answer<br>
+                    B. Answer<br>
+                    C. Answer<br>
+                    Suggested Answer: B
+                </p>
+
+                <p style="opacity:.65; font-size:12px; margin-top:6px">
+                    ❌ Answers like <code>B</code> or <code>Answer: B</code> alone will <u>not</u> be detected.
+                </p>
+
+                
+
+                <textarea name="quiz_text"
+                          required
+                          style="width:100%; height:400px; padding:10px; font-size:14px;"></textarea>
+
+                <br><br>
+
+                <h3>Optional: Remove Unwanted Text Before Parsing</h3>
+                <p style="opacity:.8; font-size:12px">
+                    Any line containing these values will be automatically deleted.<br>
+                    (One per line, case insensitive)
+                </p>
+
+                <textarea name="strip_text"
+                          placeholder="Example:
+Topic
+Exam Version
+Practice Only"
+                          style="width:100%; height:140px; padding:10px; font-size:14px;"></textarea>
+
+                <br><br>
+
+                <!-- ========================= -->
+                <!--  ADVANCED PARSING UI     -->
+                <!--  ONLY SHOW IF ENABLED    -->
+                <!-- ========================= -->
+                {% if cfg.enable_regex_replace %}
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0;">Optional: Regex Replace Rules</h3>
+
+                    <button type="button"
+                            onclick="window.open('/static/regex-help.html', '_blank')"
+                            title="Fix PDF bullets, wrapped lines, and exam paste issues"
+                            style="
+                                display:flex;
+                                align-items:center;
+                                gap:6px;
+                                font-size:13px;
+                                padding:4px 10px;
+                                cursor:pointer;
+                            ">
+                        <span style="font-size:16px;">❓</span> Regex Help
+                    </button>
+
+
+                </div>
+
+
+                <p style="opacity:.8; font-size:12px">
+                    Runs BEFORE parsing. Format:<br>
+                    REGEX => REPLACEMENT<br><br>
+
+                    Examples:<br>
+                    ^\\d+\\.\\s* =>   (removes leading "1. ")<br>
+                    Question\\s*#\\d+ =>   (removes Question # labels)<br>
+                    \\(Choose.*?\\) =>   (removes Choose statement)
+                </p>
+
+                <textarea name="replace_rules"
+                          placeholder="^\\d+\\.\\s* => 
+Question\\s*#\\d+ => "
+                          style="width:100%; height:140px; padding:10px; font-size:14px;"></textarea>
+
+                <br><br>
+
+                <h3>✨ Regex Presets (Optional)</h3>
+                <p style="opacity:.8; font-size:12px">
+                    These presets automatically apply helpful cleanup rules.<br>
+                    They will stack with any manual regex rules above.
+                </p>
+
+                <label style="display:flex; gap:10px; align-items:center;">
+                    <input type="checkbox" name="preset_number_prefix" value="1">
+                    Remove numbered question prefixes (1., 22., 5. → removed)
+                </label>
+
+                <label style="display:flex; gap:10px; align-items:center;">
+                    <input type="checkbox" name="preset_pdf_spacing" value="1">
+                    Fix PDF / Microsoft broken line wrapping & hyphenation
+                </label>
+
+                <label style="display:flex; gap:10px; align-items:center;">
+                    <input type="checkbox" name="preset_headers" value="1">
+                    Try to remove page headers / footers
+                </label>
+
+                <br><br>
+                {% endif %}
+
+                <h3>Upload Logo (Optional)</h3>
+                <input type="file" name="quiz_logo" accept="image/*">
+                <p style="opacity:0.7; font-size:12px">
+                    Supported: PNG / JPG / GIF / WEBP
+                </p>
+
+                <button type="submit">👀 Preview & Continue</button>
+            </form>
+
+            <br>
+            <button onclick="location.href='/upload'">📤 Upload File Instead</button>
+            <button onclick="location.href='/create_short_quiz'">✍️ Create Short Quiz Instead</button>
+            <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+
+        </div>
+
+    </div>
+    </body>
+    </html>
     """, portal_title=portal_title, cfg=cfg)
+
 
 
 # =========================
@@ -6073,122 +6065,110 @@ def create_short_quiz_page():
 
     return render_template_string("""
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Short Quiz</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home build-modern-page">
-<div class="dashboard-shell">
 
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="dashboard-brand">
-            <div class="dashboard-brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img">
-                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <div class="dashboard-brand-title">DLMS</div>
-                <div class="dashboard-brand-subtitle">Training Center</div>
-            </div>
-        </div>
-        <nav class="dashboard-nav" aria-label="Primary navigation">
-            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-            <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-            <a class="dashboard-nav-item active" href="/upload" aria-current="page"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-            <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-        </nav>
-        <div class="dashboard-nav-section-label"><span>System</span></div>
-        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-        </nav>
-        <button class="dashboard-shutdown" id="shutdownBtn" type="button"><span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span></button>
-        <div class="dashboard-sidebar-version">Build Quiz</div>
-    </aside>
-    <main class="dashboard-main build-modern-main">
-        <header class="dashboard-header build-page-header">
-            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-            <div>
-                <div class="build-eyebrow">MANUAL QUIZ BUILDER</div>
-                <h1>Create a Short Quiz</h1>
-                <p>Build a custom quiz question by question. Add or remove questions and choices as needed.</p>
-            </div>
-        </header>
+<body>
+<div class="container">
 
-        <form id="create-short-quiz-form" class="build-workspace" method="POST" action="/create_short_quiz" enctype="multipart/form-data">
-            <section class="dashboard-panel build-section build-short-basics">
-                <div class="build-section-heading">
-                    <div class="build-step-number">1</div>
-                    <div><h2>Quiz Basics</h2><p>Give the quiz a title and optional logo.</p></div>
-                </div>
-                <div class="build-two-column-fields">
-                    <label class="build-field">
-                        <span>Quiz Display Title</span>
-                        <input type="text" name="quiz_title" placeholder="Example: Quick Practice Quiz" required>
-                    </label>
-                    <label class="build-field">
-                        <span>Quiz Logo <em>Optional</em></span>
-                        <input type="file" name="quiz_logo" accept="image/*">
-                        <small>PNG, JPG, GIF, or WEBP.</small>
-                    </label>
-                </div>
-            </section>
+    <h1 class="hero-title">
+        ✍️ Create Short Quiz
+    </h1>
 
-            <section class="build-question-section">
-                <div class="build-section-heading build-question-section-heading">
-                    <div class="build-step-number">2</div>
-                    <div><h2>Questions &amp; Answers</h2><p>Mark every answer that should be accepted as correct.</p></div>
-                </div>
-                <div id="questions-container" class="build-question-list">
-                    {% for q in questions %}
-                    <article class="build-question-card question-block" data-question-number="{{ q.number }}">
-                        <div class="build-question-heading-row">
-                            <h3 class="question-heading">Question {{ q.number }}</h3>
-                            <button type="button" class="build-icon-danger btn-delete" onclick="deleteQuestion(this)" title="Delete question" aria-label="Delete question">×</button>
-                        </div>
-                        <label class="build-field">
-                            <span>Question Text</span>
-                            <textarea class="question-text" name="question_{{ q.number }}" placeholder="Enter question text here..."></textarea>
-                        </label>
-                        <div class="build-choice-heading"><span>Answer Choices</span><small>Select Correct for every valid answer.</small></div>
-                        <ul class="choices-list build-choice-list">
-                        {% for label in q.choices %}
-                            <li>
-                                <b class="choice-label">{{ label }}.</b>
-                                <input type="text" class="choice-text" name="choice_{{ q.number }}_{{ label }}" placeholder="Option {{ label }}">
-                                <label class="build-correct-toggle"><input type="checkbox" class="choice-correct" name="correct_{{ q.number }}_{{ label }}"><span>Correct</span></label>
-                                <button type="button" class="build-choice-delete btn-delete" onclick="deleteChoice(this)" title="Delete choice" aria-label="Delete choice">×</button>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                        <button class="build-add-choice" type="button" onclick="addChoice(this)">＋ Add Choice</button>
-                    </article>
+    <div class="card">
+
+        <form id="create-short-quiz-form" method="POST" action="/create_short_quiz" enctype="multipart/form-data">
+
+            <h3>Quiz Display Title</h3>
+            <input type="text"
+                   name="quiz_title"
+                   placeholder="Example: Quick Practice Quiz"
+                   required
+                   style="width:100%; padding:8px;">
+
+            <br><br>
+
+            <h3>Upload Logo (Optional)</h3>
+            <input type="file" name="quiz_logo" accept="image/*">
+            <p style="opacity:0.7; font-size:12px">
+                Supported: PNG / JPG / GIF / WEBP
+            </p>
+
+            <div id="questions-container">
+                {% for q in questions %}
+                <div class="card question-block" data-question-number="{{ q.number }}" style="margin-top:18px;">
+                    <h3 class="question-heading">Question {{ q.number }}</h3>
+
+                    <button type="button"
+                            class="btn-delete"
+                            onclick="deleteQuestion(this)"
+                            style="margin-bottom:10px;">
+                        🗑 Delete Question
+                    </button>
+
+                    <textarea class="question-text"
+                              name="question_{{ q.number }}"
+                              placeholder="Enter question text here..."
+                              style="width:100%; min-height:90px;"></textarea>
+
+                    <ul class="choices-list">
+                    {% for label in q.choices %}
+                        <li style="margin-bottom:6px;">
+                            <b class="choice-label">{{ label }}.</b>
+
+                            <input type="text"
+                                   class="choice-text"
+                                   name="choice_{{ q.number }}_{{ label }}"
+                                   placeholder="Option {{ label }}"
+                                   style="width:65%; padding:6px;">
+
+                            <input type="checkbox"
+                                   class="choice-correct"
+                                   name="correct_{{ q.number }}_{{ label }}">
+                            Correct
+
+                            <button type="button"
+                                    class="btn-delete"
+                                    onclick="deleteChoice(this)"
+                                    style="font-size:11px; padding:4px 6px;">
+                                ❌
+                            </button>
+                        </li>
                     {% endfor %}
-                </div>
-                <button class="build-add-question" type="button" onclick="addQuestion()">＋ Add New Question</button>
-            </section>
+                    </ul>
 
-            <section class="dashboard-panel build-finalize-bar">
-                <div><strong>Ready to create?</strong><span>DLMS will validate the questions and save the new quiz to the library.</span></div>
-                <div class="build-submit-row">
-                    <a class="build-secondary-link" href="/upload">Back to Build Options</a>
-                    <button class="build-primary-button" type="submit">Create Quiz</button>
+                    <button type="button" onclick="addChoice(this)">
+                        ➕ Add Choice
+                    </button>
                 </div>
-            </section>
+                {% endfor %}
+            </div>
+
+            <br>
+
+            <button type="button" onclick="addQuestion()">
+                ➕ Add New Question
+            </button>
+
+            <button type="submit">
+                💾 Create Quiz
+            </button>
+
         </form>
-    </main>
-</div>
-<script>
 
+        <br>
+        <button onclick="location.href='/upload'">⬅ Back To Create Options</button>
+        <button onclick="location.href='/'">⬅ Back To Dashboard</button>
+
+    </div>
+</div>
+
+<script>
 function getChoiceLabel(index) {
     return String.fromCharCode(65 + index);
 }
@@ -6233,34 +6213,35 @@ function addQuestion() {
     const qNumber = document.querySelectorAll(".question-block").length + 1;
 
     const block = document.createElement("div");
-    block.className = "build-question-card question-block";
+    block.className = "card question-block";
     block.dataset.questionNumber = qNumber;
-    
+    block.style.marginTop = "18px";
+
     block.innerHTML = `
         <h3 class="question-heading">Question ${qNumber}</h3>
 
         <button type="button"
                 class="btn-delete"
                 onclick="deleteQuestion(this)"
-                >
+                style="margin-bottom:10px;">
             🗑 Delete Question
         </button>
 
         <textarea class="question-text"
                   name="question_${qNumber}"
                   placeholder="Enter question text here..."
-                  ></textarea>
+                  style="width:100%; min-height:90px;"></textarea>
 
         <ul class="choices-list">
             ${["A", "B", "C", "D"].map(label => `
-                <li >
+                <li style="margin-bottom:6px;">
                     <b class="choice-label">${label}.</b>
 
                     <input type="text"
                            class="choice-text"
                            name="choice_${qNumber}_${label}"
                            placeholder="Option ${label}"
-                           >
+                           style="width:65%; padding:6px;">
 
                     <input type="checkbox"
                            class="choice-correct"
@@ -6270,7 +6251,7 @@ function addQuestion() {
                     <button type="button"
                             class="btn-delete"
                             onclick="deleteChoice(this)"
-                            >
+                            style="font-size:11px; padding:4px 6px;">
                         ❌
                     </button>
                 </li>
@@ -6313,14 +6294,15 @@ function addChoice(button) {
     const label = getChoiceLabel(choiceCount);
 
     const li = document.createElement("li");
-    
+    li.style.marginBottom = "6px";
+
     li.innerHTML = `
         <b class="choice-label">${label}.</b>
 
         <input type="text"
                class="choice-text"
                placeholder="Option ${label}"
-               >
+               style="width:65%; padding:6px;">
 
         <input type="checkbox"
                class="choice-correct">
@@ -6329,7 +6311,7 @@ function addChoice(button) {
         <button type="button"
                 class="btn-delete"
                 onclick="deleteChoice(this)"
-                >
+                style="font-size:11px; padding:4px 6px;">
             ❌
         </button>
     `;
@@ -6405,36 +6387,12 @@ document.getElementById("create-short-quiz-form").addEventListener("submit", fun
         }
     }
 });
-
 </script>
 
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("SHUTDOWN DLMS\\n\\nThis will stop the application.\\n\\nYou will need to restart it manually.\\n\\nContinue?")) return;
-        try {
-            await fetch("/api/shutdown", { method: "POST" });
-            document.body.innerHTML = '<div class="shutdown-screen"><div class="shutdown-screen-card"><h1>DLMS has been shut down.</h1><p>You can close this browser tab.</p></div></div>';
-        } catch (err) {
-            alert("DLMS may already be shutting down.");
-        }
-    });
-}
-</script>
 </body>
 </html>
-    """, portal_title=portal_title, questions=questions)
+""", portal_title=portal_title, questions=questions)
+
 
 
 # =========================
