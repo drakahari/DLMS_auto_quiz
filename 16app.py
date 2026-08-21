@@ -6014,31 +6014,12 @@ if (shutdownBtn) {
 def create_short_quiz_page():
     portal_title = get_portal_title()
 
-    # Two-stage manual builder:
-    # 1) Ask how many question blocks to start with.
-    # 2) Render exactly that many blocks. Users can still add/delete afterward.
-    raw_count = request.args.get("count")
-    builder_ready = raw_count is not None
-
-    if builder_ready:
-        try:
-            starting_question_count = int(str(raw_count).strip())
-        except (TypeError, ValueError):
-            starting_question_count = 10
-
-        # Keep the initial render reasonable while preserving the existing
-        # dynamic Add/Delete Question controls once the builder is open.
-        starting_question_count = max(1, min(starting_question_count, 100))
-    else:
-        starting_question_count = 10
-
     questions = []
-    if builder_ready:
-        for qnum in range(1, starting_question_count + 1):
-            questions.append({
-                "number": qnum,
-                "choices": ["A", "B", "C", "D"]
-            })
+    for qnum in range(1, 11):
+        questions.append({
+            "number": qnum,
+            "choices": ["A", "B", "C", "D"]
+        })
 
     return render_template_string("""
 <!DOCTYPE html>
@@ -6092,37 +6073,6 @@ def create_short_quiz_page():
                 <p>Build a custom quiz question by question. Add or remove questions and choices as needed.</p>
             </div>
         </header>
-
-        {% if not builder_ready %}
-        <section class="dashboard-panel build-section build-short-basics">
-            <div class="build-section-heading">
-                <div class="build-step-number">1</div>
-                <div>
-                    <h2>Choose Starting Question Count</h2>
-                    <p>Start with only the number of question blocks you need. You can add or delete questions at any time in the builder.</p>
-                </div>
-            </div>
-
-            <form method="GET" action="/create_short_quiz" class="build-workspace">
-                <label class="build-field" style="max-width:340px;">
-                    <span>How many questions would you like to start with?</span>
-                    <input type="number"
-                           name="count"
-                           min="1"
-                           max="100"
-                           value="10"
-                           inputmode="numeric"
-                           required>
-                    <small>Choose 1–100. The default is 10.</small>
-                </label>
-
-                <div class="build-submit-row" style="margin-top:18px;">
-                    <a class="build-secondary-link" href="/upload">Back to Build Options</a>
-                    <button class="build-primary-button" type="submit">Start Quiz Builder</button>
-                </div>
-            </form>
-        </section>
-        {% else %}
 
         <form id="create-short-quiz-form" class="build-workspace" method="POST" action="/create_short_quiz" enctype="multipart/form-data">
             <section class="dashboard-panel build-section build-short-basics">
@@ -6190,7 +6140,6 @@ def create_short_quiz_page():
                 </div>
             </section>
         </form>
-        {% endif %}
     </main>
 </div>
 <script>
@@ -6357,9 +6306,7 @@ function deleteChoice(button) {
     renumberQuestions();
 }
 
-const shortQuizForm = document.getElementById("create-short-quiz-form");
-if (shortQuizForm) {
-shortQuizForm.addEventListener("submit", function(e) {
+document.getElementById("create-short-quiz-form").addEventListener("submit", function(e) {
     renumberQuestions();
 
     const questions = document.querySelectorAll(".question-block");
@@ -6413,7 +6360,6 @@ shortQuizForm.addEventListener("submit", function(e) {
         }
     }
 });
-}
 
 </script>
 
@@ -6443,12 +6389,7 @@ if (shutdownBtn) {
 </script>
 </body>
 </html>
-    """,
-        portal_title=portal_title,
-        questions=questions,
-        builder_ready=builder_ready,
-        starting_question_count=starting_question_count
-    )
+    """, portal_title=portal_title, questions=questions)
 
 
 # =========================

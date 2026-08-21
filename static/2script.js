@@ -8,13 +8,7 @@ let userAnswers = {};
 let studyAnkiSelections = new Set();
 let paused = false;
 let examTimer = null;
-const DEFAULT_EXAM_MINUTES = 90;
-const configuredExamMinutes = Number(window.examDurationMinutes);
-const examDurationMinutes =
-    Number.isFinite(configuredExamMinutes) && configuredExamMinutes > 0
-        ? Math.floor(configuredExamMinutes)
-        : DEFAULT_EXAM_MINUTES;
-let timeRemaining = examDurationMinutes * 60;
+let timeRemaining = 90 * 60; // 90 minutes
 let examStartTime = null;
 let examStartedAt = null;
 
@@ -583,10 +577,9 @@ function startQuiz(isExam) {
         if (timerDiv) timerDiv.classList.add("hidden");
         stopExamTimer();
     } else {
-        // Exam mode: show timer + start the quiz-specific countdown.
-        // Older quizzes without a configured duration safely default to 90 minutes.
+        // Exam mode: show timer + start fresh 90-min countdown
         if (timerDiv) timerDiv.classList.remove("hidden");
-        timeRemaining = examDurationMinutes * 60;
+        timeRemaining = 90 * 60;
         startExamTimer();
     }
     // NEW: record start time

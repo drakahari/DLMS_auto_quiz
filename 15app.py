@@ -1276,24 +1276,7 @@ def normalize_quiz_folders(registry):
 
         return registry
 
-def normalize_exam_minutes(value, default=90):
-    """
-    Normalize a per-quiz Exam Mode duration.
-    Existing quizzes and blank/invalid values safely fall back to 90 minutes.
-    """
-    try:
-        minutes = int(str(value).strip())
-    except (TypeError, ValueError):
-        return default
-
-    if minutes < 1:
-        return default
-
-    # Keep the value reasonable while still allowing long certification exams.
-    return min(minutes, 1440)
-
-
-def add_quiz_to_registry(quiz_id, html, title, logo=None, exam_minutes=90):
+def add_quiz_to_registry(quiz_id, html, title, logo=None):
     """
     Canonical registry update:
     - quiz_id is the DATABASE quizzes.id (authoritative)
@@ -1340,7 +1323,6 @@ def add_quiz_to_registry(quiz_id, html, title, logo=None, exam_minutes=90):
             "html": html,
             "title": title,
             "logo": logo,
-            "exam_minutes": normalize_exam_minutes(exam_minutes),
             "timestamp": int(time.time())
         })
 
@@ -3737,10 +3719,6 @@ def edit_quiz(quiz_id):
 
     conn.close()
 
-    registry = load_registry()
-    quiz_entry = next((q for q in registry if str(q.get("id")) == str(quiz_id)), {})
-    exam_minutes = normalize_exam_minutes(quiz_entry.get("exam_minutes", 90))
-
     return render_template_string("""
 <!DOCTYPE html>
 <html>
@@ -3769,17 +3747,6 @@ def edit_quiz(quiz_id):
 
             <p><b>Quiz ID:</b> {{ quiz["id"] }}</p>
             <p><b>Source file:</b> {{ quiz["source_file"] }}</p>
-
-            <label><b>Exam Mode Timer (minutes)</b></label><br>
-            <input type="number"
-                   name="exam_minutes"
-                   min="1"
-                   max="1440"
-                   value="{{ exam_minutes }}"
-                   style="width:180px; padding:8px;">
-            <p style="opacity:0.7; font-size:12px">
-                Existing quizzes default to 90 minutes. Change this value to customize Exam Mode for this quiz.
-            </p>
 
              <br>
 
@@ -3906,7 +3873,7 @@ document.getElementById("edit-quiz-form").addEventListener("submit", function(e)
 
 </body>
 </html>
-""", quiz=quiz, questions=question_list, exam_minutes=exam_minutes)
+""", quiz=quiz, questions=question_list)
 
 
 # =========================
@@ -4270,8 +4237,7 @@ def rebuild_quiz_html_from_registry(quiz_id):
         get_portal_title(),
         quiz_entry.get("title") or "Edited Quiz",
         quiz_entry.get("logo"),
-        quiz_id,
-        quiz_entry.get("exam_minutes", 90)
+        quiz_id
     )
 
     print("[EDIT] Rebuilt quiz HTML:", html_path)
@@ -4339,7 +4305,6 @@ def save_edited_quiz(quiz_id):
     # SAVE CURRENT FORM VALUES FIRST
     # =========================
     new_title = request.form.get("quiz_title", "").strip()
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     if new_title:
         cur.execute(
@@ -4360,15 +4325,6 @@ def save_edited_quiz(quiz_id):
                     break
 
             save_registry(registry)
-
-    # Save per-quiz Exam Mode duration independently of the SQLite schema.
-    with registry_lock:
-        registry = load_registry()
-        for q in registry:
-            if str(q.get("id")) == str(quiz_id):
-                q["exam_minutes"] = exam_minutes
-                break
-        save_registry(registry)
 
     questions = cur.execute(
         "SELECT id FROM questions WHERE quiz_id = ?",
@@ -5770,11 +5726,6 @@ def upload_page():
                         <input type="file" name="quiz_logo" accept="image/*">
                         <small>PNG, JPG, GIF, or WEBP.</small>
                     </label>
-                    <label class="build-field">
-                        <span>Exam Mode Timer <em>Optional</em></span>
-                        <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                        <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
-                    </label>
                     <button class="build-primary-button" type="submit">Upload &amp; Build Quiz</button>
                 </form>
             </article>
@@ -5908,11 +5859,6 @@ def paste_page():
                     <input type="text" name="quiz_title" placeholder="Example: Linux+ Practice Set" required>
                 </label>
                 <label class="build-field">
-                    <span>Exam Mode Timer <em>Optional</em></span>
-                    <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                    <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
-                </label>
-                <label class="build-field">
                     <span>Questions + Answers</span>
                     <textarea class="build-source-textarea" name="quiz_text" required placeholder="Paste your formatted questions here..."></textarea>
                 </label>
@@ -6014,31 +5960,12 @@ if (shutdownBtn) {
 def create_short_quiz_page():
     portal_title = get_portal_title()
 
-    # Two-stage manual builder:
-    # 1) Ask how many question blocks to start with.
-    # 2) Render exactly that many blocks. Users can still add/delete afterward.
-    raw_count = request.args.get("count")
-    builder_ready = raw_count is not None
-
-    if builder_ready:
-        try:
-            starting_question_count = int(str(raw_count).strip())
-        except (TypeError, ValueError):
-            starting_question_count = 10
-
-        # Keep the initial render reasonable while preserving the existing
-        # dynamic Add/Delete Question controls once the builder is open.
-        starting_question_count = max(1, min(starting_question_count, 100))
-    else:
-        starting_question_count = 10
-
     questions = []
-    if builder_ready:
-        for qnum in range(1, starting_question_count + 1):
-            questions.append({
-                "number": qnum,
-                "choices": ["A", "B", "C", "D"]
-            })
+    for qnum in range(1, 11):
+        questions.append({
+            "number": qnum,
+            "choices": ["A", "B", "C", "D"]
+        })
 
     return render_template_string("""
 <!DOCTYPE html>
@@ -6093,37 +6020,6 @@ def create_short_quiz_page():
             </div>
         </header>
 
-        {% if not builder_ready %}
-        <section class="dashboard-panel build-section build-short-basics">
-            <div class="build-section-heading">
-                <div class="build-step-number">1</div>
-                <div>
-                    <h2>Choose Starting Question Count</h2>
-                    <p>Start with only the number of question blocks you need. You can add or delete questions at any time in the builder.</p>
-                </div>
-            </div>
-
-            <form method="GET" action="/create_short_quiz" class="build-workspace">
-                <label class="build-field" style="max-width:340px;">
-                    <span>How many questions would you like to start with?</span>
-                    <input type="number"
-                           name="count"
-                           min="1"
-                           max="100"
-                           value="10"
-                           inputmode="numeric"
-                           required>
-                    <small>Choose 1–100. The default is 10.</small>
-                </label>
-
-                <div class="build-submit-row" style="margin-top:18px;">
-                    <a class="build-secondary-link" href="/upload">Back to Build Options</a>
-                    <button class="build-primary-button" type="submit">Start Quiz Builder</button>
-                </div>
-            </form>
-        </section>
-        {% else %}
-
         <form id="create-short-quiz-form" class="build-workspace" method="POST" action="/create_short_quiz" enctype="multipart/form-data">
             <section class="dashboard-panel build-section build-short-basics">
                 <div class="build-section-heading">
@@ -6139,11 +6035,6 @@ def create_short_quiz_page():
                         <span>Quiz Logo <em>Optional</em></span>
                         <input type="file" name="quiz_logo" accept="image/*">
                         <small>PNG, JPG, GIF, or WEBP.</small>
-                    </label>
-                    <label class="build-field">
-                        <span>Exam Mode Timer <em>Optional</em></span>
-                        <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                        <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
                     </label>
                 </div>
             </section>
@@ -6190,7 +6081,6 @@ def create_short_quiz_page():
                 </div>
             </section>
         </form>
-        {% endif %}
     </main>
 </div>
 <script>
@@ -6357,9 +6247,7 @@ function deleteChoice(button) {
     renumberQuestions();
 }
 
-const shortQuizForm = document.getElementById("create-short-quiz-form");
-if (shortQuizForm) {
-shortQuizForm.addEventListener("submit", function(e) {
+document.getElementById("create-short-quiz-form").addEventListener("submit", function(e) {
     renumberQuestions();
 
     const questions = document.querySelectorAll(".question-block");
@@ -6413,7 +6301,6 @@ shortQuizForm.addEventListener("submit", function(e) {
         }
     }
 });
-}
 
 </script>
 
@@ -6443,12 +6330,7 @@ if (shutdownBtn) {
 </script>
 </body>
 </html>
-    """,
-        portal_title=portal_title,
-        questions=questions,
-        builder_ready=builder_ready,
-        starting_question_count=starting_question_count
-    )
+    """, portal_title=portal_title, questions=questions)
 
 
 # =========================
@@ -6457,7 +6339,6 @@ if (shutdownBtn) {
 @app.route("/create_short_quiz", methods=["POST"])
 def save_short_quiz():
     quiz_title = request.form.get("quiz_title", "").strip()
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     if not quiz_title:
         flash("Quiz title is required.", "error")
@@ -6564,8 +6445,7 @@ def save_short_quiz():
         quiz_id=quiz_id,
         html=html_name,
         title=quiz_title,
-        logo=logo_filename,
-        exam_minutes=exam_minutes
+        logo=logo_filename
     )
 
     # Build playable quiz HTML
@@ -6576,8 +6456,7 @@ def save_short_quiz():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        quiz_id,
-        exam_minutes
+        quiz_id
     )
 
     flash("Short quiz created successfully.", "success")
@@ -6755,7 +6634,6 @@ def preview_paste():
 
     quiz_text = request.form.get("quiz_text", "").strip()
     quiz_title = request.form.get("quiz_title", "Generated Quiz From Paste")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
     strip_rules_raw = request.form.get("strip_text", "").strip()
 
     # =========================
@@ -7425,7 +7303,6 @@ function runDiff() {
         <!-- IMPORTANT: Send CLEANED text forward -->
         <form action="/process_paste" method="POST">
             <input type="hidden" name="quiz_title" value="{{ quiz_title }}">
-            <input type="hidden" name="exam_minutes" value="{{ exam_minutes }}">
             <input type="hidden" name="temp_logo_name" value="{{ preview_logo_name }}">
             <textarea name="quiz_text" style="display:none;">{{ cleaned }}</textarea>
 
@@ -7443,7 +7320,6 @@ function runDiff() {
 """,
 
         quiz_title=quiz_title,
-        exam_minutes=exam_minutes,
         original=quiz_text,
         cleaned=clean_text,
         conf_summary=conf_summary,
@@ -7504,7 +7380,6 @@ def process_paste():
 
     quiz_text = request.form.get("quiz_text", "").strip()
     quiz_title = request.form.get("quiz_title", "Generated Quiz From Paste")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     # Checkbox flag (Auto Junk Cleanup)
     auto_cleanup = request.form.get("auto_cleanup") == "1"
@@ -7675,8 +7550,7 @@ def process_paste():
         db_quiz_id,
         html_name,
         quiz_title,
-        logo_filename,
-        exam_minutes
+        logo_filename
     )
 
 
@@ -7689,8 +7563,7 @@ def process_paste():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        db_quiz_id,
-        exam_minutes
+        db_quiz_id
     )
 
 
@@ -7713,7 +7586,6 @@ def process_file():
     file = request.files.get("file")
     quiz_title = request.form.get("quiz_title", "Generated Quiz")
     quiz_logo = request.files.get("quiz_logo")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     logo_filename = None  # ✅ ensure always defined
     source_file = None    # ✅ canonical quiz identifier
@@ -7873,8 +7745,7 @@ def process_file():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        quiz_id,
-        exam_minutes
+        quiz_id
     )
 
 
@@ -7882,8 +7753,7 @@ def process_file():
     quiz_id,
     html_name,
     quiz_title,
-    logo_filename,
-    exam_minutes
+    logo_filename
 )
 
 
@@ -10552,8 +10422,7 @@ def analyze_confidence(clean_text):
 # QUIZ HTML BUILDER
 # =========================
 
-def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_filename, quiz_id, exam_minutes=90):
-    exam_minutes = normalize_exam_minutes(exam_minutes)
+def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_filename, quiz_id):
     # Optional logo for mode banner (left/right)
     if logo_filename:
         mode_logo = f'<img src="/user-static/logos/{logo_filename}" class="mode-badge">'
@@ -10573,7 +10442,6 @@ def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_file
 <!-- 🔑 Canonical quiz identity for script.js + DB -->
 <script>
   window.quiz_title = "{quiz_title}";
-  window.examDurationMinutes = {exam_minutes};
 </script>
 
 </head>

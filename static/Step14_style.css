@@ -169,34 +169,6 @@ a:active {
 }
 
 /* =======================
-   GLOBAL NUMBER INPUTS
-   Keep numeric values readable throughout the dark DLMS interface.
-======================= */
-input[type="number"] {
-    box-sizing: border-box;
-    color: #eaf3ff;
-    background: rgba(3, 13, 30, 0.78);
-    border: 1px solid rgba(91, 146, 215, 0.42);
-    border-radius: 8px;
-    font: inherit;
-    caret-color: #ffffff;
-    color-scheme: dark;
-}
-
-input[type="number"]:focus {
-    outline: none;
-    border-color: rgba(75, 164, 255, 0.82);
-    background: rgba(5, 19, 42, 0.90);
-    box-shadow: 0 0 0 3px rgba(46, 137, 255, 0.10);
-}
-
-input[type="number"]::selection {
-    color: #ffffff;
-    background: rgba(27, 159, 242, 0.48);
-}
-
-
-/* =======================
    BUTTONS
 ======================= */
 button {

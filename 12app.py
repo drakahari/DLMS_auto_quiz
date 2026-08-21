@@ -887,79 +887,6 @@ cleanup_temp_logos()
 
 
 # =========================
-# DEFAULT LAW STUDY AI PROMPT
-# =========================
-DEFAULT_LAW_AI_PROMPT = r"""You are helping a first-year law student study a judicial opinion.
-
-Case:
-{{case_name}}
-
-Course:
-{{course}}
-
-Please create a law-school study packet for this case.
-
-Use only accurate information. Do not invent citations, quotations, facts, holdings, or procedural history. If you are uncertain, say so clearly.
-
-Prefer public legal sources when available, such as official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources. If you cannot verify the case from a reliable source, clearly state that verification is needed. Include the source links used in the Sources Used section of the DLMS IMPORT BLOCK.
-
-Create the following sections:
-
-{{study_sections}}
-
-Formatting requirements:
-- Use clear headings.
-- Keep explanations beginner-friendly but law-school appropriate.
-- Avoid long block quotes.
-- Do not invent citations, quotations, facts, holdings, or procedural history.
-- Include a final warning outside the DLMS import block reminding the student to verify the case against the original opinion or an approved legal research source.
-
-Return your response as one clearly marked, copyable fenced code block using plain text format.
-
-The fenced code block must begin with this heading:
-
-DLMS IMPORT BLOCK
-
-Inside the DLMS IMPORT BLOCK:
-- This entire block should be downloadable/copyable as a single plain-text block.
-- Include a Sources Used section at the top of the block.
-- In Sources Used, list the public legal sources used to verify the case, including source name and URL when available.
-- Prefer official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources.
-- Include only the requested study sections after Sources Used.
-- Include only Sources Used and sections 1, 2, 2A, 3, and 4 when those sections were requested.
-- Do not include extra commentary inside the DLMS IMPORT BLOCK.
-- Do not include the verification warning inside the DLMS IMPORT BLOCK.
-- Use clean plain-text headings so the block can be pasted into DLMS.
-
-Do not provide a separate explanation before the fenced code block.
-Do not provide a separate explanation after the fenced code block.
-
-The response format should be:
-
-```text
-DLMS IMPORT BLOCK
-
-Sources Used
-- Source name: URL
-
-1. Case Brief
-...
-
-2. Socratic Review
-...
-
-2A. Socratic Answer Key
-...
-
-3. IRAC Drill
-...
-
-4. Rule Flashcards
-...
-```
-"""
-
-# =========================
 # PORTAL CONFIG MANAGEMENT
 # =========================
 def load_portal_config():
@@ -988,7 +915,6 @@ def load_portal_config():
 
         {{questions}}
         """,
-        "law_ai_prompt_template": DEFAULT_LAW_AI_PROMPT,
     }
 
     # Ensure config directory exists
@@ -1276,24 +1202,7 @@ def normalize_quiz_folders(registry):
 
         return registry
 
-def normalize_exam_minutes(value, default=90):
-    """
-    Normalize a per-quiz Exam Mode duration.
-    Existing quizzes and blank/invalid values safely fall back to 90 minutes.
-    """
-    try:
-        minutes = int(str(value).strip())
-    except (TypeError, ValueError):
-        return default
-
-    if minutes < 1:
-        return default
-
-    # Keep the value reasonable while still allowing long certification exams.
-    return min(minutes, 1440)
-
-
-def add_quiz_to_registry(quiz_id, html, title, logo=None, exam_minutes=90):
+def add_quiz_to_registry(quiz_id, html, title, logo=None):
     """
     Canonical registry update:
     - quiz_id is the DATABASE quizzes.id (authoritative)
@@ -1340,7 +1249,6 @@ def add_quiz_to_registry(quiz_id, html, title, logo=None, exam_minutes=90):
             "html": html,
             "title": title,
             "logo": logo,
-            "exam_minutes": normalize_exam_minutes(exam_minutes),
             "timestamp": int(time.time())
         })
 
@@ -1621,21 +1529,80 @@ def law_create_case_review():
 """.strip())
 
         if case_name:
-            cfg = load_portal_config()
-            law_prompt_template = str(cfg.get("law_ai_prompt_template") or DEFAULT_LAW_AI_PROMPT).strip()
+            generated_prompt = f"""You are helping a first-year law student study a judicial opinion.
 
-            # Law Study uses its own prompt template so quiz-explanation prompts remain independent.
-            generated_prompt = (
-                law_prompt_template
-                .replace("{{case_name}}", case_name)
-                .replace("{{course}}", course)
-                .replace("{{study_sections}}", chr(10).join(requested_sections))
-            )
+Case:
+{case_name}
 
+Course:
+{course}
+
+Please create a law-school study packet for this case.
+
+Use only accurate information. Do not invent citations, quotations, facts, holdings, or procedural history. If you are uncertain, say so clearly.
+
+Prefer public legal sources when available, such as official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources. If you cannot verify the case from a reliable source, clearly state that verification is needed. Include the source links used in the Sources Used section of the DLMS IMPORT BLOCK.
+
+Create the following sections:
+
+{chr(10).join(requested_sections)}
+
+Formatting requirements:
+- Use clear headings.
+- Keep explanations beginner-friendly but law-school appropriate.
+- Avoid long block quotes.
+- Do not invent citations, quotations, facts, holdings, or procedural history.
+- Include a final warning outside the DLMS import block reminding the student to verify the case against the original opinion or an approved legal research source.
+
+Return your response as one clearly marked, copyable fenced code block using plain text format.
+
+The fenced code block must begin with this heading:
+
+DLMS IMPORT BLOCK
+
+Inside the DLMS IMPORT BLOCK:
+- This entire block should be downloadable/copyable as a single plain-text block.
+- Include a Sources Used section at the top of the block.
+- In Sources Used, list the public legal sources used to verify the case, including source name and URL when available.
+- Prefer official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources.
+- Include only the requested study sections after Sources Used.
+- Include only Sources Used and sections 1, 2, 2A, 3, and 4 when those sections were requested.
+- Do not include extra commentary inside the DLMS IMPORT BLOCK.
+- Do not include the verification warning inside the DLMS IMPORT BLOCK.
+- Use clean plain-text headings so the block can be pasted into DLMS.
+
+Do not provide a separate explanation before the fenced code block.
+Do not provide a separate explanation after the fenced code block.
+
+The response format should be:
+
+```text
+DLMS IMPORT BLOCK
+
+Sources Used
+- Source name: URL
+
+1. Case Brief
+...
+
+2. Socratic Review
+...
+
+2A. Socratic Answer Key
+...
+
+3. IRAC Drill
+...
+
+4. Rule Flashcards
+...
+```
+"""
         else:
             generated_prompt = "Please enter a case name before generating the AI prompt."
 
-    return render_template_string("""<!DOCTYPE html>
+    return render_template_string("""
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -1643,210 +1610,245 @@ def law_create_case_review():
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home law-subpage law-create-page">
-<div class="dashboard-shell">
 
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div>
-            <div class="dashboard-brand-title">DLMS</div>
-            <div class="dashboard-brand-subtitle">Training Center</div>
-        </div>
-    </div>
+<body>
+<div class="container">
 
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
+    <h1 class="hero-title">
+        ⚖️ Create Case Review<br>
+        <span style="font-size:20px;opacity:.85">
+            Case Brief • Socratic Questions • IRAC Drill • Flashcards
+        </span>
+    </h1>
 
-    <div class="dashboard-nav-section-label"><span>System</span></div>
+    <div class="card">
 
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button">
-        <span class="dashboard-shutdown-icon">⏻</span>
-        <span>Shutdown DLMS</span>
-    </button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-
-<main class="dashboard-main law-subpage-main">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div>
-            <div class="law-subpage-eyebrow">LAW STUDY</div>
-            <h1>Create Case Review</h1>
-            <p>Build a structured case-study prompt for your preferred AI provider.</p>
-        </div>
-    </header>
-
-    <section class="dashboard-panel law-workspace-panel">
-        <div class="law-panel-heading">
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        ">
             <div>
-                <span class="law-subpage-eyebrow">NEW CASE WORKFLOW</span>
-                <h2>Case Study Setup</h2>
-                <p>Enter the case, choose a course, and select the study tools you want included.</p>
+                <h2 style="margin-bottom:6px;">New Law Case Study</h2>
+                <p style="opacity:.85; margin-top:0;">
+                    Enter a case and choose the study tools you want. DLMS will generate a structured prompt for your selected AI provider.
+                </p>
             </div>
-            <span class="law-status-pill success">AI Ready</span>
+
+            <span style="
+                display:inline-block;
+                padding:7px 12px;
+                border-radius:999px;
+                background:rgba(0,180,100,.14);
+                border:1px solid rgba(0,180,100,.35);
+                font-size:13px;
+                font-weight:700;
+                white-space:nowrap;
+            ">
+                ✨ AI-ready
+            </span>
         </div>
 
-        <form method="POST" action="/law/create" class="law-form">
-            <div class="law-form-grid">
-                <label class="law-field law-field-wide">
-                    <span>Case Name</span>
-                    <input type="text" name="case_name" value="{{ case_name }}" required
-                           placeholder="Example: Palsgraf v. Long Island Railroad Co.">
-                </label>
+        <form method="POST" action="/law/create">
 
-                <label class="law-field">
-                    <span>Course / Folder</span>
-                    <select name="course">
-                        {% for folder in law_folders %}
-                        <option value="{{ folder }}" {% if folder == course %}selected{% endif %}>{{ folder }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
+            <h3>Case Name</h3>
+            <input type="text"
+                name="case_name"
+                value="{{ case_name }}"
+                required
+                placeholder="Example: Palsgraf v. Long Island Railroad Co."
+                style="width:100%; padding:10px; border-radius:8px; box-sizing:border-box;">
 
-                <label class="law-field">
-                    <span>AI Provider</span>
-                    <select name="ai_provider">
-                        <option value="chatgpt" {% if ai_provider == "chatgpt" %}selected{% endif %}>ChatGPT</option>
-                        <option value="claude" {% if ai_provider == "claude" %}selected{% endif %}>Claude</option>
-                        <option value="gemini" {% if ai_provider == "gemini" %}selected{% endif %}>Gemini</option>
-                        <option value="local" {% if ai_provider == "local" %}selected{% endif %}>Local / Custom</option>
-                    </select>
-                </label>
-            </div>
+            <br><br>
 
-            <div class="law-options-heading">
-                <span class="law-subpage-eyebrow">STUDY PACKET</span>
-                <h3>Include these sections</h3>
-            </div>
+            <h3>Course / Folder</h3>
+            <select name="course"
+                    style="width:100%; padding:10px; border-radius:8px; box-sizing:border-box;">
+                {% for folder in law_folders %}
+                    <option value="{{ folder }}" {% if folder == course %}selected{% endif %}>{{ folder }}</option>
+                {% endfor %}
+            </select>
 
-            <div class="law-option-grid">
-                <label class="law-option-card">
+            <br><br>
+
+            <h3>AI Provider</h3>
+            <select name="ai_provider"
+                    style="width:100%; padding:10px; border-radius:8px; box-sizing:border-box;">
+                <option value="chatgpt" {% if ai_provider == "chatgpt" %}selected{% endif %}>ChatGPT</option>
+                <option value="claude" {% if ai_provider == "claude" %}selected{% endif %}>Claude</option>
+                <option value="gemini" {% if ai_provider == "gemini" %}selected{% endif %}>Gemini</option>
+                <option value="local" {% if ai_provider == "local" %}selected{% endif %}>Local / Custom</option>
+            </select>
+
+            <br><br>
+
+            <h3>Study Packet Options</h3>
+
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+                gap:12px;
+                margin-top:10px;
+            ">
+                <label class="portal-card" style="cursor:pointer; text-align:left;">
                     <input type="checkbox" name="include_case_brief" {% if include_case_brief %}checked{% endif %}>
-                    <div><strong>Case Brief</strong><span>Facts, issue, rule, holding, and reasoning.</span></div>
+                    <strong>Case Brief</strong>
+                    <p style="margin-bottom:0; opacity:.8;">Facts, issue, rule, holding, and reasoning.</p>
                 </label>
-                <label class="law-option-card">
+
+                <label class="portal-card" style="cursor:pointer; text-align:left;">
                     <input type="checkbox" name="include_socratic" {% if include_socratic %}checked{% endif %}>
-                    <div><strong>Socratic Review</strong><span>Cold-call questions and a concise answer key.</span></div>
+                    <strong>Socratic Review</strong>
+                    <p style="margin-bottom:0; opacity:.8;">Cold-call style questions for class prep.</p>
                 </label>
-                <label class="law-option-card">
+
+                <label class="portal-card" style="cursor:pointer; text-align:left;">
                     <input type="checkbox" name="include_irac" {% if include_irac %}checked{% endif %}>
-                    <div><strong>IRAC Drill</strong><span>Issue, rule, analysis, conclusion, and model response.</span></div>
+                    <strong>IRAC Drill</strong>
+                    <p style="margin-bottom:0; opacity:.8;">Issue, rule, analysis, and conclusion practice.</p>
                 </label>
-                <label class="law-option-card">
+
+                <label class="portal-card" style="cursor:pointer; text-align:left;">
                     <input type="checkbox" name="include_flashcards" {% if include_flashcards %}checked{% endif %}>
-                    <div><strong>Rule Flashcards</strong><span>Active-recall cards for rule, holding, and key facts.</span></div>
+                    <strong>Rule Flashcards</strong>
+                    <p style="margin-bottom:0; opacity:.8;">Active recall cards from the case rule and holding.</p>
                 </label>
             </div>
 
-            <div class="law-action-row">
-                <button type="submit" class="law-primary-action">Generate AI Prompt</button>
-                <button type="button" class="law-secondary-action" onclick="location.href='/law/import'">Proceed to Import Case Packet</button>
-                <button type="button" class="law-quiet-action" onclick="location.href='/law'">Back to Law Study</button>
-            </div>
+            <br>
+
+                <button type="submit">
+                    ✨ Generate AI Prompt
+                </button>
+
+                <button type="button"
+                        onclick="location.href='/law/import'"
+                        title="If you generated a prompt first, DLMS will carry the active case name, course, and filename slug into the import workflow. If no prompt was generated, the import page will show a no active workflow warning and saved raw imports will use a timestamp-only filename.">
+                    📥 Proceed To Import Case Packet
+                </button>
+
+                <button type="button"
+                        onclick="location.href='/law'">
+                    ⬅ Back To Law Study
+                </button>
+
         </form>
 
         {% if generated_prompt %}
-        <section class="law-generated-panel">
-            <div class="law-panel-heading compact">
-                <div><span class="law-subpage-eyebrow">GENERATED PROMPT</span><h2>Ready for AI</h2></div>
-            </div>
-            <textarea id="lawPromptBox" class="law-prompt-box" rows="18">{{ generated_prompt }}</textarea>
-            <div class="law-action-row">
-                {% if ai_provider_url %}
-                <button type="button" class="law-primary-action" onclick="copyPromptAndOpenAi('{{ ai_provider_url }}')">Copy Prompt &amp; Open AI</button>
-                {% endif %}
-                <button type="button" class="law-secondary-action" onclick="copyLawPrompt()">Copy Prompt</button>
-            </div>
-            {% if not ai_provider_url %}
-            <p class="law-helper-text">No custom AI URL is configured for Local / Custom.</p>
-            {% endif %}
-        </section>
+        <hr style="margin:24px 0;">
+
+        <h2>Generated AI Prompt</h2>
+
+        <p style="opacity:.8;">
+            Copy this prompt into your selected AI provider. In a later step, DLMS can open the provider automatically.
+        </p>
+
+        <textarea id="lawPromptBox"
+                rows="18"
+                style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ generated_prompt }}</textarea>
+
+        <br><br>
+        {% if ai_provider_url %}
+        <button type="button" onclick="copyPromptAndOpenAi('{{ ai_provider_url }}')">
+            ✨ Copy Prompt & Open AI
+        </button>
+        {% else %}
+        <p style="opacity:.75; margin-top:10px;">
+            No custom AI URL is configured for Local / Custom.
+        </p>
         {% endif %}
-    </section>
-</main>
+
+        <button type="button" onclick="copyLawPrompt()">
+            📋 Copy Prompt
+        </button>
+
+        {% endif %}
+
+        
+
+    </div>
+
+</div>
+
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
 </div>
 
 <script>
 function copyLawPromptToClipboard(showAlert = true) {
     const box = document.getElementById("lawPromptBox");
+
     if (!box) {
-        if (showAlert) alert("Prompt box not found.");
+        if (showAlert) {
+            alert("Prompt box not found.");
+        }
         return false;
     }
+
     box.focus();
     box.select();
     box.setSelectionRange(0, box.value.length);
+
     let copied = false;
-    try { copied = document.execCommand("copy"); } catch (err) { copied = false; }
+
+    try {
+        copied = document.execCommand("copy");
+    } catch (err) {
+        copied = false;
+    }
+
     if (copied) {
-        if (showAlert) alert("Prompt copied to clipboard.");
+        if (showAlert) {
+            alert("Prompt copied to clipboard.");
+        }
         return true;
     }
-    if (showAlert) alert("Copy failed. The prompt is selected, so press Ctrl+C manually.");
+
+    if (showAlert) {
+        alert("Copy failed. The prompt is selected, so press Ctrl+C manually.");
+    }
+
     return false;
 }
-function copyLawPrompt() { copyLawPromptToClipboard(true); }
+
+
+function copyLawPrompt() {
+    copyLawPromptToClipboard(true);
+}
+
+
 function openSelectedAi(url) {
-    if (!url) { alert("No AI provider URL is configured."); return; }
+    if (!url) {
+        alert("No AI provider URL is configured.");
+        return;
+    }
+
     window.open(url, "_blank", "noopener,noreferrer");
 }
+
+
 function copyPromptAndOpenAi(url) {
     const copied = copyLawPromptToClipboard(false);
-    if (!copied) alert("The prompt could not be copied automatically. It is selected, so press Ctrl+C manually. The AI site will now open.");
+
+    if (!copied) {
+        alert("The prompt could not be copied automatically. It is selected, so press Ctrl+C manually. The AI site will now open.");
+    }
+
     openSelectedAi(url);
 }
 </script>
 
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) {
-            alert("Failed to shut down DLMS.");
-        }
-    });
-}
-</script>
-
 </body>
-</html>""",
+</html>
+""",
     portal_title=portal_title,
     law_folders=law_folders,
     case_name=case_name,
@@ -2169,7 +2171,8 @@ def law_import_case_packet():
                     print(f"[LAW IMPORT ERROR] Failed saving raw packet: {e}")
                     save_message = "Error: failed to save raw case packet."
 
-    return render_template_string("""<!DOCTYPE html>
+    return render_template_string("""
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -2177,161 +2180,212 @@ def law_import_case_packet():
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home law-subpage law-import-page">
-<div class="dashboard-shell">
 
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div>
-            <div class="dashboard-brand-title">DLMS</div>
-            <div class="dashboard-brand-subtitle">Training Center</div>
-        </div>
-    </div>
+<body>
+<div class="container">
 
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
+    <h1 class="hero-title">
+        📥 Import Case Packet<br>
+        <span style="font-size:20px;opacity:.85">
+            Paste AI Output • Review • Prepare For Saving
+        </span>
+    </h1>
 
-    <div class="dashboard-nav-section-label"><span>System</span></div>
+    <div class="card">
 
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button">
-        <span class="dashboard-shutdown-icon">⏻</span>
-        <span>Shutdown DLMS</span>
-    </button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-
-<main class="dashboard-main law-subpage-main">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div>
-            <div class="law-subpage-eyebrow">LAW STUDY</div>
-            <h1>Import Case Packet</h1>
-            <p>Paste AI output, preview the packet, and save it for structured review.</p>
-        </div>
-    </header>
-
-    <section class="dashboard-panel law-workspace-panel">
-        <div class="law-panel-heading">
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        ">
             <div>
-                <span class="law-subpage-eyebrow">CASE PACKET</span>
-                <h2>Paste AI-Generated Study Packet</h2>
-                <p>Keep the complete DLMS import block intact so it can be saved and parsed later.</p>
+                <h2 style="margin-bottom:6px;">Paste AI-Generated Study Packet</h2>
+                <p style="opacity:.85; margin-top:0;">
+                    Paste the response from your AI provider here. This step only previews the packet. Saving and parsing will come later.
+                </p>
             </div>
-            <span class="law-status-pill info">Import Workspace</span>
+
+            <span style="
+                display:inline-block;
+                padding:7px 12px;
+                border-radius:999px;
+                background:rgba(0,180,100,.14);
+                border:1px solid rgba(0,180,100,.35);
+                font-size:13px;
+                font-weight:700;
+                white-space:nowrap;
+            ">
+                🧪 Preview only
+            </span>
         </div>
 
-        {% if request.args.get('workflow_cancelled') %}
-        <div class="law-notice success"><strong>Active case workflow cancelled.</strong><span>Pending case metadata has been cleared.</span></div>
-        {% endif %}
+                 {% if request.args.get('workflow_cancelled') %}
+                    <div style="
+                        margin-bottom:18px;
+                        padding:14px;
+                        border-radius:12px;
+                        background:rgba(0,180,100,.12);
+                        border:1px solid rgba(0,180,100,.35);
+                    ">
+                        <strong>Active case workflow cancelled.</strong><br>
+                        DLMS cleared the pending case name, course, and filename slug.
+                    </div>
+                    {% endif %}                 
 
-        {% if case_name %}
-        <div class="law-workflow-banner">
-            <div>
-                <span class="law-subpage-eyebrow">ACTIVE WORKFLOW</span>
-                <strong>{{ case_name }}</strong>
-                <small>File slug: {{ case_slug }}</small>
-            </div>
-            <form method="POST" action="/law/workflow/cancel"
-                  onsubmit="return confirm('Cancel the active Law Study workflow? This will not delete saved imports or case reviews.');">
-                <button type="submit" class="law-quiet-action">Cancel Workflow</button>
-            </form>
-        </div>
-        {% else %}
-        <div class="law-notice warning">
-            <div><strong>No active case workflow.</strong><span>Start with Create Case Review if you want this import tied to a case name and course.</span></div>
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/create'">Start Case Review</button>
-        </div>
-        {% endif %}
 
-        <form method="POST" action="/law/import" class="law-form">
-            <input type="hidden" name="case_name" value="{{ case_name }}">
-            <input type="hidden" name="case_slug" value="{{ case_slug }}">
+                {% if case_name %}
+                <div style="
+                    margin-bottom:18px;
+                    padding:14px;
+                    border-radius:12px;
+                    background:rgba(0,120,255,.08);
+                    border:1px solid rgba(0,120,255,.25);
+                ">
+                    <strong>Case Review Workflow:</strong><br>
+                    Case Name: {{ case_name }}<br>
+                    File Slug: {{ case_slug }}
 
-            <label class="law-field law-field-wide">
-                <span>Case Packet Text</span>
-                <textarea name="raw_packet" class="law-import-textarea" rows="22"
-                          placeholder="Paste the AI-generated case brief, Socratic review, IRAC drill, and flashcards here...">{{ raw_packet }}</textarea>
-            </label>
+                    <br><br>
 
-            <div class="law-action-row">
-                <button type="submit" name="action" value="preview" class="law-primary-action">Preview Packet</button>
-                <button type="submit" name="action" value="save_raw" class="law-secondary-action">Save Raw Packet</button>
-                <button type="button" class="law-secondary-action" onclick="location.href='/law/imports'">Saved Imports</button>
-                <button type="button" class="law-secondary-action" onclick="location.href='/law/create'">Create Another Prompt</button>
-                <button type="button" class="law-quiet-action" onclick="location.href='/law'">Back to Law Study</button>
-            </div>
+                    <form method="POST"
+                        action="/law/workflow/cancel"
+                        style="display:inline-block;"
+                        onsubmit="return confirm('Cancel the active Law Study workflow? This will not delete saved imports or case reviews.');">
+                        <button type="submit">
+                            ✖ Cancel Active Workflow
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div style="
+                    margin-bottom:18px;
+                    padding:14px;
+                    border-radius:12px;
+                    background:rgba(255,180,0,.10);
+                    border:1px solid rgba(255,180,0,.35);
+                ">
+                    <strong>No active case workflow.</strong><br>
+                    Start from <strong>Create Case Review</strong> first if you want DLMS to attach this import to a case name, course, and readable filename.
+
+                    <br><br>
+
+                    <button type="button" onclick="location.href='/law/create'">
+                        📄 Start Create Case Review
+                    </button>
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/law/import">
+
+                    <input type="hidden" name="case_name" value="{{ case_name }}">
+                    <input type="hidden" name="case_slug" value="{{ case_slug }}">
+
+                    <h3>Case Packet Text</h3>
+
+            <textarea name="raw_packet"
+                      rows="22"
+                      placeholder="Paste the AI-generated case brief, Socratic review, IRAC drill, and flashcards here..."
+                      style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ raw_packet }}</textarea>
+
+            <br><br>
+
+            <button type="submit" name="action" value="preview">
+                🔎 Preview Packet
+            </button>
+
+            <button type="submit" name="action" value="save_raw">
+                💾 Save Raw Packet
+            </button>
+
+            <button type="button"
+                    onclick="location.href='/law/imports'"
+                    title="View raw case packets that were already saved. If a saved import was created from an active case workflow, its filename may include the case slug. From Saved Imports, you can open a raw packet and create a structured Case Review.">
+                📁 Proceed to Saved Imports
+            </button>
+
+            <button type="button"
+                    onclick="location.href='/law/create'"
+                    title="Start a new Law Study workflow by entering a case name and course, then generate an AI prompt before importing the AI output.">
+                ✨ Create Another Prompt
+            </button>
+
+            <button type="button"
+                    onclick="location.href='/law'">
+                ⬅ Back To Law Study
+            </button>
+
         </form>
 
-        {% if save_message %}
-        <div class="law-notice success"><strong>{{ save_message }}</strong></div>
-        {% endif %}
+                    {% if save_message %}
+                    <div style="
+                        margin-top:18px;
+                        padding:14px;
+                        border-radius:12px;
+                        background:rgba(0,180,100,.12);
+                        border:1px solid rgba(0,180,100,.35);
+                    ">
+                        <strong>{{ save_message }}</strong>
+                    </div>
+                    {% endif %}                                
 
         {% if packet_submitted %}
-        <section class="law-preview-panel">
-            <div class="law-panel-heading compact">
-                <div><span class="law-subpage-eyebrow">PACKET PREVIEW</span><h2>Import Summary</h2></div>
+        <hr style="margin:24px 0;">
+
+        <h2>Packet Preview</h2>
+
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+            gap:12px;
+            margin-bottom:18px;
+        ">
+            <div class="portal-card" style="text-align:left;">
+                <h3>Lines</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ line_count }}</p>
             </div>
-            <div class="law-metric-grid">
-                <div class="law-metric-card"><span>Lines</span><strong>{{ line_count }}</strong></div>
-                <div class="law-metric-card"><span>Characters</span><strong>{{ char_count }}</strong></div>
-                <div class="law-metric-card"><span>Status</span><strong>Ready</strong></div>
+
+            <div class="portal-card" style="text-align:left;">
+                <h3>Characters</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ char_count }}</p>
             </div>
-        </section>
+
+            <div class="portal-card" style="text-align:left;">
+                <h3>Status</h3>
+                <p style="margin:0;">Ready for a future parser step.</p>
+            </div>
+        </div>
+
+        <div style="
+            margin-top:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(255,180,0,.10);
+            border:1px solid rgba(255,180,0,.35);
+        ">
+            <strong>Reminder:</strong>
+            This packet is not saved yet. The next feature step will parse or save this content into a Law Case Review file.
+        </div>
         {% endif %}
-    </section>
-</main>
+
+    </div>
+
 </div>
 
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) {
-            alert("Failed to shut down DLMS.");
-        }
-    });
-}
-</script>
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
+</div>
 
 </body>
-</html>""",
+</html>
+""",
     portal_title=portal_title,
     case_name=case_name,
     case_slug=case_slug,
@@ -2376,7 +2430,8 @@ def law_saved_imports():
     except Exception as e:
         print(f"[LAW IMPORTS ERROR] Failed loading saved imports: {e}")
 
-    return render_template_string("""<!DOCTYPE html>
+    return render_template_string("""
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -2384,141 +2439,134 @@ def law_saved_imports():
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home law-subpage law-list-page">
-<div class="dashboard-shell">
 
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div>
-            <div class="dashboard-brand-title">DLMS</div>
-            <div class="dashboard-brand-subtitle">Training Center</div>
-        </div>
-    </div>
+<body>
+<div class="container">
 
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
+    <h1 class="hero-title">
+        📁 Saved Law Imports<br>
+        <span style="font-size:20px;opacity:.85">
+            Raw Case Packets Saved For Future Parsing
+        </span>
+    </h1>
 
-    <div class="dashboard-nav-section-label"><span>System</span></div>
+    <div class="card">
 
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button">
-        <span class="dashboard-shutdown-icon">⏻</span>
-        <span>Shutdown DLMS</span>
-    </button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-
-<main class="dashboard-main law-subpage-main">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div>
-            <div class="law-subpage-eyebrow">LAW STUDY</div>
-            <h1>Saved Law Imports</h1>
-            <p>Raw AI-generated case packets saved for future parsing and review.</p>
-        </div>
-    </header>
-
-    <section class="dashboard-panel law-workspace-panel">
-        <div class="law-panel-heading">
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        ">
             <div>
-                <span class="law-subpage-eyebrow">RAW PACKETS</span>
-                <h2>Saved Imports</h2>
-                <p>Open an import to inspect it or create a structured case review.</p>
+                <h2 style="margin-bottom:6px;">Saved Raw Packets</h2>
+                <p style="opacity:.85; margin-top:0;">
+                    These are pasted AI-generated case packets saved as raw text files. Parsing into structured case reviews will come later.
+                </p>
             </div>
-            <span class="law-count-pill">{{ imports|length }} saved</span>
+
+            <span style="
+                display:inline-block;
+                padding:7px 12px;
+                border-radius:999px;
+                background:rgba(0,120,255,.12);
+                border:1px solid rgba(0,120,255,.35);
+                font-size:13px;
+                font-weight:700;
+                white-space:nowrap;
+            ">
+                {{ imports|length }} saved import{% if imports|length != 1 %}s{% endif %}
+            </span>
         </div>
-
+                                  
         {% if request.args.get('deleted') %}
-        <div class="law-notice success"><strong>Saved import deleted.</strong><span>Structured case reviews were not changed.</span></div>
+        <div style="
+            margin-bottom:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(0,180,100,.12);
+            border:1px solid rgba(0,180,100,.35);
+        ">
+            <strong>Saved import deleted.</strong>
+            The raw import file was removed. Structured case reviews were not changed.
+        </div>
         {% endif %}
-
+                                  
         {% if imports %}
-        <div class="law-record-list">
+
+        <div style="display:grid; gap:12px;">
             {% for item in imports %}
-            <article class="law-record-row">
-                <div class="law-record-icon" aria-hidden="true">▤</div>
-                <div class="law-record-copy">
-                    <h3>{{ item.filename }}</h3>
-                    <div class="law-record-meta">
-                        <span>{{ item.size }} bytes</span>
-                        <span>•</span>
-                        <span>Modified {{ item.modified }}</span>
-                    </div>
-                </div>
-                <div class="law-record-actions">
-                    <button type="button" class="law-open-action" onclick="location.href='/law/imports/{{ item.filename }}'">Open</button>
-                    <form method="POST" action="/law/imports/{{ item.filename }}/delete"
-                          onsubmit="return confirm('Delete this saved raw import? This will not delete any structured case reviews already created from it.');">
-                        <button type="submit" class="law-trash-action" aria-label="Delete import" title="Delete import">🗑</button>
-                    </form>
-                </div>
-            </article>
+            <div class="portal-card" style="text-align:left; cursor:default;">
+            <h3 style="margin-bottom:6px;">📄 {{ item.filename }}</h3>
+            <p style="margin:4px 0; opacity:.85;">
+                <strong>Size:</strong> {{ item.size }} bytes
+            </p>
+            <p style="margin:4px 0; opacity:.85;">
+                <strong>Modified:</strong> {{ item.modified }}
+            </p>
+
+            <button type="button"
+                    onclick="location.href='/law/imports/{{ item.filename }}'">
+                👁 Open Import
+            </button>
+                                  
+             <form method="POST"
+                action="/law/imports/{{ item.filename }}/delete"
+                style="display:inline-block; margin-left:8px;"
+                onsubmit="return confirm('Delete this saved raw import? This will not delete any structured case reviews already created from it.');">
+                <button type="submit" class="btn-delete">
+                    🗑 Delete Import
+                </button>
+            </form>                     
+        </div>
             {% endfor %}
         </div>
+
         {% else %}
-        <div class="law-empty-state">
+
+        <div style="
+            padding:18px;
+            border-radius:12px;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.16);
+            text-align:center;
+        ">
             <h3>No saved imports yet</h3>
-            <p>Use Import Case Packet to paste and save an AI-generated study packet.</p>
+            <p style="opacity:.8;">
+                Use Import Case Packet to paste and save an AI-generated study packet.
+            </p>
         </div>
+
         {% endif %}
 
-        <div class="law-action-row law-footer-actions">
-            <button type="button" class="law-primary-action" onclick="location.href='/law/import'">Import Case Packet</button>
-            <button type="button" class="law-quiet-action" onclick="location.href='/law'">Back to Law Study</button>
-        </div>
-    </section>
-</main>
+        <br>
+
+        <button type="button" onclick="location.href='/law/import'">
+            📥 Import Case Packet
+        </button>
+
+        <button type="button" onclick="location.href='/law'">
+            ⬅ Back To Law Study
+        </button>
+
+    </div>
+
 </div>
 
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) {
-            alert("Failed to shut down DLMS.");
-        }
-    });
-}
-</script>
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
+</div>
 
 </body>
-</html>""",
+</html>
+""",
     portal_title=portal_title,
     imports=imports
     )
@@ -2560,7 +2608,8 @@ def law_view_saved_import(filename):
     size = os.stat(import_path).st_size
     parsed_sections = parse_law_packet_sections(raw_packet)
 
-    return render_template_string("""<!DOCTYPE html>
+    return render_template_string("""
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -2568,108 +2617,186 @@ def law_view_saved_import(filename):
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home law-subpage law-import-detail-page">
-<div class="dashboard-shell">
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div><div class="dashboard-brand-title">DLMS</div><div class="dashboard-brand-subtitle">Training Center</div></div>
-    </div>
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
-    <div class="dashboard-nav-section-label"><span>System</span></div>
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button"><span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span></button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-<main class="dashboard-main law-subpage-main">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div><div class="law-subpage-eyebrow">LAW STUDY · SAVED IMPORT</div><h1>View Law Import</h1><p>Inspect the raw packet and recognized study sections before creating a structured case review.</p></div>
-    </header>
 
-    <section class="dashboard-panel law-detail-panel">
-        <div class="law-detail-heading">
-            <div><span class="law-subpage-eyebrow">RAW CASE PACKET</span><h2>{{ filename }}</h2><p>Saved AI-generated source packet awaiting or supporting structured case review.</p></div>
-            <span class="law-status-pill">Raw Import</span>
-        </div>
+<body>
+<div class="container">
 
-        <div class="law-detail-stat-grid">
-            <div class="law-detail-stat"><span>Lines</span><strong>{{ line_count }}</strong></div>
-            <div class="law-detail-stat"><span>Characters</span><strong>{{ char_count }}</strong></div>
-            <div class="law-detail-stat"><span>Size</span><strong>{{ size }} bytes</strong></div>
-            <div class="law-detail-stat"><span>Modified</span><strong class="law-detail-date">{{ modified }}</strong></div>
+    <h1 class="hero-title">
+        📄 View Law Import<br>
+        <span style="font-size:20px;opacity:.85">
+            Raw Case Packet Preview
+        </span>
+    </h1>
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        ">
+            <div>
+                <h2 style="margin-bottom:6px;">{{ filename }}</h2>
+                <p style="opacity:.85; margin-top:0;">
+                    This is the saved raw text packet. Parsing into a structured case review will come later.
+                </p>
+            </div>
+
+            <span style="
+                display:inline-block;
+                padding:7px 12px;
+                border-radius:999px;
+                background:rgba(0,120,255,.12);
+                border:1px solid rgba(0,120,255,.35);
+                font-size:13px;
+                font-weight:700;
+                white-space:nowrap;
+            ">
+                Raw import
+            </span>
         </div>
 
-        {% if request.args.get('created_case') %}
-        <div class="law-message success"><strong>Case review created.</strong><span>The structured case file was saved and added to the Law Study registry.</span></div>
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+            gap:12px;
+            margin-bottom:18px;
+        ">
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Lines</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ line_count }}</p>
+            </div>
+
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Characters</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ char_count }}</p>
+            </div>
+
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Size</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ size }} bytes</p>
+            </div>
+
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Modified</h3>
+                <p style="margin:0;">{{ modified }}</p>
+            </div>
+        </div>
+
+                {% if request.args.get('created_case') %}
+        <div style="
+            margin:18px 0;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(0,180,100,.12);
+            border:1px solid rgba(0,180,100,.35);
+        ">
+            <strong>Case review created.</strong>
+            The structured case file has been saved and added to the Law Study registry.
+        </div>
         {% endif %}
 
-        <div class="law-section-heading"><span class="law-subpage-eyebrow">PARSER</span><h3>Recognized Sections</h3></div>
+        <h3>Parse Preview</h3>
+
         {% if parsed_sections %}
-        <div class="law-parse-grid">
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+            gap:12px;
+            margin-bottom:18px;
+        ">
             {% for section in parsed_sections %}
-            <article class="law-parse-card"><div class="law-parse-check">✓</div><div><h3>{{ section.title }}</h3><p>{{ section.line_count }} lines · {{ section.char_count }} characters</p></div></article>
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3 style="margin-bottom:6px;">✅ {{ section.title }}</h3>
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Lines:</strong> {{ section.line_count }}
+                </p>
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Characters:</strong> {{ section.char_count }}
+                </p>
+            </div>
             {% endfor %}
         </div>
-        <div class="law-message success"><strong>Parser preview:</strong><span>DLMS found {{ parsed_sections|length }} recognized section{% if parsed_sections|length != 1 %}s{% endif %}. Nothing new is saved until you create the case review.</span></div>
-        <form method="POST" action="/law/imports/{{ filename }}/create_case" class="law-detail-primary-form">
-            <button type="submit" class="law-primary-action" onclick="return confirm('Create a structured Law Case Review from this import?');">Create Case Review From Import</button>
+
+        <div style="
+            margin-bottom:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(0,180,100,.12);
+            border:1px solid rgba(0,180,100,.35);
+        ">
+            <strong>Parser preview:</strong>
+            DLMS found {{ parsed_sections|length }} recognized section{% if parsed_sections|length != 1 %}s{% endif %}.
+            This is only a preview. Nothing has been saved as a structured case review yet.
+        </div>
+
+        <form method="POST"
+              action="/law/imports/{{ filename }}/create_case"
+              style="margin-bottom:18px;">
+            <button type="submit"
+                    onclick="return confirm('Create a structured Law Case Review from this import?');">
+                💾 Create Case Review From Import
+            </button>
         </form>
+
         {% else %}
-        <div class="law-message warning"><strong>No recognized Law Study headings found.</strong><span>Expected headings include Case Brief, Socratic Review, Socratic Answer Key, IRAC Drill, and Rule Flashcards.</span></div>
+        <div style="
+            margin-bottom:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(255,180,0,.10);
+            border:1px solid rgba(255,180,0,.35);
+        ">
+            <strong>Parser preview:</strong>
+            No recognized Law Study section headings were found. Expected headings include
+            <code>1. Case Brief</code>,
+            <code>2. Socratic Review</code>,
+            <code>2A. Socratic Answer Key</code>,
+            <code>3. IRAC Drill</code>,
+            and <code>4. Rule Flashcards</code>.
+        </div>
         {% endif %}
 
-        <div class="law-section-heading"><span class="law-subpage-eyebrow">SOURCE</span><h3>Raw Packet Text</h3></div>
-        <textarea class="law-raw-packet" readonly rows="24">{{ raw_packet }}</textarea>
+        <h3>Raw Packet Text</h3>
 
-        <div class="law-detail-actions">
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/imports'">Back to Saved Imports</button>
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/cases'">My Case Reviews</button>
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/import'">Import Another Packet</button>
-        </div>
-    </section>
-</main>
+        <textarea readonly
+                  rows="24"
+                  style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ raw_packet }}</textarea>
+
+        <br><br>
+
+        <button type="button" onclick="location.href='/law/imports'">
+            ⬅ Back To Saved Imports
+        </button>
+
+        <button type="button" onclick="location.href='/law/cases'">
+            ⚖️ My Case Reviews
+        </button>
+
+        <button type="button" onclick="location.href='/law/import'">
+            📥 Import Another Packet
+        </button>
+
+        <button type="button" onclick="location.href='/law'">
+            ⚖️ Law Study Hub
+        </button>
+
+    </div>
+
 </div>
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) { alert("Failed to shut down DLMS."); }
-    });
-}
-</script>
+
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
+</div>
+
 </body>
 </html>
 """,
@@ -2842,7 +2969,8 @@ def law_case_reviews():
         reverse=True
     )
 
-    return render_template_string("""<!DOCTYPE html>
+    return render_template_string("""
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -2850,143 +2978,147 @@ def law_case_reviews():
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home law-subpage law-list-page">
-<div class="dashboard-shell">
 
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div>
-            <div class="dashboard-brand-title">DLMS</div>
-            <div class="dashboard-brand-subtitle">Training Center</div>
-        </div>
-    </div>
+<body>
+<div class="container">
 
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
+    <h1 class="hero-title">
+        ⚖️ My Case Reviews<br>
+        <span style="font-size:20px;opacity:.85">
+            Saved Case Briefs • Socratic Review • IRAC Practice
+        </span>
+    </h1>
 
-    <div class="dashboard-nav-section-label"><span>System</span></div>
+    <div class="card">
 
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button">
-        <span class="dashboard-shutdown-icon">⏻</span>
-        <span>Shutdown DLMS</span>
-    </button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-
-<main class="dashboard-main law-subpage-main">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div>
-            <div class="law-subpage-eyebrow">LAW STUDY</div>
-            <h1>My Case Reviews</h1>
-            <p>Saved case briefs, Socratic review, and IRAC practice in one place.</p>
-        </div>
-    </header>
-
-    <section class="dashboard-panel law-workspace-panel">
-        <div class="law-panel-heading">
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        ">
             <div>
-                <span class="law-subpage-eyebrow">CASE LIBRARY</span>
-                <h2>Saved Case Reviews</h2>
-                <p>Open a structured review or remove one you no longer need.</p>
+                <h2 style="margin-bottom:6px;">Saved Law Case Reviews</h2>
+                <p style="opacity:.85; margin-top:0;">
+                    These are structured case reviews created from saved Law Study imports.
+                </p>
             </div>
-            <span class="law-count-pill">{{ cases|length }} saved</span>
+
+            <span style="
+                display:inline-block;
+                padding:7px 12px;
+                border-radius:999px;
+                background:rgba(0,120,255,.12);
+                border:1px solid rgba(0,120,255,.35);
+                font-size:13px;
+                font-weight:700;
+                white-space:nowrap;
+            ">
+                {{ cases|length }} case review{% if cases|length != 1 %}s{% endif %}
+            </span>
         </div>
 
-        {% if request.args.get('deleted') %}
-        <div class="law-notice success"><strong>Case review deleted.</strong><span>The original raw import was not changed.</span></div>
-        {% endif %}
+                 {% if request.args.get('deleted') %}
+        <div style="
+            margin-bottom:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(0,180,100,.12);
+            border:1px solid rgba(0,180,100,.35);
+        ">
+            <strong>Case review deleted.</strong>
+            The case review was removed from the Law Study registry.
+        </div>
+        {% endif %}                                                
 
         {% if cases %}
-        <div class="law-record-list">
+
+        <div style="display:grid; gap:12px;">
             {% for case in cases %}
-            <article class="law-record-row">
-                <div class="law-record-icon" aria-hidden="true">§</div>
-                <div class="law-record-copy">
-                    <h3>{{ case.title }}</h3>
-                    <div class="law-record-meta">
-                        <span>{{ case.course or "Uncategorized" }}</span>
-                        <span>•</span>
-                        <span>Created {{ case.created_at }}</span>
-                    </div>
-                    <div class="law-record-source">Source: {{ case.source_import }}</div>
-                </div>
-                <div class="law-record-actions">
-                    <button type="button" class="law-open-action" onclick="location.href='/law/cases/{{ case.id }}'">Open</button>
-                    <form method="POST" action="/law/cases/{{ case.id }}/delete"
-                          onsubmit="return confirm('Delete this Law Case Review? This will remove the saved case review JSON file, but it will not delete the original raw import.');">
-                        <button type="submit" class="law-trash-action" aria-label="Delete case review" title="Delete case review">🗑</button>
-                    </form>
-                </div>
-            </article>
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3 style="margin-bottom:6px;">📘 {{ case.title }}</h3>
+
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Course:</strong> {{ case.course or "Uncategorized" }}
+                </p>
+
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Created:</strong> {{ case.created_at }}
+                </p>
+
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Source Import:</strong> {{ case.source_import }}
+                </p>
+
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Case File:</strong> {{ case.file }}
+                </p>
+
+                <button type="button"
+                        onclick="location.href='/law/cases/{{ case.id }}'">
+                    👁 Open Case Review
+                </button>
+                 <form method="POST"
+                    action="/law/cases/{{ case.id }}/delete"
+                    style="display:inline-block; margin-left:8px;"
+                    onsubmit="return confirm('Delete this Law Case Review? This will remove the saved case review JSON file, but it will not delete the original raw import.');">
+                    <button type="submit" class="btn-delete">
+                        🗑 Delete Case Review
+                    </button>
+                </form>                 
+            </div>
             {% endfor %}
         </div>
+
         {% else %}
-        <div class="law-empty-state">
+
+        <div style="
+            padding:18px;
+            border-radius:12px;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.16);
+            text-align:center;
+        ">
             <h3>No case reviews yet</h3>
-            <p>Create a case review from a saved import to see it here.</p>
+            <p style="opacity:.8;">
+                Create a case review from a saved import to see it here.
+            </p>
         </div>
+
         {% endif %}
 
-        <div class="law-action-row law-footer-actions">
-            <button type="button" class="law-primary-action" onclick="location.href='/law/imports'">Saved Imports</button>
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/import'">Import Case Packet</button>
-            <button type="button" class="law-quiet-action" onclick="location.href='/law'">Back to Law Study</button>
-        </div>
-    </section>
-</main>
+        <br>
+
+        <button type="button" onclick="location.href='/law/imports'">
+            📁 Saved Imports
+        </button>
+
+        <button type="button" onclick="location.href='/law/import'">
+            📥 Import Case Packet
+        </button>
+
+        <button type="button" onclick="location.href='/law'">
+            ⬅ Back To Law Study
+        </button>
+
+    </div>
+
 </div>
 
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) {
-            alert("Failed to shut down DLMS.");
-        }
-    });
-}
-</script>
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
+</div>
 
 </body>
-</html>""",
+</html>
+""",
     portal_title=portal_title,
     cases=cases
     )
@@ -3062,44 +3194,41 @@ def law_view_case_review(case_id):
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 
+    <style>
+    /* Law Study case viewer: disable portal-card push/press effects */
+    .law-study-view .portal-card,
+    .law-study-view .portal-card:hover,
+    .law-study-view .portal-card:active,
+    .law-study-view .portal-card:focus,
+    .law-study-view .portal-card:focus-within {
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+
+    /* Keep Law Study form controls stable */
+    .law-study-view textarea,
+    .law-study-view input,
+    .law-study-view select,
+    .law-study-view button {
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+    </style>
 </head>
 
-<body class="dashboard-home law-subpage law-case-detail-page">
-<div class="dashboard-shell">
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div><div class="dashboard-brand-title">DLMS</div><div class="dashboard-brand-subtitle">Training Center</div></div>
-    </div>
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
-    <div class="dashboard-nav-section-label"><span>System</span></div>
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button"><span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span></button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-<main class="dashboard-main law-subpage-main law-study-view">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div><div class="law-subpage-eyebrow">LAW STUDY · CASE REVIEW</div><h1>{{ case_data.title }}</h1><p>{{ case_data.course or "Uncategorized" }} · Structured case review</p></div>
-    </header>
+<body>
+<div class="container law-study-view">
 
-    <section class="dashboard-panel law-detail-panel law-case-detail-shell">
+    <h1 class="hero-title">
+        ⚖️ Case Review<br>
+        <span style="font-size:20px;opacity:.85">
+            {{ case_data.title }}
+        </span>
+    </h1>
+
+    <div class="card">
 
         <div style="
             display:flex;
@@ -3218,7 +3347,7 @@ def law_view_case_review(case_id):
             Verify citations, holdings, quotations, and procedural history against the original opinion or an approved legal research source.
         </div>
 
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
     <h2 style="margin-top:0;">✏️ Edit Case Details</h2>
 
     <form method="POST" action="/law/cases/{{ case_data.id }}/update_details">
@@ -3254,7 +3383,7 @@ def law_view_case_review(case_id):
                                   
         {% for section in section_cards %}
             {% if section.content %}
-            <div class="portal-card law-case-section">
+            <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
                 <h2 style="margin-top:0;">{{ section.icon }} {{ section.title }}</h2>
 
                 <pre style="
@@ -3269,7 +3398,7 @@ def law_view_case_review(case_id):
         {% endfor %}
 
   {% if case_data.sections.irac_drill %}
-    <div class="portal-card law-case-section">
+    <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
         <h2 style="margin-top:0;">🧠 IRAC Practice Response</h2>
 
         <p style="opacity:.8;">
@@ -3278,7 +3407,7 @@ def law_view_case_review(case_id):
 
         <form method="POST" action="/law/cases/{{ case_data.id }}/update_irac_response">
             <label><strong>Issue</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_issue"
+            <textarea name="irac_issue"
                     rows="4"
                     placeholder="State the legal issue..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("issue", "") }}</textarea>
@@ -3286,7 +3415,7 @@ def law_view_case_review(case_id):
             <br><br>
 
             <label><strong>Rule</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_rule"
+            <textarea name="irac_rule"
                     rows="4"
                     placeholder="State the governing rule..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("rule", "") }}</textarea>
@@ -3294,7 +3423,7 @@ def law_view_case_review(case_id):
             <br><br>
 
             <label><strong>Analysis / Application</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_analysis"
+            <textarea name="irac_analysis"
                     rows="7"
                     placeholder="Apply the rule to the facts..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("analysis", "") }}</textarea>
@@ -3302,7 +3431,7 @@ def law_view_case_review(case_id):
             <br><br>
 
             <label><strong>Conclusion</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_conclusion"
+            <textarea name="irac_conclusion"
                     rows="4"
                     placeholder="State the likely result..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("conclusion", "") }}</textarea>
@@ -3315,7 +3444,7 @@ def law_view_case_review(case_id):
         </form>
     </div>
 
-    <div class="portal-card law-case-section">
+    <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
         <h2 style="margin-top:0;">🔒 IRAC Drill</h2>
 
         <p style="opacity:.8;">
@@ -3342,7 +3471,7 @@ def law_view_case_review(case_id):
 
                                   
 {% if socratic_questions %}
-<div class="portal-card law-case-section">
+<div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
     <div style="
         display:flex;
         justify-content:space-between;
@@ -3394,7 +3523,7 @@ def law_view_case_review(case_id):
                 ">{{ question.text }}</pre>
 
                 <label><strong>Your Answer</strong></label><br>
-                <textarea class="law-detail-textarea" name="answer_{{ question.id }}"
+                <textarea name="answer_{{ question.id }}"
                           rows="5"
                           placeholder="Type your answer before revealing the guidance..."
                           style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ socratic_student_answers.get(question.id, "") }}</textarea>
@@ -3414,7 +3543,7 @@ def law_view_case_review(case_id):
     
                                                                     
         {% if socratic_answer_key %}
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
             <h2 style="margin-top:0;">🔒 Socratic Answer Key</h2>
 
             <p style="opacity:.8;">
@@ -3438,7 +3567,7 @@ def law_view_case_review(case_id):
         {% endif %}
 
         {% if rule_flashcards_content %}
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
             <h2 style="margin-top:0;">🃏 Rule Flashcards</h2>
 
             <pre style="
@@ -3451,7 +3580,7 @@ def law_view_case_review(case_id):
         </div>
         {% endif %}
                                   
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
             <h2 style="margin-top:0;">📝 Student Notes</h2>
 
             <p style="opacity:.8;">
@@ -3459,7 +3588,7 @@ def law_view_case_review(case_id):
             </p>
 
             <form method="POST" action="/law/cases/{{ case_data.id }}/update_notes">
-                <textarea class="law-detail-textarea" name="student_notes"
+                <textarea name="student_notes"
                         rows="10"
                         placeholder="Add your own notes about this case..."
                         style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ case_data.student_notes }}</textarea>
@@ -3490,8 +3619,17 @@ def law_view_case_review(case_id):
             ⚖️ Law Study Hub
         </button>
 
-    </section>
-</main>
+    </div>
+
+</div>
+
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
 </div>
 
 <script>
@@ -3521,29 +3659,6 @@ function toggleSocraticAnswerKey() {
     } else {
         box.style.display = "none";
     }
-}
-
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) { alert("Failed to shut down DLMS."); }
-    });
 }
 </script>
 
@@ -3737,10 +3852,6 @@ def edit_quiz(quiz_id):
 
     conn.close()
 
-    registry = load_registry()
-    quiz_entry = next((q for q in registry if str(q.get("id")) == str(quiz_id)), {})
-    exam_minutes = normalize_exam_minutes(quiz_entry.get("exam_minutes", 90))
-
     return render_template_string("""
 <!DOCTYPE html>
 <html>
@@ -3769,17 +3880,6 @@ def edit_quiz(quiz_id):
 
             <p><b>Quiz ID:</b> {{ quiz["id"] }}</p>
             <p><b>Source file:</b> {{ quiz["source_file"] }}</p>
-
-            <label><b>Exam Mode Timer (minutes)</b></label><br>
-            <input type="number"
-                   name="exam_minutes"
-                   min="1"
-                   max="1440"
-                   value="{{ exam_minutes }}"
-                   style="width:180px; padding:8px;">
-            <p style="opacity:0.7; font-size:12px">
-                Existing quizzes default to 90 minutes. Change this value to customize Exam Mode for this quiz.
-            </p>
 
              <br>
 
@@ -3906,7 +4006,7 @@ document.getElementById("edit-quiz-form").addEventListener("submit", function(e)
 
 </body>
 </html>
-""", quiz=quiz, questions=question_list, exam_minutes=exam_minutes)
+""", quiz=quiz, questions=question_list)
 
 
 # =========================
@@ -4270,8 +4370,7 @@ def rebuild_quiz_html_from_registry(quiz_id):
         get_portal_title(),
         quiz_entry.get("title") or "Edited Quiz",
         quiz_entry.get("logo"),
-        quiz_id,
-        quiz_entry.get("exam_minutes", 90)
+        quiz_id
     )
 
     print("[EDIT] Rebuilt quiz HTML:", html_path)
@@ -4339,7 +4438,6 @@ def save_edited_quiz(quiz_id):
     # SAVE CURRENT FORM VALUES FIRST
     # =========================
     new_title = request.form.get("quiz_title", "").strip()
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     if new_title:
         cur.execute(
@@ -4360,15 +4458,6 @@ def save_edited_quiz(quiz_id):
                     break
 
             save_registry(registry)
-
-    # Save per-quiz Exam Mode duration independently of the SQLite schema.
-    with registry_lock:
-        registry = load_registry()
-        for q in registry:
-            if str(q.get("id")) == str(quiz_id):
-                q["exam_minutes"] = exam_minutes
-                break
-        save_registry(registry)
 
     questions = cur.execute(
         "SELECT id FROM questions WHERE quiz_id = ?",
@@ -5770,11 +5859,6 @@ def upload_page():
                         <input type="file" name="quiz_logo" accept="image/*">
                         <small>PNG, JPG, GIF, or WEBP.</small>
                     </label>
-                    <label class="build-field">
-                        <span>Exam Mode Timer <em>Optional</em></span>
-                        <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                        <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
-                    </label>
                     <button class="build-primary-button" type="submit">Upload &amp; Build Quiz</button>
                 </form>
             </article>
@@ -5908,11 +5992,6 @@ def paste_page():
                     <input type="text" name="quiz_title" placeholder="Example: Linux+ Practice Set" required>
                 </label>
                 <label class="build-field">
-                    <span>Exam Mode Timer <em>Optional</em></span>
-                    <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                    <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
-                </label>
-                <label class="build-field">
                     <span>Questions + Answers</span>
                     <textarea class="build-source-textarea" name="quiz_text" required placeholder="Paste your formatted questions here..."></textarea>
                 </label>
@@ -6014,31 +6093,12 @@ if (shutdownBtn) {
 def create_short_quiz_page():
     portal_title = get_portal_title()
 
-    # Two-stage manual builder:
-    # 1) Ask how many question blocks to start with.
-    # 2) Render exactly that many blocks. Users can still add/delete afterward.
-    raw_count = request.args.get("count")
-    builder_ready = raw_count is not None
-
-    if builder_ready:
-        try:
-            starting_question_count = int(str(raw_count).strip())
-        except (TypeError, ValueError):
-            starting_question_count = 10
-
-        # Keep the initial render reasonable while preserving the existing
-        # dynamic Add/Delete Question controls once the builder is open.
-        starting_question_count = max(1, min(starting_question_count, 100))
-    else:
-        starting_question_count = 10
-
     questions = []
-    if builder_ready:
-        for qnum in range(1, starting_question_count + 1):
-            questions.append({
-                "number": qnum,
-                "choices": ["A", "B", "C", "D"]
-            })
+    for qnum in range(1, 11):
+        questions.append({
+            "number": qnum,
+            "choices": ["A", "B", "C", "D"]
+        })
 
     return render_template_string("""
 <!DOCTYPE html>
@@ -6093,37 +6153,6 @@ def create_short_quiz_page():
             </div>
         </header>
 
-        {% if not builder_ready %}
-        <section class="dashboard-panel build-section build-short-basics">
-            <div class="build-section-heading">
-                <div class="build-step-number">1</div>
-                <div>
-                    <h2>Choose Starting Question Count</h2>
-                    <p>Start with only the number of question blocks you need. You can add or delete questions at any time in the builder.</p>
-                </div>
-            </div>
-
-            <form method="GET" action="/create_short_quiz" class="build-workspace">
-                <label class="build-field" style="max-width:340px;">
-                    <span>How many questions would you like to start with?</span>
-                    <input type="number"
-                           name="count"
-                           min="1"
-                           max="100"
-                           value="10"
-                           inputmode="numeric"
-                           required>
-                    <small>Choose 1–100. The default is 10.</small>
-                </label>
-
-                <div class="build-submit-row" style="margin-top:18px;">
-                    <a class="build-secondary-link" href="/upload">Back to Build Options</a>
-                    <button class="build-primary-button" type="submit">Start Quiz Builder</button>
-                </div>
-            </form>
-        </section>
-        {% else %}
-
         <form id="create-short-quiz-form" class="build-workspace" method="POST" action="/create_short_quiz" enctype="multipart/form-data">
             <section class="dashboard-panel build-section build-short-basics">
                 <div class="build-section-heading">
@@ -6139,11 +6168,6 @@ def create_short_quiz_page():
                         <span>Quiz Logo <em>Optional</em></span>
                         <input type="file" name="quiz_logo" accept="image/*">
                         <small>PNG, JPG, GIF, or WEBP.</small>
-                    </label>
-                    <label class="build-field">
-                        <span>Exam Mode Timer <em>Optional</em></span>
-                        <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                        <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
                     </label>
                 </div>
             </section>
@@ -6190,7 +6214,6 @@ def create_short_quiz_page():
                 </div>
             </section>
         </form>
-        {% endif %}
     </main>
 </div>
 <script>
@@ -6357,9 +6380,7 @@ function deleteChoice(button) {
     renumberQuestions();
 }
 
-const shortQuizForm = document.getElementById("create-short-quiz-form");
-if (shortQuizForm) {
-shortQuizForm.addEventListener("submit", function(e) {
+document.getElementById("create-short-quiz-form").addEventListener("submit", function(e) {
     renumberQuestions();
 
     const questions = document.querySelectorAll(".question-block");
@@ -6413,7 +6434,6 @@ shortQuizForm.addEventListener("submit", function(e) {
         }
     }
 });
-}
 
 </script>
 
@@ -6443,12 +6463,7 @@ if (shutdownBtn) {
 </script>
 </body>
 </html>
-    """,
-        portal_title=portal_title,
-        questions=questions,
-        builder_ready=builder_ready,
-        starting_question_count=starting_question_count
-    )
+    """, portal_title=portal_title, questions=questions)
 
 
 # =========================
@@ -6457,7 +6472,6 @@ if (shutdownBtn) {
 @app.route("/create_short_quiz", methods=["POST"])
 def save_short_quiz():
     quiz_title = request.form.get("quiz_title", "").strip()
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     if not quiz_title:
         flash("Quiz title is required.", "error")
@@ -6564,8 +6578,7 @@ def save_short_quiz():
         quiz_id=quiz_id,
         html=html_name,
         title=quiz_title,
-        logo=logo_filename,
-        exam_minutes=exam_minutes
+        logo=logo_filename
     )
 
     # Build playable quiz HTML
@@ -6576,8 +6589,7 @@ def save_short_quiz():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        quiz_id,
-        exam_minutes
+        quiz_id
     )
 
     flash("Short quiz created successfully.", "success")
@@ -6755,7 +6767,6 @@ def preview_paste():
 
     quiz_text = request.form.get("quiz_text", "").strip()
     quiz_title = request.form.get("quiz_title", "Generated Quiz From Paste")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
     strip_rules_raw = request.form.get("strip_text", "").strip()
 
     # =========================
@@ -7425,7 +7436,6 @@ function runDiff() {
         <!-- IMPORTANT: Send CLEANED text forward -->
         <form action="/process_paste" method="POST">
             <input type="hidden" name="quiz_title" value="{{ quiz_title }}">
-            <input type="hidden" name="exam_minutes" value="{{ exam_minutes }}">
             <input type="hidden" name="temp_logo_name" value="{{ preview_logo_name }}">
             <textarea name="quiz_text" style="display:none;">{{ cleaned }}</textarea>
 
@@ -7443,7 +7453,6 @@ function runDiff() {
 """,
 
         quiz_title=quiz_title,
-        exam_minutes=exam_minutes,
         original=quiz_text,
         cleaned=clean_text,
         conf_summary=conf_summary,
@@ -7504,7 +7513,6 @@ def process_paste():
 
     quiz_text = request.form.get("quiz_text", "").strip()
     quiz_title = request.form.get("quiz_title", "Generated Quiz From Paste")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     # Checkbox flag (Auto Junk Cleanup)
     auto_cleanup = request.form.get("auto_cleanup") == "1"
@@ -7675,8 +7683,7 @@ def process_paste():
         db_quiz_id,
         html_name,
         quiz_title,
-        logo_filename,
-        exam_minutes
+        logo_filename
     )
 
 
@@ -7689,8 +7696,7 @@ def process_paste():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        db_quiz_id,
-        exam_minutes
+        db_quiz_id
     )
 
 
@@ -7713,7 +7719,6 @@ def process_file():
     file = request.files.get("file")
     quiz_title = request.form.get("quiz_title", "Generated Quiz")
     quiz_logo = request.files.get("quiz_logo")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     logo_filename = None  # ✅ ensure always defined
     source_file = None    # ✅ canonical quiz identifier
@@ -7873,8 +7878,7 @@ def process_file():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        quiz_id,
-        exam_minutes
+        quiz_id
     )
 
 
@@ -7882,8 +7886,7 @@ def process_file():
     quiz_id,
     html_name,
     quiz_title,
-    logo_filename,
-    exam_minutes
+    logo_filename
 )
 
 
@@ -8123,7 +8126,6 @@ def settings_ai_page():
     cfg.setdefault("ai_custom_url", "")
     cfg.setdefault("ai_auto_copy_prompt", True)
     cfg.setdefault("ai_prompt_template", "")
-    cfg.setdefault("law_ai_prompt_template", DEFAULT_LAW_AI_PROMPT)
 
     return render_template_string(r"""
 <!DOCTYPE html>
@@ -8235,32 +8237,6 @@ def settings_ai_page():
             </div>
         </section>
 
-        <section class="settings-form-section settings-law-prompt-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-blue">⚖</div>
-                <div>
-                    <h2>Law Study Prompt Template</h2>
-                    <p>Customize the prompt DLMS uses to generate Law Study case packets.</p>
-                </div>
-            </div>
-
-            <div class="settings-image-guidance settings-placeholder-guide">
-                Keep these placeholders where you want DLMS to insert Law Study data:
-                <code>{{ '{{case_name}}' }}</code>
-                <code>{{ '{{course}}' }}</code>
-                <code>{{ '{{study_sections}}' }}</code>
-            </div>
-
-            <textarea class="settings-textarea settings-law-prompt-textarea"
-                      id="lawAIPromptTemplate"
-                      name="law_ai_prompt_template"
-                      rows="24">{{ cfg.law_ai_prompt_template }}</textarea>
-
-            <div class="settings-inline-actions">
-                <button type="button" class="settings-secondary-button" id="resetLawPromptBtn">🔄 Reset to Default Law Prompt</button>
-            </div>
-        </section>
-
         <div class="settings-form-actions">
             <button type="submit" class="settings-primary-button">💾 Save AI Settings</button>
             <button type="button" class="settings-secondary-button" onclick="location.href='/settings'">Cancel</button>
@@ -8288,12 +8264,8 @@ For each question:
 
 ${AI_QUESTIONS_PLACEHOLDER}`;
 
-const DEFAULT_LAW_AI_PROMPT = {{ law_default_prompt|tojson }};
-
 const resetAIPromptBtn = document.getElementById("resetAIPromptBtn");
 const aiPromptTemplate = document.getElementById("aiPromptTemplate");
-const resetLawPromptBtn = document.getElementById("resetLawPromptBtn");
-const lawAIPromptTemplate = document.getElementById("lawAIPromptTemplate");
 
 if (resetAIPromptBtn && aiPromptTemplate) {
     resetAIPromptBtn.addEventListener("click", () => {
@@ -8301,17 +8273,10 @@ if (resetAIPromptBtn && aiPromptTemplate) {
         aiPromptTemplate.focus();
     });
 }
-
-if (resetLawPromptBtn && lawAIPromptTemplate) {
-    resetLawPromptBtn.addEventListener("click", () => {
-        lawAIPromptTemplate.value = DEFAULT_LAW_AI_PROMPT;
-        lawAIPromptTemplate.focus();
-    });
-}
 </script>
 </body>
 </html>
-""", cfg=cfg, law_default_prompt=DEFAULT_LAW_AI_PROMPT)
+""", cfg=cfg)
 
 
 @app.route("/settings/ai/save", methods=["POST"])
@@ -8331,7 +8296,6 @@ def save_ai_settings():
 
     cfg["ai_custom_url"] = request.form.get("ai_custom_url", "").strip()
     cfg["ai_prompt_template"] = request.form.get("ai_prompt_template", "").strip()
-    cfg["law_ai_prompt_template"] = request.form.get("law_ai_prompt_template", "").strip() or DEFAULT_LAW_AI_PROMPT
 
     with open(PORTAL_CONFIG, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=4)
@@ -10552,8 +10516,7 @@ def analyze_confidence(clean_text):
 # QUIZ HTML BUILDER
 # =========================
 
-def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_filename, quiz_id, exam_minutes=90):
-    exam_minutes = normalize_exam_minutes(exam_minutes)
+def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_filename, quiz_id):
     # Optional logo for mode banner (left/right)
     if logo_filename:
         mode_logo = f'<img src="/user-static/logos/{logo_filename}" class="mode-badge">'
@@ -10573,7 +10536,6 @@ def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_file
 <!-- 🔑 Canonical quiz identity for script.js + DB -->
 <script>
   window.quiz_title = "{quiz_title}";
-  window.examDurationMinutes = {exam_minutes};
 </script>
 
 </head>

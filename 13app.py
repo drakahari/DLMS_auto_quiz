@@ -887,79 +887,6 @@ cleanup_temp_logos()
 
 
 # =========================
-# DEFAULT LAW STUDY AI PROMPT
-# =========================
-DEFAULT_LAW_AI_PROMPT = r"""You are helping a first-year law student study a judicial opinion.
-
-Case:
-{{case_name}}
-
-Course:
-{{course}}
-
-Please create a law-school study packet for this case.
-
-Use only accurate information. Do not invent citations, quotations, facts, holdings, or procedural history. If you are uncertain, say so clearly.
-
-Prefer public legal sources when available, such as official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources. If you cannot verify the case from a reliable source, clearly state that verification is needed. Include the source links used in the Sources Used section of the DLMS IMPORT BLOCK.
-
-Create the following sections:
-
-{{study_sections}}
-
-Formatting requirements:
-- Use clear headings.
-- Keep explanations beginner-friendly but law-school appropriate.
-- Avoid long block quotes.
-- Do not invent citations, quotations, facts, holdings, or procedural history.
-- Include a final warning outside the DLMS import block reminding the student to verify the case against the original opinion or an approved legal research source.
-
-Return your response as one clearly marked, copyable fenced code block using plain text format.
-
-The fenced code block must begin with this heading:
-
-DLMS IMPORT BLOCK
-
-Inside the DLMS IMPORT BLOCK:
-- This entire block should be downloadable/copyable as a single plain-text block.
-- Include a Sources Used section at the top of the block.
-- In Sources Used, list the public legal sources used to verify the case, including source name and URL when available.
-- Prefer official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources.
-- Include only the requested study sections after Sources Used.
-- Include only Sources Used and sections 1, 2, 2A, 3, and 4 when those sections were requested.
-- Do not include extra commentary inside the DLMS IMPORT BLOCK.
-- Do not include the verification warning inside the DLMS IMPORT BLOCK.
-- Use clean plain-text headings so the block can be pasted into DLMS.
-
-Do not provide a separate explanation before the fenced code block.
-Do not provide a separate explanation after the fenced code block.
-
-The response format should be:
-
-```text
-DLMS IMPORT BLOCK
-
-Sources Used
-- Source name: URL
-
-1. Case Brief
-...
-
-2. Socratic Review
-...
-
-2A. Socratic Answer Key
-...
-
-3. IRAC Drill
-...
-
-4. Rule Flashcards
-...
-```
-"""
-
-# =========================
 # PORTAL CONFIG MANAGEMENT
 # =========================
 def load_portal_config():
@@ -988,7 +915,6 @@ def load_portal_config():
 
         {{questions}}
         """,
-        "law_ai_prompt_template": DEFAULT_LAW_AI_PROMPT,
     }
 
     # Ensure config directory exists
@@ -1276,24 +1202,7 @@ def normalize_quiz_folders(registry):
 
         return registry
 
-def normalize_exam_minutes(value, default=90):
-    """
-    Normalize a per-quiz Exam Mode duration.
-    Existing quizzes and blank/invalid values safely fall back to 90 minutes.
-    """
-    try:
-        minutes = int(str(value).strip())
-    except (TypeError, ValueError):
-        return default
-
-    if minutes < 1:
-        return default
-
-    # Keep the value reasonable while still allowing long certification exams.
-    return min(minutes, 1440)
-
-
-def add_quiz_to_registry(quiz_id, html, title, logo=None, exam_minutes=90):
+def add_quiz_to_registry(quiz_id, html, title, logo=None):
     """
     Canonical registry update:
     - quiz_id is the DATABASE quizzes.id (authoritative)
@@ -1340,7 +1249,6 @@ def add_quiz_to_registry(quiz_id, html, title, logo=None, exam_minutes=90):
             "html": html,
             "title": title,
             "logo": logo,
-            "exam_minutes": normalize_exam_minutes(exam_minutes),
             "timestamp": int(time.time())
         })
 
@@ -1621,17 +1529,75 @@ def law_create_case_review():
 """.strip())
 
         if case_name:
-            cfg = load_portal_config()
-            law_prompt_template = str(cfg.get("law_ai_prompt_template") or DEFAULT_LAW_AI_PROMPT).strip()
+            generated_prompt = f"""You are helping a first-year law student study a judicial opinion.
 
-            # Law Study uses its own prompt template so quiz-explanation prompts remain independent.
-            generated_prompt = (
-                law_prompt_template
-                .replace("{{case_name}}", case_name)
-                .replace("{{course}}", course)
-                .replace("{{study_sections}}", chr(10).join(requested_sections))
-            )
+Case:
+{case_name}
 
+Course:
+{course}
+
+Please create a law-school study packet for this case.
+
+Use only accurate information. Do not invent citations, quotations, facts, holdings, or procedural history. If you are uncertain, say so clearly.
+
+Prefer public legal sources when available, such as official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources. If you cannot verify the case from a reliable source, clearly state that verification is needed. Include the source links used in the Sources Used section of the DLMS IMPORT BLOCK.
+
+Create the following sections:
+
+{chr(10).join(requested_sections)}
+
+Formatting requirements:
+- Use clear headings.
+- Keep explanations beginner-friendly but law-school appropriate.
+- Avoid long block quotes.
+- Do not invent citations, quotations, facts, holdings, or procedural history.
+- Include a final warning outside the DLMS import block reminding the student to verify the case against the original opinion or an approved legal research source.
+
+Return your response as one clearly marked, copyable fenced code block using plain text format.
+
+The fenced code block must begin with this heading:
+
+DLMS IMPORT BLOCK
+
+Inside the DLMS IMPORT BLOCK:
+- This entire block should be downloadable/copyable as a single plain-text block.
+- Include a Sources Used section at the top of the block.
+- In Sources Used, list the public legal sources used to verify the case, including source name and URL when available.
+- Prefer official court sources, Cornell LII, Justia, Oyez, CourtListener, or other reliable public legal sources.
+- Include only the requested study sections after Sources Used.
+- Include only Sources Used and sections 1, 2, 2A, 3, and 4 when those sections were requested.
+- Do not include extra commentary inside the DLMS IMPORT BLOCK.
+- Do not include the verification warning inside the DLMS IMPORT BLOCK.
+- Use clean plain-text headings so the block can be pasted into DLMS.
+
+Do not provide a separate explanation before the fenced code block.
+Do not provide a separate explanation after the fenced code block.
+
+The response format should be:
+
+```text
+DLMS IMPORT BLOCK
+
+Sources Used
+- Source name: URL
+
+1. Case Brief
+...
+
+2. Socratic Review
+...
+
+2A. Socratic Answer Key
+...
+
+3. IRAC Drill
+...
+
+4. Rule Flashcards
+...
+```
+"""
         else:
             generated_prompt = "Please enter a case name before generating the AI prompt."
 
@@ -2560,7 +2526,8 @@ def law_view_saved_import(filename):
     size = os.stat(import_path).st_size
     parsed_sections = parse_law_packet_sections(raw_packet)
 
-    return render_template_string("""<!DOCTYPE html>
+    return render_template_string("""
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -2568,108 +2535,186 @@ def law_view_saved_import(filename):
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="dashboard-home law-subpage law-import-detail-page">
-<div class="dashboard-shell">
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div><div class="dashboard-brand-title">DLMS</div><div class="dashboard-brand-subtitle">Training Center</div></div>
-    </div>
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
-    <div class="dashboard-nav-section-label"><span>System</span></div>
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button"><span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span></button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-<main class="dashboard-main law-subpage-main">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div><div class="law-subpage-eyebrow">LAW STUDY · SAVED IMPORT</div><h1>View Law Import</h1><p>Inspect the raw packet and recognized study sections before creating a structured case review.</p></div>
-    </header>
 
-    <section class="dashboard-panel law-detail-panel">
-        <div class="law-detail-heading">
-            <div><span class="law-subpage-eyebrow">RAW CASE PACKET</span><h2>{{ filename }}</h2><p>Saved AI-generated source packet awaiting or supporting structured case review.</p></div>
-            <span class="law-status-pill">Raw Import</span>
-        </div>
+<body>
+<div class="container">
 
-        <div class="law-detail-stat-grid">
-            <div class="law-detail-stat"><span>Lines</span><strong>{{ line_count }}</strong></div>
-            <div class="law-detail-stat"><span>Characters</span><strong>{{ char_count }}</strong></div>
-            <div class="law-detail-stat"><span>Size</span><strong>{{ size }} bytes</strong></div>
-            <div class="law-detail-stat"><span>Modified</span><strong class="law-detail-date">{{ modified }}</strong></div>
+    <h1 class="hero-title">
+        📄 View Law Import<br>
+        <span style="font-size:20px;opacity:.85">
+            Raw Case Packet Preview
+        </span>
+    </h1>
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        ">
+            <div>
+                <h2 style="margin-bottom:6px;">{{ filename }}</h2>
+                <p style="opacity:.85; margin-top:0;">
+                    This is the saved raw text packet. Parsing into a structured case review will come later.
+                </p>
+            </div>
+
+            <span style="
+                display:inline-block;
+                padding:7px 12px;
+                border-radius:999px;
+                background:rgba(0,120,255,.12);
+                border:1px solid rgba(0,120,255,.35);
+                font-size:13px;
+                font-weight:700;
+                white-space:nowrap;
+            ">
+                Raw import
+            </span>
         </div>
 
-        {% if request.args.get('created_case') %}
-        <div class="law-message success"><strong>Case review created.</strong><span>The structured case file was saved and added to the Law Study registry.</span></div>
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+            gap:12px;
+            margin-bottom:18px;
+        ">
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Lines</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ line_count }}</p>
+            </div>
+
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Characters</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ char_count }}</p>
+            </div>
+
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Size</h3>
+                <p style="font-size:28px; font-weight:900; margin:0;">{{ size }} bytes</p>
+            </div>
+
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3>Modified</h3>
+                <p style="margin:0;">{{ modified }}</p>
+            </div>
+        </div>
+
+                {% if request.args.get('created_case') %}
+        <div style="
+            margin:18px 0;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(0,180,100,.12);
+            border:1px solid rgba(0,180,100,.35);
+        ">
+            <strong>Case review created.</strong>
+            The structured case file has been saved and added to the Law Study registry.
+        </div>
         {% endif %}
 
-        <div class="law-section-heading"><span class="law-subpage-eyebrow">PARSER</span><h3>Recognized Sections</h3></div>
+        <h3>Parse Preview</h3>
+
         {% if parsed_sections %}
-        <div class="law-parse-grid">
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+            gap:12px;
+            margin-bottom:18px;
+        ">
             {% for section in parsed_sections %}
-            <article class="law-parse-card"><div class="law-parse-check">✓</div><div><h3>{{ section.title }}</h3><p>{{ section.line_count }} lines · {{ section.char_count }} characters</p></div></article>
+            <div class="portal-card" style="text-align:left; cursor:default;">
+                <h3 style="margin-bottom:6px;">✅ {{ section.title }}</h3>
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Lines:</strong> {{ section.line_count }}
+                </p>
+                <p style="margin:4px 0; opacity:.85;">
+                    <strong>Characters:</strong> {{ section.char_count }}
+                </p>
+            </div>
             {% endfor %}
         </div>
-        <div class="law-message success"><strong>Parser preview:</strong><span>DLMS found {{ parsed_sections|length }} recognized section{% if parsed_sections|length != 1 %}s{% endif %}. Nothing new is saved until you create the case review.</span></div>
-        <form method="POST" action="/law/imports/{{ filename }}/create_case" class="law-detail-primary-form">
-            <button type="submit" class="law-primary-action" onclick="return confirm('Create a structured Law Case Review from this import?');">Create Case Review From Import</button>
+
+        <div style="
+            margin-bottom:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(0,180,100,.12);
+            border:1px solid rgba(0,180,100,.35);
+        ">
+            <strong>Parser preview:</strong>
+            DLMS found {{ parsed_sections|length }} recognized section{% if parsed_sections|length != 1 %}s{% endif %}.
+            This is only a preview. Nothing has been saved as a structured case review yet.
+        </div>
+
+        <form method="POST"
+              action="/law/imports/{{ filename }}/create_case"
+              style="margin-bottom:18px;">
+            <button type="submit"
+                    onclick="return confirm('Create a structured Law Case Review from this import?');">
+                💾 Create Case Review From Import
+            </button>
         </form>
+
         {% else %}
-        <div class="law-message warning"><strong>No recognized Law Study headings found.</strong><span>Expected headings include Case Brief, Socratic Review, Socratic Answer Key, IRAC Drill, and Rule Flashcards.</span></div>
+        <div style="
+            margin-bottom:18px;
+            padding:14px;
+            border-radius:12px;
+            background:rgba(255,180,0,.10);
+            border:1px solid rgba(255,180,0,.35);
+        ">
+            <strong>Parser preview:</strong>
+            No recognized Law Study section headings were found. Expected headings include
+            <code>1. Case Brief</code>,
+            <code>2. Socratic Review</code>,
+            <code>2A. Socratic Answer Key</code>,
+            <code>3. IRAC Drill</code>,
+            and <code>4. Rule Flashcards</code>.
+        </div>
         {% endif %}
 
-        <div class="law-section-heading"><span class="law-subpage-eyebrow">SOURCE</span><h3>Raw Packet Text</h3></div>
-        <textarea class="law-raw-packet" readonly rows="24">{{ raw_packet }}</textarea>
+        <h3>Raw Packet Text</h3>
 
-        <div class="law-detail-actions">
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/imports'">Back to Saved Imports</button>
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/cases'">My Case Reviews</button>
-            <button type="button" class="law-secondary-action" onclick="location.href='/law/import'">Import Another Packet</button>
-        </div>
-    </section>
-</main>
+        <textarea readonly
+                  rows="24"
+                  style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ raw_packet }}</textarea>
+
+        <br><br>
+
+        <button type="button" onclick="location.href='/law/imports'">
+            ⬅ Back To Saved Imports
+        </button>
+
+        <button type="button" onclick="location.href='/law/cases'">
+            ⚖️ My Case Reviews
+        </button>
+
+        <button type="button" onclick="location.href='/law/import'">
+            📥 Import Another Packet
+        </button>
+
+        <button type="button" onclick="location.href='/law'">
+            ⚖️ Law Study Hub
+        </button>
+
+    </div>
+
 </div>
-<script>
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) { alert("Failed to shut down DLMS."); }
-    });
-}
-</script>
+
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
+</div>
+
 </body>
 </html>
 """,
@@ -3062,44 +3107,41 @@ def law_view_case_review(case_id):
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico">
 
+    <style>
+    /* Law Study case viewer: disable portal-card push/press effects */
+    .law-study-view .portal-card,
+    .law-study-view .portal-card:hover,
+    .law-study-view .portal-card:active,
+    .law-study-view .portal-card:focus,
+    .law-study-view .portal-card:focus-within {
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+
+    /* Keep Law Study form controls stable */
+    .law-study-view textarea,
+    .law-study-view input,
+    .law-study-view select,
+    .law-study-view button {
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+    </style>
 </head>
 
-<body class="dashboard-home law-subpage law-case-detail-page">
-<div class="dashboard-shell">
-<aside class="dashboard-sidebar" id="dashboardSidebar">
-    <div class="dashboard-brand">
-        <div class="dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-                <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-                <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div><div class="dashboard-brand-title">DLMS</div><div class="dashboard-brand-subtitle">Training Center</div></div>
-    </div>
-    <nav class="dashboard-nav" aria-label="Primary navigation">
-        <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
-        <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
-        <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
-        <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
-        <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
-        <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-    </nav>
-    <div class="dashboard-nav-section-label"><span>System</span></div>
-    <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
-        <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
-        <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
-        <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
-    </nav>
-    <button class="dashboard-shutdown" id="shutdownBtn" type="button"><span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span></button>
-    <div class="dashboard-sidebar-version">Law Study</div>
-</aside>
-<main class="dashboard-main law-subpage-main law-study-view">
-    <header class="dashboard-header law-subpage-header">
-        <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
-        <div><div class="law-subpage-eyebrow">LAW STUDY · CASE REVIEW</div><h1>{{ case_data.title }}</h1><p>{{ case_data.course or "Uncategorized" }} · Structured case review</p></div>
-    </header>
+<body>
+<div class="container law-study-view">
 
-    <section class="dashboard-panel law-detail-panel law-case-detail-shell">
+    <h1 class="hero-title">
+        ⚖️ Case Review<br>
+        <span style="font-size:20px;opacity:.85">
+            {{ case_data.title }}
+        </span>
+    </h1>
+
+    <div class="card">
 
         <div style="
             display:flex;
@@ -3218,7 +3260,7 @@ def law_view_case_review(case_id):
             Verify citations, holdings, quotations, and procedural history against the original opinion or an approved legal research source.
         </div>
 
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
     <h2 style="margin-top:0;">✏️ Edit Case Details</h2>
 
     <form method="POST" action="/law/cases/{{ case_data.id }}/update_details">
@@ -3254,7 +3296,7 @@ def law_view_case_review(case_id):
                                   
         {% for section in section_cards %}
             {% if section.content %}
-            <div class="portal-card law-case-section">
+            <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
                 <h2 style="margin-top:0;">{{ section.icon }} {{ section.title }}</h2>
 
                 <pre style="
@@ -3269,7 +3311,7 @@ def law_view_case_review(case_id):
         {% endfor %}
 
   {% if case_data.sections.irac_drill %}
-    <div class="portal-card law-case-section">
+    <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
         <h2 style="margin-top:0;">🧠 IRAC Practice Response</h2>
 
         <p style="opacity:.8;">
@@ -3278,7 +3320,7 @@ def law_view_case_review(case_id):
 
         <form method="POST" action="/law/cases/{{ case_data.id }}/update_irac_response">
             <label><strong>Issue</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_issue"
+            <textarea name="irac_issue"
                     rows="4"
                     placeholder="State the legal issue..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("issue", "") }}</textarea>
@@ -3286,7 +3328,7 @@ def law_view_case_review(case_id):
             <br><br>
 
             <label><strong>Rule</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_rule"
+            <textarea name="irac_rule"
                     rows="4"
                     placeholder="State the governing rule..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("rule", "") }}</textarea>
@@ -3294,7 +3336,7 @@ def law_view_case_review(case_id):
             <br><br>
 
             <label><strong>Analysis / Application</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_analysis"
+            <textarea name="irac_analysis"
                     rows="7"
                     placeholder="Apply the rule to the facts..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("analysis", "") }}</textarea>
@@ -3302,7 +3344,7 @@ def law_view_case_review(case_id):
             <br><br>
 
             <label><strong>Conclusion</strong></label><br>
-            <textarea class="law-detail-textarea" name="irac_conclusion"
+            <textarea name="irac_conclusion"
                     rows="4"
                     placeholder="State the likely result..."
                     style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ irac_student_response.get("conclusion", "") }}</textarea>
@@ -3315,7 +3357,7 @@ def law_view_case_review(case_id):
         </form>
     </div>
 
-    <div class="portal-card law-case-section">
+    <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
         <h2 style="margin-top:0;">🔒 IRAC Drill</h2>
 
         <p style="opacity:.8;">
@@ -3342,7 +3384,7 @@ def law_view_case_review(case_id):
 
                                   
 {% if socratic_questions %}
-<div class="portal-card law-case-section">
+<div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
     <div style="
         display:flex;
         justify-content:space-between;
@@ -3394,7 +3436,7 @@ def law_view_case_review(case_id):
                 ">{{ question.text }}</pre>
 
                 <label><strong>Your Answer</strong></label><br>
-                <textarea class="law-detail-textarea" name="answer_{{ question.id }}"
+                <textarea name="answer_{{ question.id }}"
                           rows="5"
                           placeholder="Type your answer before revealing the guidance..."
                           style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ socratic_student_answers.get(question.id, "") }}</textarea>
@@ -3414,7 +3456,7 @@ def law_view_case_review(case_id):
     
                                                                     
         {% if socratic_answer_key %}
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
             <h2 style="margin-top:0;">🔒 Socratic Answer Key</h2>
 
             <p style="opacity:.8;">
@@ -3438,7 +3480,7 @@ def law_view_case_review(case_id):
         {% endif %}
 
         {% if rule_flashcards_content %}
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
             <h2 style="margin-top:0;">🃏 Rule Flashcards</h2>
 
             <pre style="
@@ -3451,7 +3493,7 @@ def law_view_case_review(case_id):
         </div>
         {% endif %}
                                   
-        <div class="portal-card law-case-section">
+        <div class="portal-card" style="text-align:left; cursor:default; margin-bottom:16px;">
             <h2 style="margin-top:0;">📝 Student Notes</h2>
 
             <p style="opacity:.8;">
@@ -3459,7 +3501,7 @@ def law_view_case_review(case_id):
             </p>
 
             <form method="POST" action="/law/cases/{{ case_data.id }}/update_notes">
-                <textarea class="law-detail-textarea" name="student_notes"
+                <textarea name="student_notes"
                         rows="10"
                         placeholder="Add your own notes about this case..."
                         style="width:100%; padding:12px; border-radius:10px; box-sizing:border-box;">{{ case_data.student_notes }}</textarea>
@@ -3490,8 +3532,17 @@ def law_view_case_review(case_id):
             ⚖️ Law Study Hub
         </button>
 
-    </section>
-</main>
+    </div>
+
+</div>
+
+<div style="
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    opacity:.65;
+">
+    DLMS Law Study Module Preview
 </div>
 
 <script>
@@ -3521,29 +3572,6 @@ function toggleSocraticAnswerKey() {
     } else {
         box.style.display = "none";
     }
-}
-
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("dashboardSidebar");
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
-    document.addEventListener("click", event => {
-        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
-        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
-        sidebar.classList.remove("open");
-    });
-}
-const shutdownBtn = document.getElementById("shutdownBtn");
-if (shutdownBtn) {
-    shutdownBtn.addEventListener("click", async () => {
-        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
-        try {
-            const res = await fetch("/api/shutdown", { method: "POST" });
-            const data = await res.json();
-            if (data.status === "ok") alert("DLMS is shutting down.");
-            else throw new Error();
-        } catch (err) { alert("Failed to shut down DLMS."); }
-    });
 }
 </script>
 
@@ -3737,10 +3765,6 @@ def edit_quiz(quiz_id):
 
     conn.close()
 
-    registry = load_registry()
-    quiz_entry = next((q for q in registry if str(q.get("id")) == str(quiz_id)), {})
-    exam_minutes = normalize_exam_minutes(quiz_entry.get("exam_minutes", 90))
-
     return render_template_string("""
 <!DOCTYPE html>
 <html>
@@ -3769,17 +3793,6 @@ def edit_quiz(quiz_id):
 
             <p><b>Quiz ID:</b> {{ quiz["id"] }}</p>
             <p><b>Source file:</b> {{ quiz["source_file"] }}</p>
-
-            <label><b>Exam Mode Timer (minutes)</b></label><br>
-            <input type="number"
-                   name="exam_minutes"
-                   min="1"
-                   max="1440"
-                   value="{{ exam_minutes }}"
-                   style="width:180px; padding:8px;">
-            <p style="opacity:0.7; font-size:12px">
-                Existing quizzes default to 90 minutes. Change this value to customize Exam Mode for this quiz.
-            </p>
 
              <br>
 
@@ -3906,7 +3919,7 @@ document.getElementById("edit-quiz-form").addEventListener("submit", function(e)
 
 </body>
 </html>
-""", quiz=quiz, questions=question_list, exam_minutes=exam_minutes)
+""", quiz=quiz, questions=question_list)
 
 
 # =========================
@@ -4270,8 +4283,7 @@ def rebuild_quiz_html_from_registry(quiz_id):
         get_portal_title(),
         quiz_entry.get("title") or "Edited Quiz",
         quiz_entry.get("logo"),
-        quiz_id,
-        quiz_entry.get("exam_minutes", 90)
+        quiz_id
     )
 
     print("[EDIT] Rebuilt quiz HTML:", html_path)
@@ -4339,7 +4351,6 @@ def save_edited_quiz(quiz_id):
     # SAVE CURRENT FORM VALUES FIRST
     # =========================
     new_title = request.form.get("quiz_title", "").strip()
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     if new_title:
         cur.execute(
@@ -4360,15 +4371,6 @@ def save_edited_quiz(quiz_id):
                     break
 
             save_registry(registry)
-
-    # Save per-quiz Exam Mode duration independently of the SQLite schema.
-    with registry_lock:
-        registry = load_registry()
-        for q in registry:
-            if str(q.get("id")) == str(quiz_id):
-                q["exam_minutes"] = exam_minutes
-                break
-        save_registry(registry)
 
     questions = cur.execute(
         "SELECT id FROM questions WHERE quiz_id = ?",
@@ -5770,11 +5772,6 @@ def upload_page():
                         <input type="file" name="quiz_logo" accept="image/*">
                         <small>PNG, JPG, GIF, or WEBP.</small>
                     </label>
-                    <label class="build-field">
-                        <span>Exam Mode Timer <em>Optional</em></span>
-                        <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                        <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
-                    </label>
                     <button class="build-primary-button" type="submit">Upload &amp; Build Quiz</button>
                 </form>
             </article>
@@ -5908,11 +5905,6 @@ def paste_page():
                     <input type="text" name="quiz_title" placeholder="Example: Linux+ Practice Set" required>
                 </label>
                 <label class="build-field">
-                    <span>Exam Mode Timer <em>Optional</em></span>
-                    <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                    <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
-                </label>
-                <label class="build-field">
                     <span>Questions + Answers</span>
                     <textarea class="build-source-textarea" name="quiz_text" required placeholder="Paste your formatted questions here..."></textarea>
                 </label>
@@ -6014,31 +6006,12 @@ if (shutdownBtn) {
 def create_short_quiz_page():
     portal_title = get_portal_title()
 
-    # Two-stage manual builder:
-    # 1) Ask how many question blocks to start with.
-    # 2) Render exactly that many blocks. Users can still add/delete afterward.
-    raw_count = request.args.get("count")
-    builder_ready = raw_count is not None
-
-    if builder_ready:
-        try:
-            starting_question_count = int(str(raw_count).strip())
-        except (TypeError, ValueError):
-            starting_question_count = 10
-
-        # Keep the initial render reasonable while preserving the existing
-        # dynamic Add/Delete Question controls once the builder is open.
-        starting_question_count = max(1, min(starting_question_count, 100))
-    else:
-        starting_question_count = 10
-
     questions = []
-    if builder_ready:
-        for qnum in range(1, starting_question_count + 1):
-            questions.append({
-                "number": qnum,
-                "choices": ["A", "B", "C", "D"]
-            })
+    for qnum in range(1, 11):
+        questions.append({
+            "number": qnum,
+            "choices": ["A", "B", "C", "D"]
+        })
 
     return render_template_string("""
 <!DOCTYPE html>
@@ -6093,37 +6066,6 @@ def create_short_quiz_page():
             </div>
         </header>
 
-        {% if not builder_ready %}
-        <section class="dashboard-panel build-section build-short-basics">
-            <div class="build-section-heading">
-                <div class="build-step-number">1</div>
-                <div>
-                    <h2>Choose Starting Question Count</h2>
-                    <p>Start with only the number of question blocks you need. You can add or delete questions at any time in the builder.</p>
-                </div>
-            </div>
-
-            <form method="GET" action="/create_short_quiz" class="build-workspace">
-                <label class="build-field" style="max-width:340px;">
-                    <span>How many questions would you like to start with?</span>
-                    <input type="number"
-                           name="count"
-                           min="1"
-                           max="100"
-                           value="10"
-                           inputmode="numeric"
-                           required>
-                    <small>Choose 1–100. The default is 10.</small>
-                </label>
-
-                <div class="build-submit-row" style="margin-top:18px;">
-                    <a class="build-secondary-link" href="/upload">Back to Build Options</a>
-                    <button class="build-primary-button" type="submit">Start Quiz Builder</button>
-                </div>
-            </form>
-        </section>
-        {% else %}
-
         <form id="create-short-quiz-form" class="build-workspace" method="POST" action="/create_short_quiz" enctype="multipart/form-data">
             <section class="dashboard-panel build-section build-short-basics">
                 <div class="build-section-heading">
@@ -6139,11 +6081,6 @@ def create_short_quiz_page():
                         <span>Quiz Logo <em>Optional</em></span>
                         <input type="file" name="quiz_logo" accept="image/*">
                         <small>PNG, JPG, GIF, or WEBP.</small>
-                    </label>
-                    <label class="build-field">
-                        <span>Exam Mode Timer <em>Optional</em></span>
-                        <input type="number" name="exam_minutes" min="1" max="1440" value="90" inputmode="numeric">
-                        <small>Minutes available in Exam Mode. Leave blank or use 90 for the standard DLMS timer.</small>
                     </label>
                 </div>
             </section>
@@ -6190,7 +6127,6 @@ def create_short_quiz_page():
                 </div>
             </section>
         </form>
-        {% endif %}
     </main>
 </div>
 <script>
@@ -6357,9 +6293,7 @@ function deleteChoice(button) {
     renumberQuestions();
 }
 
-const shortQuizForm = document.getElementById("create-short-quiz-form");
-if (shortQuizForm) {
-shortQuizForm.addEventListener("submit", function(e) {
+document.getElementById("create-short-quiz-form").addEventListener("submit", function(e) {
     renumberQuestions();
 
     const questions = document.querySelectorAll(".question-block");
@@ -6413,7 +6347,6 @@ shortQuizForm.addEventListener("submit", function(e) {
         }
     }
 });
-}
 
 </script>
 
@@ -6443,12 +6376,7 @@ if (shutdownBtn) {
 </script>
 </body>
 </html>
-    """,
-        portal_title=portal_title,
-        questions=questions,
-        builder_ready=builder_ready,
-        starting_question_count=starting_question_count
-    )
+    """, portal_title=portal_title, questions=questions)
 
 
 # =========================
@@ -6457,7 +6385,6 @@ if (shutdownBtn) {
 @app.route("/create_short_quiz", methods=["POST"])
 def save_short_quiz():
     quiz_title = request.form.get("quiz_title", "").strip()
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     if not quiz_title:
         flash("Quiz title is required.", "error")
@@ -6564,8 +6491,7 @@ def save_short_quiz():
         quiz_id=quiz_id,
         html=html_name,
         title=quiz_title,
-        logo=logo_filename,
-        exam_minutes=exam_minutes
+        logo=logo_filename
     )
 
     # Build playable quiz HTML
@@ -6576,8 +6502,7 @@ def save_short_quiz():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        quiz_id,
-        exam_minutes
+        quiz_id
     )
 
     flash("Short quiz created successfully.", "success")
@@ -6755,7 +6680,6 @@ def preview_paste():
 
     quiz_text = request.form.get("quiz_text", "").strip()
     quiz_title = request.form.get("quiz_title", "Generated Quiz From Paste")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
     strip_rules_raw = request.form.get("strip_text", "").strip()
 
     # =========================
@@ -7425,7 +7349,6 @@ function runDiff() {
         <!-- IMPORTANT: Send CLEANED text forward -->
         <form action="/process_paste" method="POST">
             <input type="hidden" name="quiz_title" value="{{ quiz_title }}">
-            <input type="hidden" name="exam_minutes" value="{{ exam_minutes }}">
             <input type="hidden" name="temp_logo_name" value="{{ preview_logo_name }}">
             <textarea name="quiz_text" style="display:none;">{{ cleaned }}</textarea>
 
@@ -7443,7 +7366,6 @@ function runDiff() {
 """,
 
         quiz_title=quiz_title,
-        exam_minutes=exam_minutes,
         original=quiz_text,
         cleaned=clean_text,
         conf_summary=conf_summary,
@@ -7504,7 +7426,6 @@ def process_paste():
 
     quiz_text = request.form.get("quiz_text", "").strip()
     quiz_title = request.form.get("quiz_title", "Generated Quiz From Paste")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     # Checkbox flag (Auto Junk Cleanup)
     auto_cleanup = request.form.get("auto_cleanup") == "1"
@@ -7675,8 +7596,7 @@ def process_paste():
         db_quiz_id,
         html_name,
         quiz_title,
-        logo_filename,
-        exam_minutes
+        logo_filename
     )
 
 
@@ -7689,8 +7609,7 @@ def process_paste():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        db_quiz_id,
-        exam_minutes
+        db_quiz_id
     )
 
 
@@ -7713,7 +7632,6 @@ def process_file():
     file = request.files.get("file")
     quiz_title = request.form.get("quiz_title", "Generated Quiz")
     quiz_logo = request.files.get("quiz_logo")
-    exam_minutes = normalize_exam_minutes(request.form.get("exam_minutes"))
 
     logo_filename = None  # ✅ ensure always defined
     source_file = None    # ✅ canonical quiz identifier
@@ -7873,8 +7791,7 @@ def process_file():
         get_portal_title(),
         quiz_title,
         logo_filename,
-        quiz_id,
-        exam_minutes
+        quiz_id
     )
 
 
@@ -7882,8 +7799,7 @@ def process_file():
     quiz_id,
     html_name,
     quiz_title,
-    logo_filename,
-    exam_minutes
+    logo_filename
 )
 
 
@@ -8123,7 +8039,6 @@ def settings_ai_page():
     cfg.setdefault("ai_custom_url", "")
     cfg.setdefault("ai_auto_copy_prompt", True)
     cfg.setdefault("ai_prompt_template", "")
-    cfg.setdefault("law_ai_prompt_template", DEFAULT_LAW_AI_PROMPT)
 
     return render_template_string(r"""
 <!DOCTYPE html>
@@ -8235,32 +8150,6 @@ def settings_ai_page():
             </div>
         </section>
 
-        <section class="settings-form-section settings-law-prompt-section">
-            <div class="settings-section-heading">
-                <div class="settings-section-icon icon-blue">⚖</div>
-                <div>
-                    <h2>Law Study Prompt Template</h2>
-                    <p>Customize the prompt DLMS uses to generate Law Study case packets.</p>
-                </div>
-            </div>
-
-            <div class="settings-image-guidance settings-placeholder-guide">
-                Keep these placeholders where you want DLMS to insert Law Study data:
-                <code>{{ '{{case_name}}' }}</code>
-                <code>{{ '{{course}}' }}</code>
-                <code>{{ '{{study_sections}}' }}</code>
-            </div>
-
-            <textarea class="settings-textarea settings-law-prompt-textarea"
-                      id="lawAIPromptTemplate"
-                      name="law_ai_prompt_template"
-                      rows="24">{{ cfg.law_ai_prompt_template }}</textarea>
-
-            <div class="settings-inline-actions">
-                <button type="button" class="settings-secondary-button" id="resetLawPromptBtn">🔄 Reset to Default Law Prompt</button>
-            </div>
-        </section>
-
         <div class="settings-form-actions">
             <button type="submit" class="settings-primary-button">💾 Save AI Settings</button>
             <button type="button" class="settings-secondary-button" onclick="location.href='/settings'">Cancel</button>
@@ -8288,12 +8177,8 @@ For each question:
 
 ${AI_QUESTIONS_PLACEHOLDER}`;
 
-const DEFAULT_LAW_AI_PROMPT = {{ law_default_prompt|tojson }};
-
 const resetAIPromptBtn = document.getElementById("resetAIPromptBtn");
 const aiPromptTemplate = document.getElementById("aiPromptTemplate");
-const resetLawPromptBtn = document.getElementById("resetLawPromptBtn");
-const lawAIPromptTemplate = document.getElementById("lawAIPromptTemplate");
 
 if (resetAIPromptBtn && aiPromptTemplate) {
     resetAIPromptBtn.addEventListener("click", () => {
@@ -8301,17 +8186,10 @@ if (resetAIPromptBtn && aiPromptTemplate) {
         aiPromptTemplate.focus();
     });
 }
-
-if (resetLawPromptBtn && lawAIPromptTemplate) {
-    resetLawPromptBtn.addEventListener("click", () => {
-        lawAIPromptTemplate.value = DEFAULT_LAW_AI_PROMPT;
-        lawAIPromptTemplate.focus();
-    });
-}
 </script>
 </body>
 </html>
-""", cfg=cfg, law_default_prompt=DEFAULT_LAW_AI_PROMPT)
+""", cfg=cfg)
 
 
 @app.route("/settings/ai/save", methods=["POST"])
@@ -8331,7 +8209,6 @@ def save_ai_settings():
 
     cfg["ai_custom_url"] = request.form.get("ai_custom_url", "").strip()
     cfg["ai_prompt_template"] = request.form.get("ai_prompt_template", "").strip()
-    cfg["law_ai_prompt_template"] = request.form.get("law_ai_prompt_template", "").strip() or DEFAULT_LAW_AI_PROMPT
 
     with open(PORTAL_CONFIG, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=4)
@@ -10552,8 +10429,7 @@ def analyze_confidence(clean_text):
 # QUIZ HTML BUILDER
 # =========================
 
-def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_filename, quiz_id, exam_minutes=90):
-    exam_minutes = normalize_exam_minutes(exam_minutes)
+def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_filename, quiz_id):
     # Optional logo for mode banner (left/right)
     if logo_filename:
         mode_logo = f'<img src="/user-static/logos/{logo_filename}" class="mode-badge">'
@@ -10573,7 +10449,6 @@ def build_quiz_html(name, jsonfile, outpath, portal_title, quiz_title, logo_file
 <!-- 🔑 Canonical quiz identity for script.js + DB -->
 <script>
   window.quiz_title = "{quiz_title}";
-  window.examDurationMinutes = {exam_minutes};
 </script>
 
 </head>
