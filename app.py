@@ -1416,6 +1416,7 @@ def law_study_home():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -1676,6 +1677,7 @@ def law_create_case_review():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -2216,6 +2218,7 @@ def law_import_case_packet():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -2429,6 +2432,7 @@ def law_saved_imports():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -2614,6 +2618,7 @@ def law_view_saved_import(filename):
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -2907,6 +2912,7 @@ def law_case_reviews():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -3122,6 +3128,7 @@ def law_view_case_review(case_id):
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -3820,6 +3827,7 @@ def edit_quiz(quiz_id):
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -5444,6 +5452,7 @@ def quiz_library():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -5893,6 +5902,7 @@ def upload_page():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -6049,6 +6059,7 @@ def paste_page():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -6251,6 +6262,7 @@ def create_short_quiz_page():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -9943,6 +9955,8 @@ def build_anki_rows_for_quiz(quiz_id):
             "front": "\n".join(front_parts).strip(),
             "back": back.strip(),
             "question_number": question["question_number"],
+            "question_id": question["id"],
+            "quiz_id": quiz_id,
         })
 
     conn.close()
@@ -10067,6 +10081,7 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1, status_filter="all"):
                 "quiz_title": row["quiz_title"] or "Unknown Quiz",
                 "quiz_id": row["quiz_id"],
                 "question_number": row["attempt_question_number"],
+                "question_id": row["question_id"],
                 "miss_count": 0,
                 "latest_miss_attempt_id": row["attempt_id"],
             }
@@ -10122,6 +10137,7 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1, status_filter="all"):
             "quiz_title": item["quiz_title"],
             "quiz_id": item["quiz_id"],
             "question_number": item["question_number"],
+            "question_id": item["question_id"],
             "miss_count": item["miss_count"],
             "recovery_status": recovery_status,
         })
@@ -10402,6 +10418,124 @@ def load_law_flashcards_for_selection(case_ids=None, course=None):
     return selection_meta, deck_rows
 
 
+
+def get_anki_custom_sources():
+    """
+    Return selectable DLMS content for the Custom Anki Deck workspace.
+
+    No data is copied or persisted. The workspace reads the same quiz,
+    performance-history, and Law Study sources already used by Anki Tools.
+    """
+    quiz_groups = []
+    for quiz in get_anki_quiz_choices():
+        quiz_title, cards = build_anki_rows_for_quiz(quiz["id"])
+        quiz_groups.append({
+            "id": quiz["id"],
+            "title": quiz_title or quiz["title"],
+            "cards": cards,
+        })
+
+    missed_cards = build_anki_rows_for_missed(None, 1, "all")
+
+    law_groups = []
+    for case in get_anki_law_case_choices():
+        meta, cards = load_law_flashcards_for_case(case["id"])
+        law_groups.append({
+            "id": case["id"],
+            "title": (meta or {}).get("title") or case["title"],
+            "course": (meta or {}).get("course") or case["course"],
+            "cards": cards,
+        })
+
+    return {
+        "quiz_groups": quiz_groups,
+        "missed_cards": missed_cards,
+        "law_groups": law_groups,
+    }
+
+
+def build_custom_anki_rows(quiz_tokens=None, missed_tokens=None, law_tokens=None):
+    """
+    Assemble selected DLMS content into one set of front/back rows.
+
+    Token formats:
+      quiz:<quiz_id>:<question_id>
+      missed:<quiz_id>:<question_id-or-question-number>
+      law:<case_id>:<1-based-card-index>
+    """
+    quiz_tokens = set(quiz_tokens or [])
+    missed_tokens = set(missed_tokens or [])
+    law_tokens = set(law_tokens or [])
+
+    rows = []
+
+    # Existing quiz questions.
+    for quiz in get_anki_quiz_choices():
+        quiz_title, cards = build_anki_rows_for_quiz(quiz["id"])
+        for card in cards:
+            token = f"quiz:{quiz['id']}:{card.get('question_id')}"
+            if token not in quiz_tokens:
+                continue
+
+            row = dict(card)
+            row["front"] = (
+                f"{quiz_title}\\n\\n{row.get('front', '')}"
+            ).strip()
+            rows.append(row)
+
+    # Performance-history questions.
+    for card in build_anki_rows_for_missed(None, 1, "all"):
+        stable_id = card.get("question_id")
+        if stable_id is None:
+            stable_id = card.get("question_number")
+
+        token = f"missed:{card.get('quiz_id')}:{stable_id}"
+        if token not in missed_tokens:
+            continue
+
+        row = dict(card)
+        row["front"] = (
+            f"{card.get('quiz_title', 'DLMS Quiz')}\\n\\n"
+            f"{row.get('front', '')}"
+        ).strip()
+        rows.append(row)
+
+    # Law Study flashcards.
+    for case in get_anki_law_case_choices():
+        meta, cards = load_law_flashcards_for_case(case["id"])
+        if not meta:
+            continue
+
+        for index, card in enumerate(cards, start=1):
+            token = f"law:{case['id']}:{index}"
+            if token not in law_tokens:
+                continue
+
+            row = dict(card)
+            row["front"] = (
+                f"{meta['course']} · {meta['title']}\\n\\n"
+                f"{row.get('front', '')}"
+            ).strip()
+            rows.append(row)
+
+    # Avoid accidental duplicates when the same question is selected from
+    # both the Quiz and Missed Questions sections.
+    unique_rows = []
+    seen = set()
+
+    for row in rows:
+        key = (
+            str(row.get("front") or "").strip().casefold(),
+            str(row.get("back") or "").strip().casefold(),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_rows.append(row)
+
+    return unique_rows
+
+
 def make_safe_anki_download_name(name, fallback="dlms_anki_deck"):
     cleaned = secure_filename(str(name or "").strip())
     cleaned = os.path.splitext(cleaned)[0]
@@ -10491,6 +10625,7 @@ def anki_tools():
             <div class="dashboard-nav-group">
                 <a class="dashboard-nav-item active" href="/anki" aria-current="page"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
                 <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/custom"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
                     <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
                 </div>
             </div>
@@ -10769,6 +10904,352 @@ if (window.location.hash === "#ankiPreview") {
         total_missed_cards=total_missed_cards,
     )
 
+
+
+
+@app.route("/anki/custom", methods=["GET", "POST"])
+def anki_custom_deck():
+    sources = get_anki_custom_sources()
+
+    deck_name = (request.form.get("deck_name") or "DLMS Custom Deck").strip()
+    selected_quiz = request.form.getlist("quiz_cards")
+    selected_missed = request.form.getlist("missed_cards")
+    selected_law = request.form.getlist("law_cards")
+
+    preview_requested = request.method == "POST"
+    preview_rows = []
+
+    if preview_requested:
+        preview_rows = build_custom_anki_rows(
+            selected_quiz,
+            selected_missed,
+            selected_law,
+        )
+
+    return render_template_string(r"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Anki Deck - DLMS</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/favicon.ico">
+</head>
+<body class="dashboard-home anki-tools-page">
+<div class="dashboard-shell">
+
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-brand">
+            <div class="dashboard-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img">
+                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <div class="dashboard-brand-title">DLMS</div>
+                <div class="dashboard-brand-subtitle">Training Center</div>
+            </div>
+        </div>
+
+        <nav class="dashboard-nav" aria-label="Primary navigation">
+            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+            <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
+            <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
+            <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
+            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
+            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
+
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item active" href="/anki" aria-current="page"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem active" href="/anki/custom" aria-current="page"><span class="dashboard-nav-subicon">↳</span><span>Custom Deck</span></a>
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-nav-section-label"><span>System</span></div>
+        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
+            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
+            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
+            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
+        </nav>
+
+        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
+            <span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span>
+        </button>
+        <div class="dashboard-sidebar-version">DLMS v{{ app_version }}</div>
+    </aside>
+
+    <main class="dashboard-main anki-tools-main">
+        <header class="dashboard-header anki-tools-header">
+            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
+            <div>
+                <div class="anki-tools-eyebrow">ANKI TOOLS · CUSTOM DECK</div>
+                <h1>Build a Custom Anki Deck</h1>
+                <p>Combine selected quiz questions, performance-history questions, and Law Study flashcards into one DLMS deck.</p>
+            </div>
+        </header>
+
+        <form method="POST" class="anki-source-form" id="customAnkiForm">
+            <section class="dashboard-panel anki-source-card anki-source-card-wide">
+                <div class="anki-source-heading">
+                    <span class="anki-source-icon">◆</span>
+                    <div>
+                        <span class="anki-source-kicker">DECK SETTINGS</span>
+                        <h2>Name Your Deck</h2>
+                        <p>The exported deck is flat in Anki and does not create nested subdecks.</p>
+                    </div>
+                </div>
+
+                <label>
+                    <span>Deck Name</span>
+                    <input type="text"
+                           name="deck_name"
+                           value="{{ deck_name }}"
+                           maxlength="120"
+                           required
+                           style="width:100%;min-height:42px;box-sizing:border-box;padding:9px 11px;color:#eaf3ff;background:rgba(3,13,30,.78);border:1px solid rgba(91,146,215,.42);border-radius:9px;font:inherit;">
+                </label>
+            </section>
+
+            <section class="dashboard-panel anki-source-card anki-source-card-wide" style="margin-top:18px;">
+                <div class="anki-source-heading">
+                    <span class="anki-source-icon">▤</span>
+                    <div>
+                        <span class="anki-source-kicker">QUIZ LIBRARY</span>
+                        <h2>Select Quiz Questions</h2>
+                        <p>Open a quiz and choose only the questions you want in this custom deck.</p>
+                    </div>
+                </div>
+
+                {% if quiz_groups %}
+                    {% for quiz in quiz_groups %}
+                    <details style="margin:10px 0;border:1px solid rgba(90,147,215,.20);border-radius:11px;background:rgba(3,13,29,.42);">
+                        <summary style="cursor:pointer;padding:12px 14px;font-weight:700;">
+                            {{ quiz.title }} · {{ quiz.cards|length }} questions
+                        </summary>
+                        <div style="padding:0 14px 12px;">
+                            {% for card in quiz.cards %}
+                            {% set token = "quiz:" ~ quiz.id ~ ":" ~ card.question_id %}
+                            <label style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid rgba(90,147,215,.10);">
+                                <input type="checkbox" name="quiz_cards" value="{{ token }}" {% if token in selected_quiz %}checked{% endif %}>
+                                <span><strong>Q{{ card.question_number }}</strong> · {{ card.front.split("\n")[0] }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% endfor %}
+                {% else %}
+                    <div class="anki-empty-message">No quizzes are currently available.</div>
+                {% endif %}
+            </section>
+
+            <section class="dashboard-panel anki-source-card anki-source-card-wide" style="margin-top:18px;">
+                <div class="anki-source-heading">
+                    <span class="anki-source-icon">↶</span>
+                    <div>
+                        <span class="anki-source-kicker">PERFORMANCE DATA</span>
+                        <h2>Select Missed / Weak Questions</h2>
+                        <p>Add individual questions from your DLMS attempt history. Status and miss counts are shown for context.</p>
+                    </div>
+                </div>
+
+                {% if missed_cards %}
+                <details open style="margin:10px 0;border:1px solid rgba(90,147,215,.20);border-radius:11px;background:rgba(3,13,29,.42);">
+                    <summary style="cursor:pointer;padding:12px 14px;font-weight:700;">
+                        Performance History · {{ missed_cards|length }} unique missed questions
+                    </summary>
+                    <div style="padding:0 14px 12px;max-height:420px;overflow:auto;">
+                        {% for card in missed_cards %}
+                        {% set stable_id = card.question_id if card.question_id is not none else card.question_number %}
+                        {% set token = "missed:" ~ card.quiz_id ~ ":" ~ stable_id %}
+                        <label style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid rgba(90,147,215,.10);">
+                            <input type="checkbox" name="missed_cards" value="{{ token }}" {% if token in selected_missed %}checked{% endif %}>
+                            <span>
+                                <strong>{{ card.quiz_title }} · Q{{ card.question_number }}</strong><br>
+                                {{ card.front.split("\n")[0] }}
+                                <small style="display:block;margin-top:3px;color:#8fa7c1;">
+                                    {{ card.miss_count }} miss{% if card.miss_count != 1 %}es{% endif %} ·
+                                    {% if card.recovery_status == "currently_weak" %}Currently Weak{% else %}Recovered Later{% endif %}
+                                </small>
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </details>
+                {% else %}
+                    <div class="anki-empty-message">No missed-question history is currently available.</div>
+                {% endif %}
+            </section>
+
+            <section class="dashboard-panel anki-source-card anki-source-card-wide" style="margin-top:18px;">
+                <div class="anki-source-heading">
+                    <span class="anki-source-icon">⚖</span>
+                    <div>
+                        <span class="anki-source-kicker">LAW STUDY</span>
+                        <h2>Select Law Flashcards</h2>
+                        <p>Choose individual Rule Flashcards from saved Law Study cases.</p>
+                    </div>
+                </div>
+
+                {% if law_groups %}
+                    {% for case in law_groups %}
+                    <details style="margin:10px 0;border:1px solid rgba(90,147,215,.20);border-radius:11px;background:rgba(3,13,29,.42);">
+                        <summary style="cursor:pointer;padding:12px 14px;font-weight:700;">
+                            {{ case.course }} · {{ case.title }} · {{ case.cards|length }} cards
+                        </summary>
+                        <div style="padding:0 14px 12px;">
+                            {% for card in case.cards %}
+                            {% set token = "law:" ~ case.id ~ ":" ~ loop.index %}
+                            <label style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid rgba(90,147,215,.10);">
+                                <input type="checkbox" name="law_cards" value="{{ token }}" {% if token in selected_law %}checked{% endif %}>
+                                <span><strong>Card {{ loop.index }}</strong> · {{ card.front.split("\n")[0] }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% endfor %}
+                {% else %}
+                    <div class="anki-empty-message">No recognized Law Study flashcards are currently available.</div>
+                {% endif %}
+            </section>
+
+            <section class="dashboard-panel anki-source-card anki-source-card-wide" style="margin-top:18px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <button type="submit"
+                            class="anki-preview-button"
+                            formaction="/anki/custom"
+                            formmethod="POST">
+                        Preview Deck
+                    </button>
+                    <button type="submit"
+                            class="anki-export-button"
+                            formaction="/anki/export/custom"
+                            formmethod="POST">
+                        Export .apkg
+                    </button>
+                </div>
+            </section>
+        </form>
+
+        {% if preview_requested %}
+        <section class="dashboard-panel anki-preview-panel" id="ankiPreview">
+            <div class="anki-preview-heading">
+                <div>
+                    <span class="anki-source-kicker">CUSTOM DECK PREVIEW</span>
+                    <h2>{{ deck_name }}</h2>
+                </div>
+                <span class="anki-count-pill">{{ preview_rows|length }} card{% if preview_rows|length != 1 %}s{% endif %}</span>
+            </div>
+
+            {% if not preview_rows %}
+                <div class="anki-empty-message">Select at least one DLMS item to build this deck.</div>
+            {% else %}
+                <div class="anki-preview-list">
+                    {% for card in preview_rows[:20] %}
+                    <article class="anki-preview-card">
+                        <div class="anki-preview-number">Card {{ loop.index }}</div>
+                        <div class="anki-card-side">
+                            <span>FRONT</span>
+                            <pre>{{ card.front }}</pre>
+                        </div>
+                        <div class="anki-card-side anki-card-back">
+                            <span>BACK</span>
+                            <pre>{{ card.back }}</pre>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                {% if preview_rows|length > 20 %}
+                <div class="anki-preview-more">
+                    Previewing the first 20 of {{ preview_rows|length }} cards. The export includes all selected cards.
+                </div>
+                {% endif %}
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+const menuButton = document.getElementById("menuButton");
+const sidebar = document.getElementById("dashboardSidebar");
+
+if (menuButton && sidebar) {
+    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
+
+    document.addEventListener("click", event => {
+        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
+        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
+        sidebar.classList.remove("open");
+    });
+}
+
+const shutdownBtn = document.getElementById("shutdownBtn");
+if (shutdownBtn) {
+    shutdownBtn.addEventListener("click", async () => {
+        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
+        try {
+            const res = await fetch("/api/shutdown", { method: "POST" });
+            const data = await res.json();
+            if (data.status === "ok") alert("DLMS is shutting down.");
+            else throw new Error();
+        } catch (err) {
+            alert("Failed to shut down DLMS.");
+        }
+    });
+}
+
+if (window.location.hash === "#ankiPreview" || {{ "true" if preview_requested else "false" }}) {
+    const preview = document.getElementById("ankiPreview");
+    if (preview) preview.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+</script>
+
+</body>
+</html>
+""",
+        app_version=APP_VERSION,
+        deck_name=deck_name,
+        preview_requested=preview_requested,
+        preview_rows=preview_rows,
+        quiz_groups=sources["quiz_groups"],
+        missed_cards=sources["missed_cards"],
+        law_groups=sources["law_groups"],
+        selected_quiz=selected_quiz,
+        selected_missed=selected_missed,
+        selected_law=selected_law,
+    )
+
+
+@app.route("/anki/export/custom", methods=["POST"])
+def anki_export_custom():
+    deck_name = (request.form.get("deck_name") or "DLMS Custom Deck").strip()
+
+    deck_rows = build_custom_anki_rows(
+        request.form.getlist("quiz_cards"),
+        request.form.getlist("missed_cards"),
+        request.form.getlist("law_cards"),
+    )
+
+    if not deck_rows:
+        return "Select at least one DLMS item before exporting a custom deck.", 400
+
+    apkg_path = export_quiz_to_apkg(deck_name, deck_rows)
+
+    return send_file(
+        apkg_path,
+        as_attachment=True,
+        download_name=make_safe_anki_download_name(
+            deck_name,
+            "DLMS_Custom_Deck"
+        ),
+        mimetype="application/octet-stream"
+    )
 
 
 @app.route("/anki/law")
