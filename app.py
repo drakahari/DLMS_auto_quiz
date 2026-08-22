@@ -10340,7 +10340,6 @@ def make_safe_anki_download_name(name, fallback="dlms_anki_deck"):
 def anki_tools():
     quizzes = get_anki_quiz_choices()
     law_cases = get_anki_law_case_choices()
-    law_courses = get_anki_law_courses(law_cases)
 
     anki_source = (request.args.get("source") or "").strip().lower()
     preview_rows = []
@@ -10351,10 +10350,6 @@ def anki_tools():
     selected_missed_quiz = request.args.get("missed_quiz_id", "all")
     selected_min_misses = request.args.get("min_misses", "1")
     selected_missed_status = request.args.get("missed_status", "all")
-    selected_case_id = request.args.get("case_id", "")
-    selected_case_ids = request.args.getlist("case_ids")
-    selected_law_scope = request.args.get("law_scope", "cases")
-    selected_law_course = request.args.get("law_course", "")
 
     if anki_source == "quiz" and selected_quiz_id:
         quiz_title, preview_rows = build_anki_rows_for_quiz(selected_quiz_id)
@@ -10382,40 +10377,6 @@ def anki_tools():
         )
         if not preview_rows:
             preview_message = "No missed questions match those filters."
-
-    elif anki_source == "law":
-        if selected_law_scope == "course" and selected_law_course:
-            selection_meta, preview_rows = load_law_flashcards_for_selection(
-                course=selected_law_course
-            )
-            preview_title = f"{selected_law_course} - Rule Flashcards"
-            if not preview_rows:
-                preview_message = "No recognized Rule Flashcards were found for that course."
-
-        elif selected_case_ids:
-            selection_meta, preview_rows = load_law_flashcards_for_selection(
-                case_ids=selected_case_ids
-            )
-            case_count = selection_meta.get("case_count", 0)
-            preview_title = (
-                f"{case_count} Saved Cases - Rule Flashcards"
-                if case_count != 1
-                else "Saved Case - Rule Flashcards"
-            )
-            if not preview_rows:
-                preview_message = "No recognized Rule Flashcards were found in the selected cases."
-
-        elif selected_case_id:
-            case_meta, preview_rows = load_law_flashcards_for_case(selected_case_id)
-            if case_meta:
-                preview_title = f"{case_meta['title']} - Rule Flashcards"
-                if not preview_rows:
-                    preview_message = (
-                        "No Front/Back flashcard pairs were recognized in this case's "
-                        "Rule Flashcards section."
-                    )
-            else:
-                preview_message = "That Law Study case could not be loaded."
 
     missed_summary = get_anki_missed_summary()
     total_missed_cards = missed_summary["total"]
@@ -10634,85 +10595,20 @@ def anki_tools():
                     <div>
                         <span class="anki-source-kicker">LAW STUDY</span>
                         <h2>Rule Flashcards → Anki</h2>
-                        <p>Export one case, several saved cases, or every recognized Rule Flashcard in an entire course.</p>
+                        <p>Export one case, several saved cases, or an entire Law Study course from a dedicated workspace.</p>
                     </div>
                 </div>
 
-                {% if law_cases %}
-                <form method="GET" action="/anki" class="anki-source-form">
-                    <input type="hidden" name="source" value="law">
+                <div class="anki-empty-message" style="margin-bottom:14px;">
+                    {{ law_cases|length }} saved case{% if law_cases|length != 1 %}s{% endif %} ·
+                    {{ total_law_cards }} recognized flashcard{% if total_law_cards != 1 %}s{% endif %}
+                </div>
 
-                    <label>
-                        <span>Export Scope</span>
-                        <select name="law_scope">
-                            <option value="cases" {% if selected_law_scope == "cases" %}selected{% endif %}>Selected Cases</option>
-                            <option value="course" {% if selected_law_scope == "course" %}selected{% endif %}>Entire Course</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        <span>Saved Cases — Ctrl/Cmd-click to select more than one</span>
-                        <select name="case_ids" multiple size="6">
-                            {% for case in law_cases %}
-                            <option value="{{ case.id }}" {% if case.id in selected_case_ids %}selected{% endif %}>
-                                {{ case.course }} · {{ case.title }} ({{ case.card_count }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </label>
-
-                    <label>
-                        <span>Course</span>
-                        <select name="law_course">
-                            <option value="">Choose a course...</option>
-                            {% for course in law_courses %}
-                            <option value="{{ course.course }}" {% if selected_law_course == course.course %}selected{% endif %}>
-                                {{ course.course }} · {{ course.case_count }} cases · {{ course.card_count }} cards
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </label>
-
-                    <button type="submit" class="anki-preview-button">Preview Cards</button>
-                </form>
-
-                <form method="POST" action="/anki/export/law" class="anki-export-form">
-                    <label>
-                        <span>Export Scope</span>
-                        <select name="law_scope">
-                            <option value="cases" {% if selected_law_scope == "cases" %}selected{% endif %}>Selected Cases</option>
-                            <option value="course" {% if selected_law_scope == "course" %}selected{% endif %}>Entire Course</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        <span>Saved Cases — Ctrl/Cmd-click to select more than one</span>
-                        <select name="case_ids" multiple size="6">
-                            {% for case in law_cases %}
-                            <option value="{{ case.id }}" {% if case.id in selected_case_ids %}selected{% endif %}>
-                                {{ case.course }} · {{ case.title }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </label>
-
-                    <label>
-                        <span>Course</span>
-                        <select name="law_course">
-                            <option value="">Choose a course...</option>
-                            {% for course in law_courses %}
-                            <option value="{{ course.course }}" {% if selected_law_course == course.course %}selected{% endif %}>
-                                {{ course.course }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </label>
-
-                    <button type="submit" class="anki-export-button">Export .apkg</button>
-                </form>
-                {% else %}
-                <div class="anki-empty-message">No saved Law Study cases are currently available.</div>
-                {% endif %}
+                <button type="button"
+                        class="anki-export-button"
+                        onclick="location.href='/anki/law'">
+                    Open Law Study Export
+                </button>
             </article>
         </section>
 
@@ -10800,7 +10696,6 @@ if (window.location.hash === "#ankiPreview") {
         app_version=APP_VERSION,
         quizzes=quizzes,
         law_cases=law_cases,
-        law_courses=law_courses,
         anki_source=anki_source,
         preview_rows=preview_rows,
         preview_title=preview_title,
@@ -10809,12 +10704,320 @@ if (window.location.hash === "#ankiPreview") {
         selected_missed_quiz=selected_missed_quiz,
         selected_min_misses=selected_min_misses,
         selected_missed_status=selected_missed_status,
-        selected_case_id=selected_case_id,
+        missed_summary=missed_summary,
+        total_missed_cards=total_missed_cards,
+        total_law_cards=total_law_cards,
+    )
+
+
+
+@app.route("/anki/law")
+def anki_law_tools():
+    law_cases = get_anki_law_case_choices()
+    law_courses = get_anki_law_courses(law_cases)
+
+    preview_rows = []
+    preview_title = ""
+    preview_message = ""
+
+    selected_case_ids = request.args.getlist("case_ids")
+    selected_law_scope = (request.args.get("law_scope") or "cases").strip().lower()
+    selected_law_course = (request.args.get("law_course") or "").strip()
+    preview_requested = (request.args.get("preview") or "").strip() == "1"
+
+    if preview_requested:
+        if selected_law_scope == "course":
+            if selected_law_course:
+                selection_meta, preview_rows = load_law_flashcards_for_selection(
+                    course=selected_law_course
+                )
+                preview_title = f"{selected_law_course} - Rule Flashcards"
+                if not preview_rows:
+                    preview_message = "No recognized Rule Flashcards were found for that course."
+            else:
+                preview_message = "Choose a course before previewing."
+
+        else:
+            if selected_case_ids:
+                selection_meta, preview_rows = load_law_flashcards_for_selection(
+                    case_ids=selected_case_ids
+                )
+                case_count = selection_meta.get("case_count", 0)
+                preview_title = (
+                    f"{case_count} Saved Cases - Rule Flashcards"
+                    if case_count != 1
+                    else "Saved Case - Rule Flashcards"
+                )
+                if not preview_rows:
+                    preview_message = "No recognized Rule Flashcards were found in the selected cases."
+            else:
+                preview_message = "Choose at least one saved case before previewing."
+
+    total_law_cards = sum(case["card_count"] for case in law_cases)
+
+    return render_template_string(r"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Law Study Anki - DLMS</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/favicon.ico">
+</head>
+<body class="dashboard-home anki-tools-page">
+<div class="dashboard-shell">
+
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-brand">
+            <div class="dashboard-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img">
+                    <path d="M4 5.5 12 3l8 2.5v5.7c0 4.9-3.3 8.1-8 9.8-4.7-1.7-8-4.9-8-9.8V5.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="m8 12 2.3-2.4 2.1 2.1L16 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <div class="dashboard-brand-title">DLMS</div>
+                <div class="dashboard-brand-subtitle">Training Center</div>
+            </div>
+        </div>
+
+        <nav class="dashboard-nav" aria-label="Primary navigation">
+            <a class="dashboard-nav-item" href="/"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+            <a class="dashboard-nav-item" href="/library"><span class="dashboard-nav-icon">▤</span><span>Quiz Library</span></a>
+            <a class="dashboard-nav-item" href="/upload"><span class="dashboard-nav-icon">✎</span><span>Build Quiz</span></a>
+            <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
+            <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
+            <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
+            <a class="dashboard-nav-item active" href="/anki" aria-current="page"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+        </nav>
+
+        <div class="dashboard-nav-section-label"><span>System</span></div>
+        <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
+            <a class="dashboard-nav-item" href="/settings"><span class="dashboard-nav-icon">⚙</span><span>Settings</span></a>
+            <a class="dashboard-nav-item" href="/help"><span class="dashboard-nav-icon">?</span><span>Help</span></a>
+            <a class="dashboard-nav-item" href="/admin/maintenance"><span class="dashboard-nav-icon">⌘</span><span>Maintenance</span></a>
+        </nav>
+
+        <button class="dashboard-shutdown" id="shutdownBtn" type="button">
+            <span class="dashboard-shutdown-icon">⏻</span><span>Shutdown DLMS</span>
+        </button>
+        <div class="dashboard-sidebar-version">DLMS v{{ app_version }}</div>
+    </aside>
+
+    <main class="dashboard-main anki-tools-main">
+        <header class="dashboard-header anki-tools-header">
+            <button class="dashboard-menu-button" id="menuButton" type="button" aria-label="Toggle navigation">☰</button>
+            <div>
+                <div class="anki-tools-eyebrow">ANKI TOOLS · LAW STUDY</div>
+                <h1>Law Study → Anki</h1>
+                <p>Build a focused Anki deck from one case, several saved cases, or an entire Law Study course.</p>
+            </div>
+        </header>
+
+        <section class="anki-tools-summary" aria-label="Law Anki summary">
+            <div class="dashboard-stat-card">
+                <span class="dashboard-stat-label">Saved Cases</span>
+                <strong>{{ law_cases|length }}</strong>
+                <span class="dashboard-stat-note">available case reviews</span>
+            </div>
+            <div class="dashboard-stat-card">
+                <span class="dashboard-stat-label">Courses</span>
+                <strong>{{ law_courses|length }}</strong>
+                <span class="dashboard-stat-note">with saved cases</span>
+            </div>
+            <div class="dashboard-stat-card">
+                <span class="dashboard-stat-label">Law Flashcards</span>
+                <strong>{{ total_law_cards }}</strong>
+                <span class="dashboard-stat-note">recognized cards</span>
+            </div>
+        </section>
+
+        <section class="dashboard-panel anki-source-card anki-source-card-wide">
+            <div class="anki-source-heading">
+                <span class="anki-source-icon">⚖</span>
+                <div>
+                    <span class="anki-source-kicker">LAW STUDY EXPORT</span>
+                    <h2>Choose Your Deck Source</h2>
+                    <p>Select individual cases or an entire course. Preview cards before creating the .apkg file.</p>
+                </div>
+            </div>
+
+            {% if law_cases %}
+            <form method="GET" action="/anki/law" class="anki-source-form">
+                <input type="hidden" name="preview" value="1">
+
+                <label>
+                    <span>Export Scope</span>
+                    <select name="law_scope">
+                        <option value="cases" {% if selected_law_scope == "cases" %}selected{% endif %}>Selected Cases</option>
+                        <option value="course" {% if selected_law_scope == "course" %}selected{% endif %}>Entire Course</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Saved Cases — Ctrl/Cmd-click to select more than one</span>
+                    <select name="case_ids" multiple size="6">
+                        {% for case in law_cases %}
+                        <option value="{{ case.id }}" {% if case.id in selected_case_ids %}selected{% endif %}>
+                            {{ case.course }} · {{ case.title }} ({{ case.card_count }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    <span>Course</span>
+                    <select name="law_course">
+                        <option value="">Choose a course...</option>
+                        {% for course in law_courses %}
+                        <option value="{{ course.course }}" {% if selected_law_course == course.course %}selected{% endif %}>
+                            {{ course.course }} · {{ course.case_count }} cases · {{ course.card_count }} cards
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <button type="submit" class="anki-preview-button">Preview Cards</button>
+            </form>
+
+            <form method="POST" action="/anki/export/law" class="anki-export-form">
+                <label>
+                    <span>Export Scope</span>
+                    <select name="law_scope">
+                        <option value="cases" {% if selected_law_scope == "cases" %}selected{% endif %}>Selected Cases</option>
+                        <option value="course" {% if selected_law_scope == "course" %}selected{% endif %}>Entire Course</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Saved Cases — Ctrl/Cmd-click to select more than one</span>
+                    <select name="case_ids" multiple size="6">
+                        {% for case in law_cases %}
+                        <option value="{{ case.id }}" {% if case.id in selected_case_ids %}selected{% endif %}>
+                            {{ case.course }} · {{ case.title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    <span>Course</span>
+                    <select name="law_course">
+                        <option value="">Choose a course...</option>
+                        {% for course in law_courses %}
+                        <option value="{{ course.course }}" {% if selected_law_course == course.course %}selected{% endif %}>
+                            {{ course.course }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <button type="submit" class="anki-export-button">Export .apkg</button>
+            </form>
+            {% else %}
+            <div class="anki-empty-message">No saved Law Study cases are currently available.</div>
+            {% endif %}
+        </section>
+
+        {% if preview_requested %}
+        <section class="dashboard-panel anki-preview-panel" id="ankiPreview">
+            <div class="anki-preview-heading">
+                <div>
+                    <span class="anki-source-kicker">EXPORT PREVIEW</span>
+                    <h2>{{ preview_title or "Law Study Preview" }}</h2>
+                </div>
+                <span class="anki-count-pill">{{ preview_rows|length }} card{% if preview_rows|length != 1 %}s{% endif %}</span>
+            </div>
+
+            {% if preview_message %}
+            <div class="anki-empty-message">{{ preview_message }}</div>
+            {% endif %}
+
+            {% if preview_rows %}
+            <div class="anki-preview-list">
+                {% for card in preview_rows[:20] %}
+                <article class="anki-preview-card">
+                    <div class="anki-preview-number">Card {{ loop.index }}</div>
+                    <div class="anki-card-side">
+                        <span>FRONT</span>
+                        <pre>{{ card.front }}</pre>
+                    </div>
+                    <div class="anki-card-side anki-card-back">
+                        <span>BACK</span>
+                        <pre>{{ card.back }}</pre>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+
+            {% if preview_rows|length > 20 %}
+            <div class="anki-preview-more">
+                Previewing the first 20 of {{ preview_rows|length }} cards. The export includes all matching cards.
+            </div>
+            {% endif %}
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <div style="margin-top:18px;">
+            <button type="button"
+                    class="anki-preview-button"
+                    onclick="location.href='/anki'">
+                ← Back to Anki Tools
+            </button>
+        </div>
+    </main>
+</div>
+
+<script>
+const menuButton = document.getElementById("menuButton");
+const sidebar = document.getElementById("dashboardSidebar");
+
+if (menuButton && sidebar) {
+    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
+
+    document.addEventListener("click", event => {
+        if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
+        if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
+        sidebar.classList.remove("open");
+    });
+}
+
+const shutdownBtn = document.getElementById("shutdownBtn");
+if (shutdownBtn) {
+    shutdownBtn.addEventListener("click", async () => {
+        if (!confirm("Shut down DLMS? You will need to restart it manually.")) return;
+        try {
+            const res = await fetch("/api/shutdown", { method: "POST" });
+            const data = await res.json();
+            if (data.status === "ok") alert("DLMS is shutting down.");
+            else throw new Error();
+        } catch (err) {
+            alert("Failed to shut down DLMS.");
+        }
+    });
+}
+
+if (window.location.search.includes("preview=1")) {
+    const preview = document.getElementById("ankiPreview");
+    if (preview) preview.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+</script>
+
+</body>
+</html>
+""",
+        app_version=APP_VERSION,
+        law_cases=law_cases,
+        law_courses=law_courses,
+        preview_requested=preview_requested,
+        preview_rows=preview_rows,
+        preview_title=preview_title,
+        preview_message=preview_message,
         selected_case_ids=selected_case_ids,
         selected_law_scope=selected_law_scope,
         selected_law_course=selected_law_course,
-        missed_summary=missed_summary,
-        total_missed_cards=total_missed_cards,
         total_law_cards=total_law_cards,
     )
 
