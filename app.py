@@ -10175,10 +10175,25 @@ def parse_law_flashcards_text(raw_text):
       Q / A
 
     Bullets and Markdown emphasis around the labels are tolerated.
+
+    Standalone headings such as "Flashcard 1", "**Flashcard 2**", or
+    "Flashcard #3:" are treated as separators only and are not included
+    in the front or back of the exported Anki card.
     """
     text = str(raw_text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
     if not text:
         return []
+
+    # AI-generated Law Study packets commonly number cards with standalone
+    # headings. Without removing those headings, "Flashcard 3" can become
+    # trailing text on Flashcard 2's Back field because the next Front label
+    # is what normally ends the current block.
+    flashcard_heading_pattern = re.compile(
+        r"(?im)^\s*(?:[-*+]\s*)?(?:\*\*|__)?"
+        r"flashcard\s*#?\s*\d+"
+        r"(?:\*\*|__)?\s*:?\s*$"
+    )
+    text = flashcard_heading_pattern.sub("", text)
 
     label_pattern = re.compile(
         r"(?im)^\s*(?:[-*+]\s*)?(?:\*\*|__)?"
@@ -10232,7 +10247,6 @@ def parse_law_flashcards_text(raw_text):
             pending_front = None
 
     return cards
-
 
 def load_law_flashcards_for_case(case_id):
     case_entry = get_law_case_by_id(case_id)
