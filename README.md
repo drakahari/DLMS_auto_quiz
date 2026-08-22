@@ -1,25 +1,35 @@
 ## Latest Release
 
-DLMS v2.1.0 is now available.
+### DLMS v2.5.0 is now available
 
-Added a new Law Study workflow for structured legal study and case review
-Added AI-assisted Law Study prompt generation
-Added case packet import support with preview before saving
-Added saved law study imports and raw import viewing
-Added case review creation and a My Case Reviews page
-Added editable case review notes, IRAC-style fields, and Socratic Q&A support
-Added rule flashcard support for legal study review
-Added text export support for saved case reviews
-Improved Law Study workflow navigation, warnings, cancel options, and tooltips
-Updated binaries for Windows 11, macOS Apple Silicon, Fedora 44, Ubuntu 24.04, and Ubuntu 26.04
+DLMS v2.5.0 is a major study-workflow and interface release.
 
-- Added ability to edit/delete/add questions and answers
-- Added ability to create quick quizzes as a thrid option of creation.
-- Added ability to copy missed questions/answers to clipboard and go to the AI of your choice (including local models!) to research further
-- Added a customizable AI prompt that can be used when checking missed questions/answers
-- Added Ubuntu 26.04 binaries
+Highlights include:
 
-👉 Download from the [Releases page](../../releases).
+- New dedicated **Anki Tools** workspace
+- Custom Anki Deck Builder
+- Weak-area analysis using quiz attempt history
+- Targeted decks for repeatedly missed and currently weak questions
+- Duplicate-card protection
+- Individual card selection and deck preview
+- Expanded Law Study Anki exports
+- Single-case, multi-case, and full-course Law Study deck creation
+- Improved Law Study flashcard parsing
+- Major interface modernization across DLMS
+- Modernized Edit Quiz and Law Study interfaces
+- Improved Exam Mode controls
+- Continued compatibility with existing quizzes, history, analytics, and Law Study data
+- No database schema migration required
+
+Prebuilt binaries are available for:
+
+- Windows 11 x86_64
+- Fedora 44 x86_64
+- Ubuntu 24.04 x86_64
+- Ubuntu 26.04 x86_64
+- macOS Apple Silicon
+
+👉 Download the latest version from the [Releases page](https://github.com/drakahari/DLMS_auto_quiz/releases/latest).
 
 Created on 1/9/26 by Mike Buchanan
 
