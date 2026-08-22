@@ -11180,7 +11180,7 @@ def anki_export_law():
         if not deck_rows:
             return "No recognized Rule Flashcards were found for that course.", 404
 
-        deck_name = f"DLMS::Law::{law_course}"
+        deck_name = f"DLMS - Law - {law_course}"
         file_base = f"{law_course}_rule_flashcards"
 
     else:
@@ -11199,10 +11199,10 @@ def anki_export_law():
             # Recover the course for the single case so existing deck naming stays familiar.
             case_meta, _cards = load_law_flashcards_for_case(case_ids[0])
             course = (case_meta or {}).get("course") or "Law Study"
-            deck_name = f"DLMS::Law::{course}::{title}"
+            deck_name = f"DLMS - Law - {course} - {title}"
             file_base = f"{course}_{title}_flashcards"
         else:
-            deck_name = f"DLMS::Law::Selected Cases ({selection_meta['case_count']})"
+            deck_name = f"DLMS - Law - Selected Cases ({selection_meta['case_count']})"
             file_base = f"DLMS_Law_{selection_meta['case_count']}_selected_cases"
 
     apkg_path = export_quiz_to_apkg(deck_name, deck_rows)
