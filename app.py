@@ -88,7 +88,7 @@ def get_app_data_dir(app_name: str = "DLMS") -> str:
     return path
 
 APP_NAME = "DLMS"
-APP_VERSION = "2.4.1"
+APP_VERSION = "2.5.0"
 APP_DATA_DIR = get_app_data_dir(APP_NAME)
 
 # =========================
@@ -10479,7 +10479,7 @@ def build_custom_anki_rows(quiz_tokens=None, missed_tokens=None, law_tokens=None
 
             row = dict(card)
             row["front"] = (
-                f"{quiz_title}\\n\\n{row.get('front', '')}"
+                f"{quiz_title}\n\n{row.get('front', '')}"
             ).strip()
             rows.append(row)
 
@@ -10495,7 +10495,7 @@ def build_custom_anki_rows(quiz_tokens=None, missed_tokens=None, law_tokens=None
 
         row = dict(card)
         row["front"] = (
-            f"{card.get('quiz_title', 'DLMS Quiz')}\\n\\n"
+            f"{card.get('quiz_title', 'DLMS Quiz')}\n\n"
             f"{row.get('front', '')}"
         ).strip()
         rows.append(row)
@@ -10513,7 +10513,7 @@ def build_custom_anki_rows(quiz_tokens=None, missed_tokens=None, law_tokens=None
 
             row = dict(card)
             row["front"] = (
-                f"{meta['course']} · {meta['title']}\\n\\n"
+                f"{meta['course']} · {meta['title']}\n\n"
                 f"{row.get('front', '')}"
             ).strip()
             rows.append(row)
