@@ -10895,7 +10895,7 @@ def anki_law_tools():
             </div>
 
             {% if law_cases %}
-            <form method="GET" action="/anki/law" class="anki-source-form">
+            <form method="GET" action="/anki/law" class="anki-source-form" id="lawAnkiForm">
                 <input type="hidden" name="preview" value="1">
 
                 <label>
@@ -10929,42 +10929,10 @@ def anki_law_tools():
                     </select>
                 </label>
 
-                <button type="submit" class="anki-preview-button">Preview Cards</button>
-            </form>
-
-            <form method="POST" action="/anki/export/law" class="anki-export-form">
-                <label>
-                    <span>Export Scope</span>
-                    <select name="law_scope">
-                        <option value="cases" {% if selected_law_scope == "cases" %}selected{% endif %}>Selected Cases</option>
-                        <option value="course" {% if selected_law_scope == "course" %}selected{% endif %}>Entire Course</option>
-                    </select>
-                </label>
-
-                <label>
-                    <span>Saved Cases — Ctrl/Cmd-click to select more than one</span>
-                    <select name="case_ids" multiple size="6">
-                        {% for case in law_cases %}
-                        <option value="{{ case.id }}" {% if case.id in selected_case_ids %}selected{% endif %}>
-                            {{ case.course }} · {{ case.title }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </label>
-
-                <label>
-                    <span>Course</span>
-                    <select name="law_course">
-                        <option value="">Choose a course...</option>
-                        {% for course in law_courses %}
-                        <option value="{{ course.course }}" {% if selected_law_course == course.course %}selected{% endif %}>
-                            {{ course.course }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </label>
-
-                <button type="submit" class="anki-export-button">Export .apkg</button>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <button type="submit" class="anki-preview-button">Preview Cards</button>
+                    <button type="button" class="anki-export-button" id="exportLawAnki">Export .apkg</button>
+                </div>
             </form>
             {% else %}
             <div class="anki-empty-message">No saved Law Study cases are currently available.</div>
@@ -11032,6 +11000,45 @@ if (menuButton && sidebar) {
         if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
         if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
         sidebar.classList.remove("open");
+    });
+}
+
+
+const exportLawAnki = document.getElementById("exportLawAnki");
+
+if (exportLawAnki) {
+    exportLawAnki.addEventListener("click", () => {
+        const form = document.getElementById("lawAnkiForm");
+        if (!form) return;
+
+        const scopeSelect = form.querySelector('[name="law_scope"]');
+        const caseSelect = form.querySelector('[name="case_ids"]');
+        const courseSelect = form.querySelector('[name="law_course"]');
+
+        const exportForm = document.createElement("form");
+        exportForm.method = "POST";
+        exportForm.action = "/anki/export/law";
+        exportForm.style.display = "none";
+
+        const addHidden = (name, value) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = name;
+            input.value = value;
+            exportForm.appendChild(input);
+        };
+
+        addHidden("law_scope", scopeSelect ? scopeSelect.value : "cases");
+        addHidden("law_course", courseSelect ? courseSelect.value : "");
+
+        if (caseSelect) {
+            Array.from(caseSelect.selectedOptions).forEach(option => {
+                addHidden("case_ids", option.value);
+            });
+        }
+
+        document.body.appendChild(exportForm);
+        exportForm.submit();
     });
 }
 
