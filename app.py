@@ -10581,7 +10581,7 @@ def anki_tools():
                     </div>
                 </div>
 
-                <form method="GET" action="/anki" class="anki-source-form">
+                <form method="GET" action="/anki" class="anki-source-form" id="missedAnkiForm">
                     <input type="hidden" name="source" value="missed">
 
                     <div class="anki-two-field-row">
@@ -10614,41 +10614,10 @@ def anki_tools():
                         </select>
                     </label>
 
-                    <button type="submit" class="anki-preview-button">Preview Cards</button>
-                </form>
-
-                <form method="POST" action="/anki/export/missed" class="anki-export-form">
-                    <div class="anki-two-field-row">
-                        <label>
-                            <span>Quiz</span>
-                            <select name="quiz_id">
-                                <option value="all" {% if selected_missed_quiz == "all" %}selected{% endif %}>All Quizzes</option>
-                                {% for quiz in quizzes %}
-                                <option value="{{ quiz.id }}" {% if selected_missed_quiz|string == quiz.id|string %}selected{% endif %}>
-                                    {{ quiz.title }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </label>
-
-                        <label>
-                            <span>Minimum Times Missed</span>
-                            <input type="number" name="min_misses" value="{{ selected_min_misses }}" min="1" max="100">
-                        </label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <button type="submit" class="anki-preview-button">Preview Cards</button>
+                        <button type="button" class="anki-export-button" id="exportMissedAnki">Export .apkg</button>
                     </div>
-
-                    <label>
-                        <span>Focus</span>
-                        <select name="missed_status">
-                            <option value="all" {% if selected_missed_status == "all" %}selected{% endif %}>All Missed Questions</option>
-                            <option value="currently_weak" {% if selected_missed_status == "currently_weak" %}selected{% endif %}>Currently Weak</option>
-                            <option value="repeated" {% if selected_missed_status == "repeated" %}selected{% endif %}>Repeatedly Missed</option>
-                            <option value="recovered" {% if selected_missed_status == "recovered" %}selected{% endif %}>Recovered Later</option>
-                            <option value="once" {% if selected_missed_status == "once" %}selected{% endif %}>Missed Once</option>
-                        </select>
-                    </label>
-
-                    <button type="submit" class="anki-export-button">Export .apkg</button>
                 </form>
             </article>
 
@@ -10709,6 +10678,42 @@ if (menuButton && sidebar) {
         if (window.innerWidth > 820 || !sidebar.classList.contains("open")) return;
         if (sidebar.contains(event.target) || menuButton.contains(event.target)) return;
         sidebar.classList.remove("open");
+    });
+}
+
+
+const exportMissedAnki = document.getElementById("exportMissedAnki");
+
+if (exportMissedAnki) {
+    exportMissedAnki.addEventListener("click", () => {
+        const form = document.getElementById("missedAnkiForm");
+        if (!form) return;
+
+        const quizSelect = form.querySelector('[name="missed_quiz_id"]');
+        const minMisses = form.querySelector('[name="min_misses"]');
+        const statusSelect = form.querySelector('[name="missed_status"]');
+
+        const exportForm = document.createElement("form");
+        exportForm.method = "POST";
+        exportForm.action = "/anki/export/missed";
+        exportForm.style.display = "none";
+
+        const fields = {
+            quiz_id: quizSelect ? quizSelect.value : "all",
+            min_misses: minMisses ? minMisses.value : "1",
+            missed_status: statusSelect ? statusSelect.value : "all"
+        };
+
+        Object.entries(fields).forEach(([name, value]) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = name;
+            input.value = value;
+            exportForm.appendChild(input);
+        });
+
+        document.body.appendChild(exportForm);
+        exportForm.submit();
     });
 }
 
