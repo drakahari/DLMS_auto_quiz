@@ -9889,18 +9889,28 @@ def build_anki_rows_for_quiz(quiz_id):
     return quiz["title"] or "DLMS Quiz", deck_rows
 
 
-def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
+def build_anki_rows_for_missed(quiz_id=None, min_misses=1, status_filter="all"):
     """
-    Aggregate DLMS snapshot data from missed_questions.
+    Aggregate DLMS snapshot data from missed_questions and classify each
+    question using later completed attempts of the same quiz.
 
-    A question appears once in the exported deck even if it was missed
-    on several attempts. The most recent snapshot supplies the card text,
-    while miss_count records how often the question was missed.
+    Status meanings:
+      currently_weak = the most recent attempt for that quiz still missed it
+      recovered      = a later completed attempt exists after the last miss
+      repeated       = missed two or more times (can also be weak/recovered)
+      once           = missed exactly once
+
+    The existing two-argument calls remain backward compatible.
     """
     try:
         min_misses = max(1, min(int(min_misses or 1), 100))
     except (TypeError, ValueError):
         min_misses = 1
+
+    status_filter = str(status_filter or "all").strip().lower()
+    valid_filters = {"all", "currently_weak", "repeated", "recovered", "once"}
+    if status_filter not in valid_filters:
+        status_filter = "all"
 
     selected_quiz_id = None
     if quiz_id not in (None, "", "all"):
@@ -9912,8 +9922,39 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
     conn = get_db()
     cur = conn.cursor()
 
+    # Completed attempts provide the timeline used to decide whether a
+    # previously missed question was later recovered.
+    attempt_sql = """
+        SELECT id, quiz_id, completed_at
+        FROM attempts
+        WHERE completed_at IS NOT NULL
+    """
+    attempt_params = []
+
+    if selected_quiz_id is not None:
+        attempt_sql += " AND quiz_id = ? "
+        attempt_params.append(selected_quiz_id)
+
+    attempt_sql += """
+        ORDER BY
+            completed_at ASC,
+            id ASC
+    """
+
+    attempt_rows = cur.execute(attempt_sql, attempt_params).fetchall()
+
+    attempts_by_quiz = {}
+    attempt_order = {}
+
+    for position, row in enumerate(attempt_rows):
+        qid = row["quiz_id"]
+        attempts_by_quiz.setdefault(qid, []).append(row["id"])
+        attempt_order[row["id"]] = position
+
     sql = """
         SELECT
+            mq.id AS missed_id,
+            mq.attempt_id,
             mq.question_id,
             mq.attempt_question_number,
             mq.question_text,
@@ -9926,17 +9967,18 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
         FROM missed_questions mq
         JOIN attempts a ON a.id = mq.attempt_id
         LEFT JOIN quizzes qu ON qu.id = a.quiz_id
+        WHERE a.completed_at IS NOT NULL
     """
     params = []
 
     if selected_quiz_id is not None:
-        sql += " WHERE a.quiz_id = ? "
+        sql += " AND a.quiz_id = ? "
         params.append(selected_quiz_id)
 
     sql += """
         ORDER BY
-            CASE WHEN a.completed_at IS NULL THEN 1 ELSE 0 END,
             a.completed_at DESC,
+            a.id DESC,
             mq.id DESC
     """
 
@@ -9966,6 +10008,7 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
                 "quiz_id": row["quiz_id"],
                 "question_number": row["attempt_question_number"],
                 "miss_count": 0,
+                "latest_miss_attempt_id": row["attempt_id"],
             }
 
         aggregated[key]["miss_count"] += 1
@@ -9974,6 +10017,26 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
 
     for item in aggregated.values():
         if item["miss_count"] < min_misses:
+            continue
+
+        latest_miss_attempt_id = item["latest_miss_attempt_id"]
+        quiz_attempt_ids = attempts_by_quiz.get(item["quiz_id"], [])
+        latest_miss_position = attempt_order.get(latest_miss_attempt_id, -1)
+
+        has_later_attempt = any(
+            attempt_order.get(attempt_id, -1) > latest_miss_position
+            for attempt_id in quiz_attempt_ids
+        )
+
+        recovery_status = "recovered" if has_later_attempt else "currently_weak"
+
+        if status_filter == "currently_weak" and recovery_status != "currently_weak":
+            continue
+        if status_filter == "recovered" and recovery_status != "recovered":
+            continue
+        if status_filter == "repeated" and item["miss_count"] < 2:
+            continue
+        if status_filter == "once" and item["miss_count"] != 1:
             continue
 
         front_parts = [item["question_text"]]
@@ -9985,10 +10048,13 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
         if correct:
             back_parts.append(correct)
 
-        if item["miss_count"] > 1:
-            back_parts.extend(["", f"Missed in DLMS: {item['miss_count']} times"])
-        else:
-            back_parts.extend(["", "Missed in DLMS: 1 time"])
+        back_parts.extend([
+            "",
+            f"Missed in DLMS: {item['miss_count']} "
+            + ("times" if item["miss_count"] != 1 else "time"),
+            "DLMS status: "
+            + ("Currently Weak" if recovery_status == "currently_weak" else "Recovered Later"),
+        ])
 
         cards.append({
             "front": "\n".join(front_parts).strip(),
@@ -9997,10 +10063,12 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
             "quiz_id": item["quiz_id"],
             "question_number": item["question_number"],
             "miss_count": item["miss_count"],
+            "recovery_status": recovery_status,
         })
 
     cards.sort(
         key=lambda x: (
+            0 if x["recovery_status"] == "currently_weak" else 1,
             -x["miss_count"],
             str(x["quiz_title"]).casefold(),
             x["question_number"] if isinstance(x["question_number"], int) else 999999
@@ -10009,6 +10077,33 @@ def build_anki_rows_for_missed(quiz_id=None, min_misses=1):
 
     return cards
 
+
+def get_anki_missed_summary(quiz_id=None):
+    """
+    Return non-destructive performance counts for the Anki Tools UI.
+    Counts are derived from existing attempts/missed_questions data only.
+    """
+    all_cards = build_anki_rows_for_missed(quiz_id, 1, "all")
+
+    return {
+        "total": len(all_cards),
+        "currently_weak": sum(
+            1 for card in all_cards
+            if card.get("recovery_status") == "currently_weak"
+        ),
+        "recovered": sum(
+            1 for card in all_cards
+            if card.get("recovery_status") == "recovered"
+        ),
+        "repeated": sum(
+            1 for card in all_cards
+            if int(card.get("miss_count") or 0) >= 2
+        ),
+        "once": sum(
+            1 for card in all_cards
+            if int(card.get("miss_count") or 0) == 1
+        ),
+    }
 
 def parse_law_flashcards_text(raw_text):
     """
@@ -10166,6 +10261,73 @@ def get_anki_law_case_choices():
     return results
 
 
+
+def get_anki_law_courses(law_cases=None):
+    law_cases = law_cases if law_cases is not None else get_anki_law_case_choices()
+    course_map = {}
+
+    for case in law_cases:
+        course = str(case.get("course") or "Uncategorized").strip() or "Uncategorized"
+        info = course_map.setdefault(course, {"course": course, "case_count": 0, "card_count": 0})
+        info["case_count"] += 1
+        info["card_count"] += int(case.get("card_count") or 0)
+
+    return sorted(
+        course_map.values(),
+        key=lambda item: item["course"].casefold()
+    )
+
+
+def load_law_flashcards_for_selection(case_ids=None, course=None):
+    """
+    Combine Rule Flashcards from multiple saved cases or an entire course.
+    Existing single-case loading remains unchanged.
+    """
+    law_cases = get_anki_law_case_choices()
+
+    selected_ids = {
+        str(case_id).strip()
+        for case_id in (case_ids or [])
+        if str(case_id).strip()
+    }
+
+    selected_course = str(course or "").strip()
+
+    if selected_course:
+        selected_cases = [
+            case for case in law_cases
+            if str(case.get("course") or "").strip().casefold() == selected_course.casefold()
+        ]
+    else:
+        selected_cases = [
+            case for case in law_cases
+            if str(case.get("id") or "").strip() in selected_ids
+        ]
+
+    deck_rows = []
+    loaded_cases = []
+
+    for case in selected_cases:
+        meta, cards = load_law_flashcards_for_case(case["id"])
+        if not meta:
+            continue
+
+        loaded_cases.append(meta)
+
+        for card in cards:
+            row = dict(card)
+            row["front"] = f"{meta['title']}\n\n{row.get('front', '')}".strip()
+            deck_rows.append(row)
+
+    selection_meta = {
+        "course": selected_course or None,
+        "case_count": len(loaded_cases),
+        "case_titles": [case["title"] for case in loaded_cases],
+    }
+
+    return selection_meta, deck_rows
+
+
 def make_safe_anki_download_name(name, fallback="dlms_anki_deck"):
     cleaned = secure_filename(str(name or "").strip())
     cleaned = os.path.splitext(cleaned)[0]
@@ -10178,6 +10340,7 @@ def make_safe_anki_download_name(name, fallback="dlms_anki_deck"):
 def anki_tools():
     quizzes = get_anki_quiz_choices()
     law_cases = get_anki_law_case_choices()
+    law_courses = get_anki_law_courses(law_cases)
 
     anki_source = (request.args.get("source") or "").strip().lower()
     preview_rows = []
@@ -10187,7 +10350,11 @@ def anki_tools():
     selected_quiz_id = request.args.get("quiz_id", "")
     selected_missed_quiz = request.args.get("missed_quiz_id", "all")
     selected_min_misses = request.args.get("min_misses", "1")
+    selected_missed_status = request.args.get("missed_status", "all")
     selected_case_id = request.args.get("case_id", "")
+    selected_case_ids = request.args.getlist("case_ids")
+    selected_law_scope = request.args.get("law_scope", "cases")
+    selected_law_course = request.args.get("law_course", "")
 
     if anki_source == "quiz" and selected_quiz_id:
         quiz_title, preview_rows = build_anki_rows_for_quiz(selected_quiz_id)
@@ -10199,25 +10366,59 @@ def anki_tools():
     elif anki_source == "missed":
         preview_rows = build_anki_rows_for_missed(
             selected_missed_quiz,
-            selected_min_misses
+            selected_min_misses,
+            selected_missed_status
         )
-        preview_title = "Missed Questions"
+        status_titles = {
+            "all": "All Missed Questions",
+            "currently_weak": "Currently Weak Questions",
+            "repeated": "Repeatedly Missed Questions",
+            "recovered": "Recovered Questions",
+            "once": "Questions Missed Once",
+        }
+        preview_title = status_titles.get(
+            selected_missed_status,
+            "Missed Questions"
+        )
         if not preview_rows:
             preview_message = "No missed questions match those filters."
 
-    elif anki_source == "law" and selected_case_id:
-        case_meta, preview_rows = load_law_flashcards_for_case(selected_case_id)
-        if case_meta:
-            preview_title = f"{case_meta['title']} - Rule Flashcards"
+    elif anki_source == "law":
+        if selected_law_scope == "course" and selected_law_course:
+            selection_meta, preview_rows = load_law_flashcards_for_selection(
+                course=selected_law_course
+            )
+            preview_title = f"{selected_law_course} - Rule Flashcards"
             if not preview_rows:
-                preview_message = (
-                    "No Front/Back flashcard pairs were recognized in this case's "
-                    "Rule Flashcards section."
-                )
-        else:
-            preview_message = "That Law Study case could not be loaded."
+                preview_message = "No recognized Rule Flashcards were found for that course."
 
-    total_missed_cards = len(build_anki_rows_for_missed(None, 1))
+        elif selected_case_ids:
+            selection_meta, preview_rows = load_law_flashcards_for_selection(
+                case_ids=selected_case_ids
+            )
+            case_count = selection_meta.get("case_count", 0)
+            preview_title = (
+                f"{case_count} Saved Cases - Rule Flashcards"
+                if case_count != 1
+                else "Saved Case - Rule Flashcards"
+            )
+            if not preview_rows:
+                preview_message = "No recognized Rule Flashcards were found in the selected cases."
+
+        elif selected_case_id:
+            case_meta, preview_rows = load_law_flashcards_for_case(selected_case_id)
+            if case_meta:
+                preview_title = f"{case_meta['title']} - Rule Flashcards"
+                if not preview_rows:
+                    preview_message = (
+                        "No Front/Back flashcard pairs were recognized in this case's "
+                        "Rule Flashcards section."
+                    )
+            else:
+                preview_message = "That Law Study case could not be loaded."
+
+    missed_summary = get_anki_missed_summary()
+    total_missed_cards = missed_summary["total"]
     total_law_cards = sum(case["card_count"] for case in law_cases)
 
     return render_template_string(r"""
@@ -10289,7 +10490,7 @@ def anki_tools():
             <div class="dashboard-stat-card">
                 <span class="dashboard-stat-label">Missed Questions</span>
                 <strong>{{ total_missed_cards }}</strong>
-                <span class="dashboard-stat-note">unique questions</span>
+                <span class="dashboard-stat-note">{{ missed_summary.currently_weak }} weak · {{ missed_summary.repeated }} repeated · {{ missed_summary.recovered }} recovered</span>
             </div>
             <div class="dashboard-stat-card">
                 <span class="dashboard-stat-label">Law Flashcards</span>
@@ -10378,6 +10579,17 @@ def anki_tools():
                         </label>
                     </div>
 
+                    <label>
+                        <span>Focus</span>
+                        <select name="missed_status">
+                            <option value="all" {% if selected_missed_status == "all" %}selected{% endif %}>All Missed Questions</option>
+                            <option value="currently_weak" {% if selected_missed_status == "currently_weak" %}selected{% endif %}>Currently Weak</option>
+                            <option value="repeated" {% if selected_missed_status == "repeated" %}selected{% endif %}>Repeatedly Missed</option>
+                            <option value="recovered" {% if selected_missed_status == "recovered" %}selected{% endif %}>Recovered Later</option>
+                            <option value="once" {% if selected_missed_status == "once" %}selected{% endif %}>Missed Once</option>
+                        </select>
+                    </label>
+
                     <button type="submit" class="anki-preview-button">Preview Cards</button>
                 </form>
 
@@ -10401,6 +10613,17 @@ def anki_tools():
                         </label>
                     </div>
 
+                    <label>
+                        <span>Focus</span>
+                        <select name="missed_status">
+                            <option value="all" {% if selected_missed_status == "all" %}selected{% endif %}>All Missed Questions</option>
+                            <option value="currently_weak" {% if selected_missed_status == "currently_weak" %}selected{% endif %}>Currently Weak</option>
+                            <option value="repeated" {% if selected_missed_status == "repeated" %}selected{% endif %}>Repeatedly Missed</option>
+                            <option value="recovered" {% if selected_missed_status == "recovered" %}selected{% endif %}>Recovered Later</option>
+                            <option value="once" {% if selected_missed_status == "once" %}selected{% endif %}>Missed Once</option>
+                        </select>
+                    </label>
+
                     <button type="submit" class="anki-export-button">Export .apkg</button>
                 </form>
             </article>
@@ -10411,43 +10634,82 @@ def anki_tools():
                     <div>
                         <span class="anki-source-kicker">LAW STUDY</span>
                         <h2>Rule Flashcards → Anki</h2>
-                        <p>Export recognized Front/Back pairs from the Rule Flashcards section of a saved Law Study case.</p>
+                        <p>Export one case, several saved cases, or every recognized Rule Flashcard in an entire course.</p>
                     </div>
                 </div>
 
                 {% if law_cases %}
-                <div class="anki-law-layout">
-                    <form method="GET" action="/anki" class="anki-source-form">
-                        <input type="hidden" name="source" value="law">
-                        <label>
-                            <span>Saved Case Review</span>
-                            <select name="case_id" required>
-                                <option value="">Choose a case...</option>
-                                {% for case in law_cases %}
-                                <option value="{{ case.id }}" {% if selected_case_id == case.id %}selected{% endif %}>
-                                    {{ case.course }} · {{ case.title }} ({{ case.card_count }})
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <button type="submit" class="anki-preview-button">Preview Cards</button>
-                    </form>
+                <form method="GET" action="/anki" class="anki-source-form">
+                    <input type="hidden" name="source" value="law">
 
-                    <form method="POST" action="/anki/export/law" class="anki-export-form">
-                        <label>
-                            <span>Case to Export</span>
-                            <select name="case_id" required>
-                                <option value="">Choose a case...</option>
-                                {% for case in law_cases %}
-                                <option value="{{ case.id }}" {% if selected_case_id == case.id %}selected{% endif %}>
-                                    {{ case.course }} · {{ case.title }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <button type="submit" class="anki-export-button">Export .apkg</button>
-                    </form>
-                </div>
+                    <label>
+                        <span>Export Scope</span>
+                        <select name="law_scope">
+                            <option value="cases" {% if selected_law_scope == "cases" %}selected{% endif %}>Selected Cases</option>
+                            <option value="course" {% if selected_law_scope == "course" %}selected{% endif %}>Entire Course</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Saved Cases — Ctrl/Cmd-click to select more than one</span>
+                        <select name="case_ids" multiple size="6">
+                            {% for case in law_cases %}
+                            <option value="{{ case.id }}" {% if case.id in selected_case_ids %}selected{% endif %}>
+                                {{ case.course }} · {{ case.title }} ({{ case.card_count }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Course</span>
+                        <select name="law_course">
+                            <option value="">Choose a course...</option>
+                            {% for course in law_courses %}
+                            <option value="{{ course.course }}" {% if selected_law_course == course.course %}selected{% endif %}>
+                                {{ course.course }} · {{ course.case_count }} cases · {{ course.card_count }} cards
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <button type="submit" class="anki-preview-button">Preview Cards</button>
+                </form>
+
+                <form method="POST" action="/anki/export/law" class="anki-export-form">
+                    <label>
+                        <span>Export Scope</span>
+                        <select name="law_scope">
+                            <option value="cases" {% if selected_law_scope == "cases" %}selected{% endif %}>Selected Cases</option>
+                            <option value="course" {% if selected_law_scope == "course" %}selected{% endif %}>Entire Course</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Saved Cases — Ctrl/Cmd-click to select more than one</span>
+                        <select name="case_ids" multiple size="6">
+                            {% for case in law_cases %}
+                            <option value="{{ case.id }}" {% if case.id in selected_case_ids %}selected{% endif %}>
+                                {{ case.course }} · {{ case.title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Course</span>
+                        <select name="law_course">
+                            <option value="">Choose a course...</option>
+                            {% for course in law_courses %}
+                            <option value="{{ course.course }}" {% if selected_law_course == course.course %}selected{% endif %}>
+                                {{ course.course }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <button type="submit" class="anki-export-button">Export .apkg</button>
+                </form>
                 {% else %}
                 <div class="anki-empty-message">No saved Law Study cases are currently available.</div>
                 {% endif %}
@@ -10538,6 +10800,7 @@ if (window.location.hash === "#ankiPreview") {
         app_version=APP_VERSION,
         quizzes=quizzes,
         law_cases=law_cases,
+        law_courses=law_courses,
         anki_source=anki_source,
         preview_rows=preview_rows,
         preview_title=preview_title,
@@ -10545,7 +10808,12 @@ if (window.location.hash === "#ankiPreview") {
         selected_quiz_id=selected_quiz_id,
         selected_missed_quiz=selected_missed_quiz,
         selected_min_misses=selected_min_misses,
+        selected_missed_status=selected_missed_status,
         selected_case_id=selected_case_id,
+        selected_case_ids=selected_case_ids,
+        selected_law_scope=selected_law_scope,
+        selected_law_course=selected_law_course,
+        missed_summary=missed_summary,
         total_missed_cards=total_missed_cards,
         total_law_cards=total_law_cards,
     )
@@ -10577,8 +10845,13 @@ def anki_export_quiz():
 def anki_export_missed():
     quiz_id = request.form.get("quiz_id", "all")
     min_misses = request.form.get("min_misses", "1")
+    missed_status = request.form.get("missed_status", "all")
 
-    deck_rows = build_anki_rows_for_missed(quiz_id, min_misses)
+    deck_rows = build_anki_rows_for_missed(
+        quiz_id,
+        min_misses,
+        missed_status
+    )
 
     if not deck_rows:
         return "No missed questions matched those filters.", 404
@@ -10595,6 +10868,17 @@ def anki_export_missed():
         threshold = max(1, int(min_misses or 1))
     except (TypeError, ValueError):
         threshold = 1
+
+    status_names = {
+        "currently_weak": "Currently Weak",
+        "repeated": "Repeatedly Missed",
+        "recovered": "Recovered",
+        "once": "Missed Once",
+    }
+
+    if missed_status in status_names:
+        deck_name += f" - {status_names[missed_status]}"
+        file_base += f"_{missed_status}"
 
     if threshold > 1:
         deck_name += f" - {threshold}+ Misses"
@@ -10615,21 +10899,50 @@ def anki_export_missed():
 
 @app.route("/anki/export/law", methods=["POST"])
 def anki_export_law():
-    case_id = request.form.get("case_id")
-    case_meta, deck_rows = load_law_flashcards_for_case(case_id)
+    law_scope = (request.form.get("law_scope") or "cases").strip().lower()
+    case_ids = request.form.getlist("case_ids")
+    law_course = (request.form.get("law_course") or "").strip()
 
-    if not case_meta:
-        return "Law Study case not found.", 404
+    # Backward compatibility with the original single-case Anki Tools form.
+    legacy_case_id = request.form.get("case_id")
+    if legacy_case_id and not case_ids:
+        case_ids = [legacy_case_id]
 
-    if not deck_rows:
-        return (
-            "No recognized Front/Back flashcard pairs were found in this case.",
-            404
+    if law_scope == "course":
+        if not law_course:
+            return "Choose a Law Study course to export.", 400
+
+        selection_meta, deck_rows = load_law_flashcards_for_selection(
+            course=law_course
         )
 
-    course = case_meta.get("course") or "Law Study"
-    title = case_meta.get("title") or "Case Review"
-    deck_name = f"DLMS::Law::{course}::{title}"
+        if not deck_rows:
+            return "No recognized Rule Flashcards were found for that course.", 404
+
+        deck_name = f"DLMS::Law::{law_course}"
+        file_base = f"{law_course}_rule_flashcards"
+
+    else:
+        if not case_ids:
+            return "Choose at least one saved Law Study case to export.", 400
+
+        selection_meta, deck_rows = load_law_flashcards_for_selection(
+            case_ids=case_ids
+        )
+
+        if not deck_rows:
+            return "No recognized Rule Flashcards were found in the selected cases.", 404
+
+        if selection_meta["case_count"] == 1:
+            title = selection_meta["case_titles"][0]
+            # Recover the course for the single case so existing deck naming stays familiar.
+            case_meta, _cards = load_law_flashcards_for_case(case_ids[0])
+            course = (case_meta or {}).get("course") or "Law Study"
+            deck_name = f"DLMS::Law::{course}::{title}"
+            file_base = f"{course}_{title}_flashcards"
+        else:
+            deck_name = f"DLMS::Law::Selected Cases ({selection_meta['case_count']})"
+            file_base = f"DLMS_Law_{selection_meta['case_count']}_selected_cases"
 
     apkg_path = export_quiz_to_apkg(deck_name, deck_rows)
 
@@ -10637,12 +10950,11 @@ def anki_export_law():
         apkg_path,
         as_attachment=True,
         download_name=make_safe_anki_download_name(
-            f"{course}_{title}_flashcards",
+            file_base,
             "dlms_law_flashcards"
         ),
         mimetype="application/octet-stream"
     )
-
 
 def export_anki_tsv_for_quiz(quiz_id: int) -> str:
     conn = get_db()
