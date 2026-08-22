@@ -1413,7 +1413,12 @@ def law_study_home():
             <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
 
         <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -1668,7 +1673,12 @@ def law_create_case_review():
         <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
         <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
         <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
     </nav>
 
     <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -2203,7 +2213,12 @@ def law_import_case_packet():
         <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
         <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
         <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
     </nav>
 
     <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -2411,7 +2426,12 @@ def law_saved_imports():
         <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
         <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
         <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
     </nav>
 
     <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -2591,7 +2611,12 @@ def law_view_saved_import(filename):
         <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
         <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
         <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
     </nav>
     <div class="dashboard-nav-section-label"><span>System</span></div>
     <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
@@ -2879,7 +2904,12 @@ def law_case_reviews():
         <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
         <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
         <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
     </nav>
 
     <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -3089,7 +3119,12 @@ def law_view_case_review(case_id):
         <a class="dashboard-nav-item active" href="/law" aria-current="page"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
         <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
         <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
     </nav>
     <div class="dashboard-nav-section-label"><span>System</span></div>
     <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
@@ -3782,7 +3817,12 @@ def edit_quiz(quiz_id):
             <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
 
         <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -5401,7 +5441,12 @@ def quiz_library():
             <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
 
         <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -5845,7 +5890,12 @@ def upload_page():
             <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
         <div class="dashboard-nav-section-label"><span>System</span></div>
         <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
@@ -5996,7 +6046,12 @@ def paste_page():
             <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
         <div class="dashboard-nav-section-label"><span>System</span></div>
         <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
@@ -6193,7 +6248,12 @@ def create_short_quiz_page():
             <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item" href="/anki"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
         <div class="dashboard-nav-section-label"><span>System</span></div>
         <nav class="dashboard-nav dashboard-nav-system" aria-label="System navigation">
@@ -10339,7 +10399,6 @@ def make_safe_anki_download_name(name, fallback="dlms_anki_deck"):
 @app.route("/anki")
 def anki_tools():
     quizzes = get_anki_quiz_choices()
-    law_cases = get_anki_law_case_choices()
 
     anki_source = (request.args.get("source") or "").strip().lower()
     preview_rows = []
@@ -10380,7 +10439,6 @@ def anki_tools():
 
     missed_summary = get_anki_missed_summary()
     total_missed_cards = missed_summary["total"]
-    total_law_cards = sum(case["card_count"] for case in law_cases)
 
     return render_template_string(r"""
 <!DOCTYPE html>
@@ -10416,7 +10474,12 @@ def anki_tools():
             <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item active" href="/anki" aria-current="page"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item active" href="/anki" aria-current="page"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem" href="/anki/law"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
 
         <div class="dashboard-nav-section-label"><span>System</span></div>
@@ -10438,7 +10501,7 @@ def anki_tools():
             <div>
                 <div class="anki-tools-eyebrow">STUDY EXPORTS</div>
                 <h1>Anki Tools</h1>
-                <p>Turn material already in DLMS into focused Anki decks without changing your existing Study Mode or Review exports.</p>
+                <p>Build Anki decks from existing quizzes and your DLMS performance history. Law Study exports are available from the Anki Tools submenu.</p>
             </div>
         </header>
 
@@ -10589,27 +10652,7 @@ def anki_tools():
                 </form>
             </article>
 
-            <article class="dashboard-panel anki-source-card anki-source-card-wide">
-                <div class="anki-source-heading">
-                    <span class="anki-source-icon">⚖</span>
-                    <div>
-                        <span class="anki-source-kicker">LAW STUDY</span>
-                        <h2>Rule Flashcards → Anki</h2>
-                        <p>Export one case, several saved cases, or an entire Law Study course from a dedicated workspace.</p>
-                    </div>
-                </div>
 
-                <div class="anki-empty-message" style="margin-bottom:14px;">
-                    {{ law_cases|length }} saved case{% if law_cases|length != 1 %}s{% endif %} ·
-                    {{ total_law_cards }} recognized flashcard{% if total_law_cards != 1 %}s{% endif %}
-                </div>
-
-                <button type="button"
-                        class="anki-export-button"
-                        onclick="location.href='/anki/law'">
-                    Open Law Study Export
-                </button>
-            </article>
         </section>
 
         {% if anki_source %}
@@ -10695,7 +10738,6 @@ if (window.location.hash === "#ankiPreview") {
 """,
         app_version=APP_VERSION,
         quizzes=quizzes,
-        law_cases=law_cases,
         anki_source=anki_source,
         preview_rows=preview_rows,
         preview_title=preview_title,
@@ -10706,7 +10748,6 @@ if (window.location.hash === "#ankiPreview") {
         selected_missed_status=selected_missed_status,
         missed_summary=missed_summary,
         total_missed_cards=total_missed_cards,
-        total_law_cards=total_law_cards,
     )
 
 
@@ -10789,7 +10830,12 @@ def anki_law_tools():
             <a class="dashboard-nav-item" href="/law"><span class="dashboard-nav-icon">⚖</span><span>Law Study</span></a>
             <a class="dashboard-nav-item" href="/history"><span class="dashboard-nav-icon">↶</span><span>History</span></a>
             <a class="dashboard-nav-item" href="/dashboard"><span class="dashboard-nav-icon">▥</span><span>Analytics</span></a>
-            <a class="dashboard-nav-item active" href="/anki" aria-current="page"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+            <div class="dashboard-nav-group">
+                <a class="dashboard-nav-item active" href="/anki" aria-current="page"><span class="dashboard-nav-icon">◆</span><span>Anki Tools</span></a>
+                <div class="dashboard-nav-submenu">
+                    <a class="dashboard-nav-subitem active" href="/anki/law" aria-current="page"><span class="dashboard-nav-subicon">↳</span><span>Law Study Anki</span></a>
+                </div>
+            </div>
         </nav>
 
         <div class="dashboard-nav-section-label"><span>System</span></div>

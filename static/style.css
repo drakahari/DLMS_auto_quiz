@@ -6156,3 +6156,72 @@ a.settings-hub-card:hover {
         align-self: flex-start;
     }
 }
+/* =========================================================
+   DASHBOARD SIDEBAR — ANKI SUBMENU
+   Keeps Law Study Anki available without adding another
+   full-size primary navigation item or workspace card.
+   ========================================================= */
+
+.dashboard-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dashboard-nav-submenu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: -1px 0 3px 42px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(83, 151, 230, 0.28);
+}
+
+.dashboard-nav-subitem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 5px 10px;
+    color: #9fb5ce;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    transition: color .15s ease, background .15s ease, border-color .15s ease, transform .12s ease;
+}
+
+.dashboard-nav-subitem:hover {
+    color: #e7f3ff;
+    text-decoration: none;
+    transform: translateX(2px);
+    background: rgba(25, 73, 127, 0.28);
+    border-color: rgba(84, 155, 255, 0.18);
+}
+
+.dashboard-nav-subitem.active {
+    color: #dff1ff;
+    background: rgba(22, 84, 157, 0.34);
+    border-color: rgba(72, 153, 245, 0.34);
+}
+
+.dashboard-nav-subicon {
+    width: 14px;
+    flex: 0 0 14px;
+    color: #69b7ff;
+    font-size: 14px;
+    line-height: 1;
+    text-align: center;
+}
+
+@media (max-width: 820px) {
+    .dashboard-nav-submenu {
+        margin-left: 38px;
+    }
+
+    .dashboard-nav-subitem {
+        min-height: 38px;
+        font-size: 14px;
+    }
+}
